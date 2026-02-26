@@ -2,14 +2,14 @@ databases:
   - name: adel-beach-resort-db
     databaseName: adel_beach_resort
     plan: free
-    region: oregon
+    region: singapore
 
 services:
   # Django Backend
   - type: web
     name: adel-beach-resort-backend
     env: python
-    region: oregon
+    region: singapore
     plan: free
     buildCommand: "chmod +x ./backend/build.sh && ./backend/build.sh"
     startCommand: "cd backend && gunicorn hotel.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
