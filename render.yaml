@@ -41,7 +41,7 @@ services:
   - type: web
     name: adel-beach-resort-frontend
     env: node
-    region: oregon
+    region: singapore
     plan: free
     buildCommand: "cd frontend && npm install && npm run build"
     startCommand: "cd frontend && npm run start"
