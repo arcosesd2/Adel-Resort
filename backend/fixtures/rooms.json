@@ -1,0 +1,98 @@
+[
+  {
+    "model": "rooms.room",
+    "pk": 1,
+    "fields": {
+      "name": "Ocean View Standard",
+      "room_type": "standard",
+      "description": "Wake up to breathtaking ocean views in our cozy standard room. Featuring a plush king-size bed, modern bathroom, and a private balcony overlooking the turquoise waters of Adel Beach.",
+      "price_per_night": "120.00",
+      "capacity": 2,
+      "size_sqm": 28,
+      "amenities": ["WiFi", "Air Conditioning", "Balcony", "Ocean View", "TV", "Mini-bar", "Safe"],
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "rooms.room",
+    "pk": 2,
+    "fields": {
+      "name": "Deluxe Beachfront",
+      "room_type": "deluxe",
+      "description": "Experience the ultimate beach getaway in our deluxe beachfront room. Step directly onto the sand from your private terrace, enjoy premium amenities, and indulge in panoramic sea views.",
+      "price_per_night": "220.00",
+      "capacity": 2,
+      "size_sqm": 42,
+      "amenities": ["WiFi", "Air Conditioning", "Private Terrace", "Ocean View", "TV", "Mini-bar", "Safe", "Bathtub", "Room Service", "Espresso Machine"],
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "rooms.room",
+    "pk": 3,
+    "fields": {
+      "name": "Family Suite",
+      "room_type": "suite",
+      "description": "Perfect for families, our spacious suite offers separate sleeping areas, a living room, and all the comforts of home. Kids will love the beach access and the pool views.",
+      "price_per_night": "350.00",
+      "capacity": 4,
+      "size_sqm": 65,
+      "amenities": ["WiFi", "Air Conditioning", "Living Room", "Ocean View", "2 TVs", "Kitchen", "Safe", "Bathtub", "Room Service", "Kids Amenities"],
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "rooms.room",
+    "pk": 4,
+    "fields": {
+      "name": "Honeymoon Villa",
+      "room_type": "villa",
+      "description": "An intimate and luxurious private villa perfect for couples. Featuring a private plunge pool, outdoor shower, curated romantic decor, and direct beach access. The ultimate romantic escape.",
+      "price_per_night": "580.00",
+      "capacity": 2,
+      "size_sqm": 90,
+      "amenities": ["WiFi", "Air Conditioning", "Private Pool", "Ocean View", "TV", "Full Kitchen", "Safe", "Outdoor Shower", "Butler Service", "Champagne on Arrival", "Jacuzzi"],
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "rooms.room",
+    "pk": 5,
+    "fields": {
+      "name": "Beach Bungalow",
+      "room_type": "bungalow",
+      "description": "A charming standalone bungalow nestled in our tropical gardens. Enjoy the privacy of your own space with a hammock porch, outdoor shower, and a 2-minute stroll to the beach.",
+      "price_per_night": "180.00",
+      "capacity": 3,
+      "size_sqm": 38,
+      "amenities": ["WiFi", "Air Conditioning", "Hammock Porch", "Garden View", "TV", "Mini Fridge", "Safe", "Outdoor Shower"],
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "rooms.room",
+    "pk": 6,
+    "fields": {
+      "name": "Presidential Suite",
+      "room_type": "suite",
+      "description": "The pinnacle of luxury at Adel Beach Resort. This sprawling suite offers multiple rooms, a private infinity pool, dedicated butler service, and unrivaled 270-degree ocean views.",
+      "price_per_night": "950.00",
+      "capacity": 4,
+      "size_sqm": 150,
+      "amenities": ["WiFi", "Air Conditioning", "Private Infinity Pool", "Panoramic Ocean View", "3 TVs", "Full Kitchen", "Safe", "Butler Service", "Jacuzzi", "Home Theater", "Private Gym", "Wine Cellar Access"],
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

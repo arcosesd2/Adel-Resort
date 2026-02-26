@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import 'react-datepicker/dist/react-datepicker.css';
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 240, 249, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__day--highlighted-booked {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-radius: 50% !important;
+}
+
+.react-datepicker__day--highlighted-booked:hover {
+  background-color: #dc2626 !important;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-ocean-600 hover:bg-ocean-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200;
+  }
+  .btn-secondary {
+    @apply bg-sand-500 hover:bg-sand-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200;
+  }
+  .btn-outline {
+    @apply border-2 border-ocean-600 text-ocean-600 hover:bg-ocean-50 font-semibold py-3 px-6 rounded-lg transition-colors duration-200;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-md overflow-hidden;
+  }
+  .input-field {
+    @apply w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent;
+  }
+}
