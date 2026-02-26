@@ -37,13 +37,13 @@ export default function RegisterPage() {
       toast.success('Account created! Welcome to Adel Beach Resort.')
       router.push('/dashboard')
     } catch (err) {
-      const errors = err.response?.data
-      if (errors) {
-        Object.entries(errors).forEach(([key, msgs]) => {
+      const data = err.response?.data
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([key, msgs]) => {
           toast.error(`${key}: ${Array.isArray(msgs) ? msgs[0] : msgs}`)
         })
       } else {
-        toast.error('Registration failed')
+        toast.error(err.message || 'Registration failed')
       }
     } finally {
       setLoading(false)
