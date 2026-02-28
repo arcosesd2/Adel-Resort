@@ -53,39 +53,49 @@ export default function PricingPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {Object.entries(grouped).map(([roomType, items]) => (
-              <div key={roomType} className="card overflow-hidden">
-                <div className="bg-ocean-600 px-6 py-3">
-                  <h2 className="font-serif text-xl font-bold text-white">{roomType}</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b bg-gray-50">
-                        <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Accommodation</th>
-                        <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Day Rate</th>
-                        <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Night Rate</th>
-                        <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((item) => (
-                        <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
-                          <td className="px-6 py-4 text-gray-800 font-medium">{item.label}</td>
-                          <td className="px-6 py-4 text-right text-gray-700">
-                            ₱{Number(item.day_price).toLocaleString()}
+            <div className="card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col className="w-[40%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[24%]" />
+                  </colgroup>
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Accommodation</th>
+                      <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Day Rate</th>
+                      <th className="text-right px-6 py-3 text-sm font-semibold text-gray-600">Night Rate</th>
+                      <th className="text-left px-6 py-3 text-sm font-semibold text-gray-600">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(grouped).map(([roomType, items]) => (
+                      <>
+                        <tr key={`header-${roomType}`}>
+                          <td colSpan={4} className="bg-ocean-600 px-6 py-3">
+                            <h2 className="font-serif text-lg font-bold text-white">{roomType}</h2>
                           </td>
-                          <td className="px-6 py-4 text-right text-gray-700">
-                            {item.night_price ? `₱${Number(item.night_price).toLocaleString()}` : '—'}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-500">{item.notes}</td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                        {items.map((item) => (
+                          <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
+                            <td className="px-6 py-4 text-gray-800 font-medium">{item.label}</td>
+                            <td className="px-6 py-4 text-right text-gray-700">
+                              ₱{Number(item.day_price).toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 text-right text-gray-700">
+                              {item.night_price ? `₱${Number(item.night_price).toLocaleString()}` : '—'}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">{item.notes}</td>
+                          </tr>
+                        ))}
+                      </>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
+            </div>
 
             <div className="card p-6 bg-amber-50 border border-amber-200">
               <h3 className="font-semibold text-amber-800 mb-2">Additional Information</h3>
