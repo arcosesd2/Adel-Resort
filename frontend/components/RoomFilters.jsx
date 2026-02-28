@@ -5,16 +5,11 @@ import { SlidersHorizontal } from 'lucide-react'
 
 const ROOM_TYPES = [
   { value: '', label: 'All Types' },
-  { value: 'small_cottage', label: 'Small Cottage' },
-  { value: 'dos_andanas_down', label: 'Dos Andanas Down' },
-  { value: 'dos_andanas_up', label: 'Dos Andanas Up' },
-  { value: 'large_cottage', label: 'Large Cottage' },
-  { value: 'dos_andanas_room_sm', label: 'Dos Andanas Room (S)' },
-  { value: 'dos_andanas_room_lg', label: 'Dos Andanas Room (L)' },
+  { value: 'cottage', label: 'Cottage' },
+  { value: 'dos_andanas', label: 'Dos Andanas' },
   { value: 'lavender_house', label: 'Lavender House' },
   { value: 'ac_karaoke', label: 'Karaoke Room' },
-  { value: 'kubo_with_toilet', label: 'Kubo w/ Toilet' },
-  { value: 'kubo_without_toilet', label: 'Kubo w/o Toilet' },
+  { value: 'kubo', label: 'Kubo' },
   { value: 'function_hall', label: 'Function Hall' },
   { value: 'trapal_table', label: 'Trapal Table' },
 ]

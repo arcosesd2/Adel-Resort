@@ -5,16 +5,11 @@ import { Users, Maximize } from 'lucide-react'
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80'
 
 const typeColors = {
-  small_cottage: 'bg-blue-100 text-blue-700',
-  dos_andanas_down: 'bg-sky-100 text-sky-700',
-  dos_andanas_up: 'bg-cyan-100 text-cyan-700',
-  large_cottage: 'bg-teal-100 text-teal-700',
-  dos_andanas_room_sm: 'bg-purple-100 text-purple-700',
-  dos_andanas_room_lg: 'bg-violet-100 text-violet-700',
+  cottage: 'bg-blue-100 text-blue-700',
+  dos_andanas: 'bg-purple-100 text-purple-700',
   lavender_house: 'bg-fuchsia-100 text-fuchsia-700',
   ac_karaoke: 'bg-pink-100 text-pink-700',
-  kubo_with_toilet: 'bg-amber-100 text-amber-700',
-  kubo_without_toilet: 'bg-orange-100 text-orange-700',
+  kubo: 'bg-amber-100 text-amber-700',
   function_hall: 'bg-emerald-100 text-emerald-700',
   trapal_table: 'bg-lime-100 text-lime-700',
 }

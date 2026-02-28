@@ -13,33 +13,23 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const ROOM_TYPES = [
-  { value: 'small_cottage', label: 'Small Cottage' },
-  { value: 'dos_andanas_down', label: 'Dos Andanas Down' },
-  { value: 'dos_andanas_up', label: 'Dos Andanas Up' },
-  { value: 'large_cottage', label: 'Large Cottage' },
-  { value: 'dos_andanas_room_sm', label: 'Dos Andanas Room (S)' },
-  { value: 'dos_andanas_room_lg', label: 'Dos Andanas Room (L)' },
+  { value: 'cottage', label: 'Cottage' },
+  { value: 'dos_andanas', label: 'Dos Andanas' },
   { value: 'lavender_house', label: 'Lavender House' },
   { value: 'ac_karaoke', label: 'Karaoke Room' },
-  { value: 'kubo_with_toilet', label: 'Kubo w/ Toilet' },
-  { value: 'kubo_without_toilet', label: 'Kubo w/o Toilet' },
+  { value: 'kubo', label: 'Kubo' },
   { value: 'function_hall', label: 'Function Hall' },
   { value: 'trapal_table', label: 'Trapal Table' },
 ]
 
 const TYPE_COLORS = {
-  small_cottage:        { bg: '#dbeafe', bar: '#3b82f6', text: '#1e40af' },
-  dos_andanas_down:     { bg: '#ede9fe', bar: '#8b5cf6', text: '#5b21b6' },
-  dos_andanas_up:       { bg: '#e0f2fe', bar: '#0ea5e9', text: '#0369a1' },
-  large_cottage:        { bg: '#fef3c7', bar: '#f59e0b', text: '#92400e' },
-  dos_andanas_room_sm:  { bg: '#ffedd5', bar: '#f97316', text: '#9a3412' },
-  dos_andanas_room_lg:  { bg: '#f3e8ff', bar: '#a855f7', text: '#7e22ce' },
-  lavender_house:       { bg: '#fce7f3', bar: '#ec4899', text: '#9d174d' },
-  ac_karaoke:           { bg: '#d1fae5', bar: '#10b981', text: '#065f46' },
-  kubo_with_toilet:     { bg: '#ccfbf1', bar: '#14b8a6', text: '#115e59' },
-  kubo_without_toilet:  { bg: '#fee2e2', bar: '#ef4444', text: '#991b1b' },
-  function_hall:        { bg: '#e0e7ff', bar: '#6366f1', text: '#3730a3' },
-  trapal_table:         { bg: '#fef9c3', bar: '#eab308', text: '#854d0e' },
+  cottage:         { bg: '#dbeafe', bar: '#3b82f6', text: '#1e40af' },
+  dos_andanas:     { bg: '#ede9fe', bar: '#8b5cf6', text: '#5b21b6' },
+  lavender_house:  { bg: '#fce7f3', bar: '#ec4899', text: '#9d174d' },
+  ac_karaoke:      { bg: '#d1fae5', bar: '#10b981', text: '#065f46' },
+  kubo:            { bg: '#ccfbf1', bar: '#14b8a6', text: '#115e59' },
+  function_hall:   { bg: '#e0e7ff', bar: '#6366f1', text: '#3730a3' },
+  trapal_table:    { bg: '#fef9c3', bar: '#eab308', text: '#854d0e' },
 }
 
 const DEFAULT_COLOR = { bg: '#f3f4f6', bar: '#6b7280', text: '#374151' }

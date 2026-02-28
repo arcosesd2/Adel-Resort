@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "name": "Small Cottage",
-      "room_type": "small_cottage",
+      "room_type": "cottage",
       "description": "A cozy open-air cottage perfect for small groups and day outings. Comes with lights, outlets, and trapal coverings for shade and rain protection.",
       "day_price": "500.00",
       "night_price": "600.00",
@@ -22,7 +22,7 @@
     "pk": 2,
     "fields": {
       "name": "Dos Andanas Cottage Down",
-      "room_type": "dos_andanas_down",
+      "room_type": "dos_andanas",
       "description": "Ground-level two-story cottage ideal for gatherings. Features a spacious covered area with lights, outlets, and trapal coverings.",
       "day_price": "800.00",
       "night_price": "1000.00",
@@ -40,7 +40,7 @@
     "pk": 3,
     "fields": {
       "name": "Dos Andanas Cottage Up",
-      "room_type": "dos_andanas_up",
+      "room_type": "dos_andanas",
       "description": "Upper-level two-story cottage offering elevated views and a refreshing breeze. Includes lights, outlets, and trapal coverings.",
       "day_price": "1000.00",
       "night_price": "1200.00",
@@ -58,7 +58,7 @@
     "pk": 4,
     "fields": {
       "name": "Large Cottage",
-      "room_type": "large_cottage",
+      "room_type": "cottage",
       "description": "Spacious cottage that accommodates up to 20 persons — great for family reunions and bigger groups. Comes with lights, outlets, and trapal coverings.",
       "day_price": "1000.00",
       "night_price": "1200.00",
@@ -76,7 +76,7 @@
     "pk": 5,
     "fields": {
       "name": "Dos Andanas Room w/ Cottage (Small)",
-      "room_type": "dos_andanas_room_sm",
+      "room_type": "dos_andanas",
       "description": "A private room paired with a cottage area. The room includes a queen-sized foam mattress and wall fan for a comfortable overnight stay.",
       "day_price": "1500.00",
       "night_price": "1500.00",
@@ -94,7 +94,7 @@
     "pk": 6,
     "fields": {
       "name": "Dos Andanas Room w/ Cottage (Large)",
-      "room_type": "dos_andanas_room_lg",
+      "room_type": "dos_andanas",
       "description": "A larger private room with cottage area. Equipped with a queen-sized foam mattress and wall fan — perfect for groups wanting both indoor and outdoor space.",
       "day_price": "1800.00",
       "night_price": "1800.00",
@@ -148,7 +148,7 @@
     "pk": 9,
     "fields": {
       "name": "Kubo Room & Cottage w/ Toilet",
-      "room_type": "kubo_with_toilet",
+      "room_type": "kubo",
       "description": "A traditional kubo-style room with an attached cottage and private toilet & bath. Includes a queen-sized foam, single elevated bed, wall fan, and electrical outlets.",
       "day_price": "2000.00",
       "night_price": "2000.00",
@@ -166,7 +166,7 @@
     "pk": 10,
     "fields": {
       "name": "Kubo Room & Cottage w/o Toilet",
-      "room_type": "kubo_without_toilet",
+      "room_type": "kubo",
       "description": "A traditional kubo-style room with an attached cottage. Includes a queen-sized foam, single elevated bed, wall fan, and electrical outlets. Uses shared toilet & bath facilities.",
       "day_price": "1500.00",
       "night_price": "1500.00",
