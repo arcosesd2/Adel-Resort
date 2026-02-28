@@ -14,9 +14,9 @@ const ROOM_TYPES = [
   { value: 'trapal_table', label: 'Trapal Table' },
 ]
 
-export default function RoomFilters({ onFilter }) {
+export default function RoomFilters({ onFilter, initialFilters = {} }) {
   const [filters, setFilters] = useState({
-    room_type: '',
+    room_type: initialFilters.room_type || '',
     min_capacity: '',
     min_price: '',
     max_price: '',

@@ -19,6 +19,7 @@
     "react-datepicker": "^7.3.0",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "swiper": "^12.1.2",
     "tailwind-merge": "^2.4.0",
     "zustand": "^4.5.4"
   },

@@ -32,6 +32,9 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/rooms', label: 'Rooms' },
+    { href: '/pricing', label: 'Pricing' },
+    { href: '/events', label: 'Events' },
+    { href: '/promotions', label: 'Promos' },
     { href: '/availability', label: 'Availability' },
   ]
 

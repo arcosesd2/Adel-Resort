@@ -44,11 +44,19 @@ export default function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Accommodations</h3>
             <ul className="space-y-2 text-ocean-200 text-sm">
-              <li>Cottages</li>
-              <li>Kubo Rooms</li>
-              <li>Lavender House</li>
-              <li>Karaoke Room</li>
-              <li>Function Hall</li>
+              {[
+                { href: '/rooms?room_type=cottage', label: 'Cottages' },
+                { href: '/rooms?room_type=kubo', label: 'Kubo Rooms' },
+                { href: '/rooms?room_type=lavender_house', label: 'Lavender House' },
+                { href: '/rooms?room_type=ac_karaoke', label: 'Karaoke Room' },
+                { href: '/rooms?room_type=function_hall', label: 'Function Hall' },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="hover:text-white transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

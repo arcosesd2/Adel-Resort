@@ -28,6 +28,31 @@ body {
   background-color: #dc2626 !important;
 }
 
+/* Swiper gallery overrides */
+.room-gallery-swiper .swiper-button-next,
+.room-gallery-swiper .swiper-button-prev {
+  color: white;
+  background: rgba(0, 0, 0, 0.35);
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+}
+
+.room-gallery-swiper .swiper-button-next::after,
+.room-gallery-swiper .swiper-button-prev::after {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.room-gallery-swiper .swiper-pagination-bullet {
+  background: white;
+  opacity: 0.6;
+}
+
+.room-gallery-swiper .swiper-pagination-bullet-active {
+  opacity: 1;
+}
+
 @layer components {
   .btn-primary {
     @apply bg-ocean-600 hover:bg-ocean-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200;

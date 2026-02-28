@@ -1,0 +1,146 @@
+[
+  {
+    "model": "content.pricing",
+    "pk": 1,
+    "fields": {
+      "room_type": "cottage",
+      "label": "Small Cottage",
+      "day_price": "500.00",
+      "night_price": "600.00",
+      "notes": "",
+      "order": 1
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 2,
+    "fields": {
+      "room_type": "dos_andanas",
+      "label": "Dos Andanas Cottage Down",
+      "day_price": "800.00",
+      "night_price": "1000.00",
+      "notes": "",
+      "order": 2
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 3,
+    "fields": {
+      "room_type": "dos_andanas",
+      "label": "Dos Andanas Cottage Up",
+      "day_price": "1000.00",
+      "night_price": "1200.00",
+      "notes": "",
+      "order": 3
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 4,
+    "fields": {
+      "room_type": "cottage",
+      "label": "Large Cottage",
+      "day_price": "1000.00",
+      "night_price": "1200.00",
+      "notes": "",
+      "order": 4
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 5,
+    "fields": {
+      "room_type": "dos_andanas",
+      "label": "Dos Andanas Room w/ Cottage (Small)",
+      "day_price": "1500.00",
+      "night_price": "1500.00",
+      "notes": "",
+      "order": 5
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 6,
+    "fields": {
+      "room_type": "dos_andanas",
+      "label": "Dos Andanas Room w/ Cottage (Large)",
+      "day_price": "1800.00",
+      "night_price": "1800.00",
+      "notes": "",
+      "order": 6
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 7,
+    "fields": {
+      "room_type": "lavender_house",
+      "label": "Lavender House",
+      "day_price": "3500.00",
+      "night_price": "3500.00",
+      "notes": "",
+      "order": 7
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 8,
+    "fields": {
+      "room_type": "ac_karaoke",
+      "label": "Air-Conditioned Karaoke Room",
+      "day_price": "2500.00",
+      "night_price": "2500.00",
+      "notes": "",
+      "order": 8
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 9,
+    "fields": {
+      "room_type": "kubo",
+      "label": "Kubo Room & Cottage w/ Toilet",
+      "day_price": "2000.00",
+      "night_price": "2000.00",
+      "notes": "",
+      "order": 9
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 10,
+    "fields": {
+      "room_type": "kubo",
+      "label": "Kubo Room & Cottage w/o Toilet",
+      "day_price": "1500.00",
+      "night_price": "1500.00",
+      "notes": "",
+      "order": 10
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 11,
+    "fields": {
+      "room_type": "function_hall",
+      "label": "Function Hall",
+      "day_price": "5000.00",
+      "night_price": "5000.00",
+      "notes": "+500 to avail sound system",
+      "order": 11
+    }
+  },
+  {
+    "model": "content.pricing",
+    "pk": 12,
+    "fields": {
+      "room_type": "trapal_table",
+      "label": "Trapal Table",
+      "day_price": "300.00",
+      "night_price": null,
+      "notes": "Day only",
+      "order": 12
+    }
+  }
+]

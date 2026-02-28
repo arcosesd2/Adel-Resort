@@ -1,10 +1,8 @@
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { Users, Maximize, Check } from 'lucide-react'
 import BookingForm from '@/components/BookingForm'
+import RoomGallery from '@/components/RoomGallery'
 import api from '@/lib/api'
-
-const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80'
 
 async function getRoom(id) {
   try {
@@ -38,22 +36,12 @@ export default async function RoomDetailPage({ params }) {
   const room = await getRoom(params.id)
   if (!room) notFound()
 
-  const primaryImage = room.primary_image || PLACEHOLDER
-  const otherImages = room.images?.filter(img => !img.is_primary).slice(0, 4) || []
-
   return (
     <div className="min-h-screen pt-20 pb-16">
-      {/* Hero Image */}
-      <div className="relative h-96 md:h-[500px] w-full">
-        <Image
-          src={primaryImage}
-          alt={room.name}
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-6 left-6 text-white">
+      {/* Image Gallery with Swipe & Zoom */}
+      <div className="relative">
+        <RoomGallery images={room.images || []} roomName={room.name} />
+        <div className="absolute bottom-6 left-6 text-white z-20 pointer-events-none">
           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${typeColors[room.room_type] || 'bg-gray-100 text-gray-700'}`}>
             {room.room_type_display}
           </span>
@@ -96,25 +84,6 @@ export default async function RoomDetailPage({ params }) {
                         <Check size={12} className="text-ocean-600" />
                       </div>
                       <span className="text-sm">{amenity}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Gallery */}
-            {otherImages.length > 0 && (
-              <div>
-                <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">Gallery</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {otherImages.map((img) => (
-                    <div key={img.id} className="relative h-48 rounded-xl overflow-hidden">
-                      <Image
-                        src={img.image}
-                        alt={img.alt_text || room.name}
-                        fill
-                        className="object-cover hover:scale-105 transition-transform duration-300"
-                      />
                     </div>
                   ))}
                 </div>
