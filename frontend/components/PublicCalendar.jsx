@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { parseISO, addDays } from 'date-fns'
 import api from '@/lib/api'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+
+const DAY_COL_WIDTH = 70 // px per day column
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
@@ -56,6 +58,7 @@ export default function PublicCalendar() {
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -71,6 +74,23 @@ export default function PublicCalendar() {
     fetchAll()
   }, [])
 
+  // Auto-scroll to today when month changes or data loads
+  useEffect(() => {
+    if (loading || !scrollRef.current) return
+    const isCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth()
+    if (isCurrentMonth) {
+      const todayIndex = today.getDate() - 1
+      scrollRef.current.scrollLeft = Math.max(0, todayIndex * DAY_COL_WIDTH - DAY_COL_WIDTH)
+    } else {
+      scrollRef.current.scrollLeft = 0
+    }
+  }, [loading, viewYear, viewMonth])
+
+  const scrollByDays = useCallback((days) => {
+    if (!scrollRef.current) return
+    scrollRef.current.scrollBy({ left: days * DAY_COL_WIDTH, behavior: 'smooth' })
+  }, [])
+
   const prevMonth = () => {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1) }
     else setViewMonth(m => m - 1)
@@ -82,6 +102,7 @@ export default function PublicCalendar() {
   }
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const gridTotalWidth = daysInMonth * DAY_COL_WIDTH
 
   const daysArray = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, i) => {
@@ -198,110 +219,142 @@ export default function PublicCalendar() {
         })}
       </div>
 
-      {/* Timeline */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-        <div className="min-w-[700px]">
+      {/* Week scroll buttons */}
+      <div className="flex items-center justify-between mb-2">
+        <button
+          onClick={() => scrollByDays(-7)}
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <ChevronLeft size={16} /> Previous 7 days
+        </button>
+        <span className="text-xs text-gray-400">Swipe or scroll to browse</span>
+        <button
+          onClick={() => scrollByDays(7)}
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          Next 7 days <ChevronRight size={16} />
+        </button>
+      </div>
 
-          {/* Header row */}
-          <div className="flex border-b border-gray-200">
-            <div className="w-[180px] min-w-[180px] bg-gray-100 border-r border-gray-200 px-3 py-2 font-semibold text-sm text-gray-700 sticky left-0 z-20">
+      {/* Timeline */}
+      <div className="rounded-xl border border-gray-200 bg-white">
+        <div className="flex">
+          {/* Sticky room name column */}
+          <div className="w-[140px] min-w-[140px] flex-shrink-0 z-20">
+            {/* Header cell */}
+            <div className="bg-gray-100 border-r border-b border-gray-200 px-3 py-2 font-semibold text-sm text-gray-700" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
               Room
             </div>
-            <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))` }}>
-              {daysArray.map(d => (
+            {/* Group headers + room name cells */}
+            {groupedRooms.map(group => (
+              <div key={group.type}>
                 <div
-                  key={d.day}
-                  className={`py-1.5 text-center text-xs leading-tight border-r border-gray-100 last:border-r-0 ${
-                    d.isToday
-                      ? 'bg-ocean-100 font-bold text-ocean-700'
-                      : d.isWeekend
-                        ? 'bg-gray-100 text-gray-500'
-                        : 'bg-gray-50 text-gray-500'
-                  }`}
+                  className="flex items-center gap-2 px-3 py-1.5 font-semibold text-sm border-b border-r border-gray-200"
+                  style={{ backgroundColor: group.color.bg, color: group.color.text }}
                 >
-                  <div className="font-medium">{d.abbr}</div>
-                  <div>{d.day}</div>
+                  <span
+                    className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0"
+                    style={{ backgroundColor: group.color.bar }}
+                  />
+                  <span className="truncate">{group.label}</span>
+                </div>
+                {group.rooms.map(room => (
+                  <div
+                    key={room.room_id}
+                    className="bg-white border-r border-b border-gray-100 px-3 py-2.5 text-sm text-gray-700 truncate"
+                    title={room.room_name}
+                    style={{ minHeight: '40px' }}
+                  >
+                    {room.room_name}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Scrollable days area */}
+          <div className="flex-1 overflow-x-auto" ref={scrollRef}>
+            <div style={{ width: `${gridTotalWidth}px` }}>
+              {/* Header row */}
+              <div className="flex border-b border-gray-200" style={{ height: '52px' }}>
+                {daysArray.map(d => (
+                  <div
+                    key={d.day}
+                    className={`py-1.5 text-center text-xs leading-tight border-r border-gray-100 last:border-r-0 flex flex-col justify-center ${
+                      d.isToday
+                        ? 'bg-ocean-100 font-bold text-ocean-700'
+                        : d.isWeekend
+                          ? 'bg-gray-100 text-gray-500'
+                          : 'bg-gray-50 text-gray-500'
+                    }`}
+                    style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px` }}
+                  >
+                    <div className="font-medium">{d.abbr}</div>
+                    <div>{d.day}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Room groups */}
+              {groupedRooms.map(group => (
+                <div key={group.type}>
+                  {/* Group header spacer (matches sticky side) */}
+                  <div
+                    className="border-b border-gray-200 px-3 py-1.5 text-sm"
+                    style={{ backgroundColor: group.color.bg, height: '33px' }}
+                  />
+
+                  {/* Room rows */}
+                  {group.rooms.map(room => {
+                    const bars = computeBars(room)
+                    const color = getTypeColor(room.room_type)
+                    return (
+                      <div key={room.room_id} className="relative border-b border-gray-100" style={{ minHeight: '40px' }}>
+                        {/* Day cell backgrounds */}
+                        <div className="flex h-full">
+                          {daysArray.map(d => (
+                            <div
+                              key={d.day}
+                              className={`border-r border-gray-50 last:border-r-0 ${
+                                d.isToday
+                                  ? 'bg-ocean-50'
+                                  : d.isWeekend
+                                    ? 'bg-gray-50/70'
+                                    : ''
+                              }`}
+                              style={{
+                                width: `${DAY_COL_WIDTH}px`,
+                                minWidth: `${DAY_COL_WIDTH}px`,
+                                minHeight: '40px',
+                                ...(d.isToday ? { boxShadow: 'inset 0 0 0 1px rgba(14,165,233,0.25)' } : {}),
+                              }}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Booking bar overlays */}
+                        {bars.map(bar => (
+                          <div
+                            key={bar.key}
+                            className="absolute top-1/2 -translate-y-1/2 h-[20px]"
+                            style={{
+                              left: `${bar.leftPct}%`,
+                              width: `${bar.widthPct}%`,
+                              minWidth: '8px',
+                              backgroundColor: color.bar,
+                              opacity: 0.85,
+                              borderRadius: `${bar.continuesBefore ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesBefore ? '0' : '4px'}`,
+                            }}
+                            title={`${room.room_name} — Booked`}
+                          />
+                        ))}
+                      </div>
+                    )
+                  })}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Room groups */}
-          {groupedRooms.map(group => (
-            <div key={group.type}>
-              {/* Group header */}
-              <div
-                className="flex items-center gap-2 px-3 py-1.5 font-semibold text-sm border-b border-gray-200"
-                style={{ backgroundColor: group.color.bg, color: group.color.text }}
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0"
-                  style={{ backgroundColor: group.color.bar }}
-                />
-                {group.label}
-              </div>
-
-              {/* Room rows */}
-              {group.rooms.map(room => {
-                const bars = computeBars(room)
-                const color = getTypeColor(room.room_type)
-                return (
-                  <div key={room.room_id} className="flex border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                    {/* Room name — sticky */}
-                    <div
-                      className="w-[180px] min-w-[180px] bg-white border-r border-gray-200 px-3 py-2.5 text-sm text-gray-700 truncate sticky left-0 z-10"
-                      title={room.room_name}
-                    >
-                      {room.room_name}
-                    </div>
-
-                    {/* Days area with booking bars */}
-                    <div className="flex-1 relative">
-                      {/* Day cell backgrounds */}
-                      <div
-                        className="grid h-full"
-                        style={{ gridTemplateColumns: `repeat(${daysInMonth}, minmax(0, 1fr))` }}
-                      >
-                        {daysArray.map(d => (
-                          <div
-                            key={d.day}
-                            className={`border-r border-gray-50 last:border-r-0 ${
-                              d.isToday
-                                ? 'bg-ocean-50'
-                                : d.isWeekend
-                                  ? 'bg-gray-50/70'
-                                  : ''
-                            }`}
-                            style={{
-                              minHeight: '36px',
-                              ...(d.isToday ? { boxShadow: 'inset 0 0 0 1px rgba(14,165,233,0.25)' } : {}),
-                            }}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Booking bar overlays */}
-                      {bars.map(bar => (
-                        <div
-                          key={bar.key}
-                          className="absolute top-1/2 -translate-y-1/2 h-[20px] transition-opacity"
-                          style={{
-                            left: `${bar.leftPct}%`,
-                            width: `${bar.widthPct}%`,
-                            minWidth: '8px',
-                            backgroundColor: color.bar,
-                            opacity: 0.85,
-                            borderRadius: `${bar.continuesBefore ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesBefore ? '0' : '4px'}`,
-                          }}
-                          title={`${room.room_name} — Booked`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ))}
         </div>
       </div>
 
