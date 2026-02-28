@@ -164,7 +164,8 @@ export default function PublicCalendar() {
         widthPct,
         continuesBefore,
         continuesAfter,
-        key: `${range.check_in}-${range.check_out}`,
+        tourType: range.tour_type || 'day',
+        key: `${range.check_in}-${range.check_out}-${range.tour_type}`,
       })
     }
     return bars
@@ -207,6 +208,16 @@ export default function PublicCalendar() {
             </div>
           )
         })}
+        <div className="border-l border-gray-300 pl-3 flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-sm">
+            <span className="w-8 h-3 rounded-sm inline-block bg-ocean-500 text-[7px] text-white font-bold flex items-center justify-center">DAY</span>
+            <span className="text-gray-600">Day Tour</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-sm">
+            <span className="w-8 h-3 rounded-sm inline-block bg-slate-800 text-[7px] text-white font-bold flex items-center justify-center">NGT</span>
+            <span className="text-gray-600">Night Tour</span>
+          </div>
+        </div>
       </div>
 
       {/* Week scroll buttons */}
@@ -323,21 +334,28 @@ export default function PublicCalendar() {
                         </div>
 
                         {/* Booking bar overlays */}
-                        {bars.map(bar => (
-                          <div
-                            key={bar.key}
-                            className="absolute top-1/2 -translate-y-1/2 h-[20px]"
-                            style={{
-                              left: `${bar.leftPct}%`,
-                              width: `${bar.widthPct}%`,
-                              minWidth: '8px',
-                              backgroundColor: color.bar,
-                              opacity: 0.85,
-                              borderRadius: `${bar.continuesBefore ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesBefore ? '0' : '4px'}`,
-                            }}
-                            title={`${room.room_name} — Booked`}
-                          />
-                        ))}
+                        {bars.map(bar => {
+                          const isNight = bar.tourType === 'night'
+                          return (
+                            <div
+                              key={bar.key}
+                              className="absolute top-1/2 -translate-y-1/2 h-[22px] flex items-center justify-center overflow-hidden"
+                              style={{
+                                left: `${bar.leftPct}%`,
+                                width: `${bar.widthPct}%`,
+                                minWidth: '8px',
+                                backgroundColor: isNight ? '#1e293b' : color.bar,
+                                opacity: 0.85,
+                                borderRadius: `${bar.continuesBefore ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesBefore ? '0' : '4px'}`,
+                              }}
+                              title={`${room.room_name} — ${isNight ? 'Night Tour (5PM–8AM)' : 'Day Tour (8AM–5PM)'}`}
+                            >
+                              <span className="text-[9px] font-bold text-white tracking-wide uppercase truncate px-1">
+                                {isNight ? 'Night' : 'Day'}
+                              </span>
+                            </div>
+                          )
+                        })}
                       </div>
                     )
                   })}

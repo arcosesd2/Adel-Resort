@@ -36,10 +36,10 @@ def room_availability(request, pk):
     bookings = Booking.objects.filter(
         room=room,
         status__in=['confirmed', 'pending']
-    ).values('check_in', 'check_out')
+    ).values('check_in', 'check_out', 'tour_type')
 
     booked_ranges = [
-        {'check_in': str(b['check_in']), 'check_out': str(b['check_out'])}
+        {'check_in': str(b['check_in']), 'check_out': str(b['check_out']), 'tour_type': b['tour_type']}
         for b in bookings
     ]
 
@@ -59,7 +59,7 @@ def all_rooms_availability(request):
         bookings = Booking.objects.filter(
             room=room,
             status__in=['confirmed', 'pending']
-        ).values('check_in', 'check_out')
+        ).values('check_in', 'check_out', 'tour_type')
 
         result.append({
             'room_id': room.id,
@@ -69,7 +69,7 @@ def all_rooms_availability(request):
             'night_price': str(room.night_price) if room.night_price else None,
             'is_day_only': room.is_day_only,
             'booked_ranges': [
-                {'check_in': str(b['check_in']), 'check_out': str(b['check_out'])}
+                {'check_in': str(b['check_in']), 'check_out': str(b['check_out']), 'tour_type': b['tour_type']}
                 for b in bookings
             ],
         })
