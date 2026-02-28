@@ -19,6 +19,7 @@ const statusConfig = {
 function BookingCard({ booking, onCancel }) {
   const cfg = statusConfig[booking.status] || statusConfig.pending
   const Icon = cfg.icon
+  const awaitingConfirmation = booking.status === 'pending' && booking.payment_submitted
 
   return (
     <div className="card p-5">
@@ -27,10 +28,17 @@ function BookingCard({ booking, onCancel }) {
           <h3 className="font-semibold text-lg text-gray-900">{booking.room_detail?.name}</h3>
           <p className="text-gray-500 text-sm capitalize">{booking.room_detail?.room_type_display}</p>
         </div>
-        <span className={`flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full ${cfg.color}`}>
-          <Icon size={12} />
-          {cfg.label}
-        </span>
+        {awaitingConfirmation ? (
+          <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+            <Clock size={12} />
+            Awaiting Confirmation
+          </span>
+        ) : (
+          <span className={`flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full ${cfg.color}`}>
+            <Icon size={12} />
+            {cfg.label}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4 text-sm text-gray-600">
@@ -52,12 +60,12 @@ function BookingCard({ booking, onCancel }) {
 
       <div className="flex items-center justify-between border-t pt-3">
         <div>
-          <span className="text-xl font-bold text-ocean-700">${booking.total_price}</span>
-          <span className="text-gray-400 text-sm"> · {booking.nights} night{booking.nights !== 1 ? 's' : ''}</span>
+          <span className="text-xl font-bold text-ocean-700">₱{booking.total_price}</span>
+          <span className="text-gray-400 text-sm"> · {booking.tour_type === 'night' ? 'Night Tour' : 'Day Tour'}</span>
         </div>
 
         <div className="flex gap-2">
-          {booking.status === 'pending' && (
+          {booking.status === 'pending' && !booking.payment_submitted && (
             <Link
               href={`/checkout?booking=${booking.id}`}
               className="btn-primary py-1.5 px-4 text-sm"
@@ -65,7 +73,7 @@ function BookingCard({ booking, onCancel }) {
               Pay Now
             </Link>
           )}
-          {(booking.status === 'pending') && (
+          {booking.status === 'pending' && (
             <button
               onClick={() => onCancel(booking.id)}
               className="py-1.5 px-4 text-sm border border-red-300 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

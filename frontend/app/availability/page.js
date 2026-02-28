@@ -10,13 +10,13 @@ export const metadata = {
 export default function AvailabilityPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Room Availability
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            View real-time availability for all our rooms. Colored indicators show booked dates per room type.
+            View real-time availability across all rooms. Each row shows a room with booking bars spanning their reserved dates.
           </p>
         </div>
 

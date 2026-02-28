@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X, Waves } from 'lucide-react'
+import Image from 'next/image'
+import { Menu, X } from 'lucide-react'
 import useAuthStore from '@/store/authStore'
 import toast from 'react-hot-toast'
 
@@ -47,7 +48,7 @@ export default function Navbar() {
           <Link href="/" className={`flex items-center gap-2 font-serif font-bold text-xl ${
             transparent ? 'text-white' : 'text-ocean-700'
           }`}>
-            <Waves className="w-6 h-6" />
+            <Image src="/logo.jpeg" alt="Adel Beach Resort" width={36} height={36} className="rounded-full" />
             Adel Beach Resort
           </Link>
 

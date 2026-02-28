@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer } from 'lucide-react'
+import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, Clock } from 'lucide-react'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
@@ -69,6 +69,16 @@ export default function BookingDetailPage() {
           </div>
         )}
 
+        {booking.status === 'pending' && booking.payment_submitted && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
+            <Clock className="text-blue-500 flex-shrink-0" size={28} />
+            <div>
+              <h2 className="font-semibold text-blue-800">Payment Proof Submitted</h2>
+              <p className="text-blue-600 text-sm">Your payment is being reviewed. We&apos;ll confirm your booking shortly.</p>
+            </div>
+          </div>
+        )}
+
         <div className="card p-6 md:p-8">
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -109,13 +119,13 @@ export default function BookingDetailPage() {
               <div className="flex items-center gap-2">
                 <Users size={16} className="text-ocean-500" />
                 <div>
-                  <div className="text-gray-400">Guests</div>
+                  <div className="text-gray-400">Persons</div>
                   <div className="font-medium text-gray-800">{booking.guests}</div>
                 </div>
               </div>
               <div>
-                <div className="text-gray-400">Duration</div>
-                <div className="font-medium text-gray-800">{booking.nights} night{booking.nights !== 1 ? 's' : ''}</div>
+                <div className="text-gray-400">Tour Type</div>
+                <div className="font-medium text-gray-800">{booking.tour_type === 'night' ? 'Night Tour' : 'Day Tour'}</div>
               </div>
             </div>
           </div>
@@ -130,12 +140,12 @@ export default function BookingDetailPage() {
           <div className="border-t pt-5">
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Total Amount</span>
-              <span className="text-2xl font-bold text-ocean-700">${booking.total_price}</span>
+              <span className="text-2xl font-bold text-ocean-700">₱{booking.total_price}</span>
             </div>
           </div>
 
           <div className="flex gap-3 mt-6">
-            {booking.status === 'pending' && (
+            {booking.status === 'pending' && !booking.payment_submitted && (
               <Link href={`/checkout?booking=${booking.id}`} className="btn-primary flex-1 text-center">
                 Complete Payment
               </Link>

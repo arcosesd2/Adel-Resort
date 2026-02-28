@@ -8,9 +8,9 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
 
 export const metadata = {
-  title: 'Adel Beach Resort | Luxury Beach Hotel',
-  description: 'Experience paradise at Adel Beach Resort. Book your dream beachfront stay with stunning ocean views, world-class amenities, and unforgettable experiences.',
-  keywords: 'beach resort, hotel, luxury, ocean view, beach vacation, Adel Beach Resort',
+  title: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
+  description: 'Book cottages, rooms, and event spaces at Adel Beach Resort in Lawigan, Surigao Del Sur. Day tours and overnight stays available.',
+  keywords: 'Adel Beach Resort, Lawigan, Surigao Del Sur, beach resort, cottages, kubo, function hall, day tour, night tour',
 }
 
 export default function RootLayout({ children }) {

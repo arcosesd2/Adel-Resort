@@ -65,7 +65,9 @@ def all_rooms_availability(request):
             'room_id': room.id,
             'room_name': room.name,
             'room_type': room.room_type,
-            'price_per_night': str(room.price_per_night),
+            'day_price': str(room.day_price),
+            'night_price': str(room.night_price) if room.night_price else None,
+            'is_day_only': room.is_day_only,
             'booked_ranges': [
                 {'check_in': str(b['check_in']), 'check_out': str(b['check_out'])}
                 for b in bookings

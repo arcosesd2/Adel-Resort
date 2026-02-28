@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Star, Waves, Shield, Clock } from 'lucide-react'
+import { ArrowRight, Trophy, TreePalm, Music, CarFront } from 'lucide-react'
 import api from '@/lib/api'
 import RoomCard from '@/components/RoomCard'
 
@@ -14,10 +14,10 @@ async function getFeaturedRooms() {
 }
 
 const features = [
-  { icon: Waves, title: 'Beachfront Location', desc: 'Directly on the pristine shores with stunning ocean views' },
-  { icon: Star, title: 'Luxury Amenities', desc: 'World-class facilities including pool, spa, and fine dining' },
-  { icon: Shield, title: 'Best Price Guarantee', desc: 'Book direct and get the best available rate, always' },
-  { icon: Clock, title: '24/7 Concierge', desc: 'Round-the-clock personalized service for every need' },
+  { icon: Trophy, title: 'Multi-purpose Court', desc: 'Volleyball and basketball hard court for active fun with family and friends' },
+  { icon: TreePalm, title: "Children's Playground", desc: 'A safe and fun play area to keep the little ones entertained all day' },
+  { icon: Music, title: 'Karaoke Units', desc: 'Multiple karaoke setups around the resort — sing your heart out!' },
+  { icon: CarFront, title: 'Spacious Parking', desc: 'CCTV-monitored parking area so your vehicle stays safe while you relax' },
 ]
 
 export default async function HomePage() {
@@ -40,17 +40,17 @@ export default async function HomePage() {
 
         <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
           <p className="text-sand-300 font-semibold tracking-widest text-sm uppercase mb-4">
-            Welcome to Paradise
+            Lawigan, Surigao Del Sur
           </p>
           <h1 className="font-serif text-5xl md:text-7xl font-bold mb-6 leading-tight">
             Adel Beach Resort
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Experience the perfect harmony of luxury and nature on the world's most beautiful shores.
+            Escape to the shores of Lawigan — affordable cottages, rooms, and event spaces right by the beach.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/rooms" className="btn-primary px-8 py-4 text-lg flex items-center gap-2 justify-center">
-              Browse Rooms
+              Browse Accommodations
               <ArrowRight size={20} />
             </Link>
             <Link href="/availability" className="btn-outline px-8 py-4 text-lg border-white text-white hover:bg-white hover:text-ocean-700">
@@ -71,9 +71,9 @@ export default async function HomePage() {
       <section className="py-20 bg-ocean-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="font-serif text-4xl font-bold text-gray-900 mb-4">Why Choose Adel Beach?</h2>
+            <h2 className="font-serif text-4xl font-bold text-gray-900 mb-4">Resort Amenities</h2>
             <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-              We combine breathtaking natural beauty with unmatched luxury to create memories that last a lifetime.
+              Everything you need for a fun and relaxing beach getaway with family and friends.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -95,7 +95,7 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="font-serif text-4xl font-bold text-gray-900 mb-4">Featured Accommodations</h2>
-            <p className="text-gray-500 text-lg">From cozy standard rooms to lavish private villas</p>
+            <p className="text-gray-500 text-lg">From budget-friendly cottages to fully furnished rooms</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rooms.slice(0, 3).map((room) => (
@@ -104,7 +104,7 @@ export default async function HomePage() {
           </div>
           <div className="text-center mt-10">
             <Link href="/rooms" className="btn-outline px-8 py-3 inline-flex items-center gap-2">
-              View All Rooms
+              View All Accommodations
               <ArrowRight size={18} />
             </Link>
           </div>
@@ -124,13 +124,13 @@ export default async function HomePage() {
         </div>
         <div className="relative z-10 text-center text-white max-w-3xl mx-auto px-4">
           <h2 className="font-serif text-4xl md:text-5xl font-bold mb-6">
-            Ready for Your Dream Escape?
+            Plan Your Next Beach Trip
           </h2>
           <p className="text-ocean-200 text-lg mb-8">
-            Book directly and enjoy exclusive perks including free airport transfer and late checkout.
+            Book your day tour or overnight stay at Adel Beach Resort. Cottages, rooms, and event halls available.
           </p>
           <Link href="/rooms" className="btn-secondary px-10 py-4 text-lg">
-            Book Your Stay
+            Book Now
           </Link>
         </div>
       </section>

@@ -1,15 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal } from 'lucide-react'
 
 const ROOM_TYPES = [
   { value: '', label: 'All Types' },
-  { value: 'standard', label: 'Standard' },
-  { value: 'deluxe', label: 'Deluxe' },
-  { value: 'suite', label: 'Suite' },
-  { value: 'villa', label: 'Villa' },
-  { value: 'bungalow', label: 'Bungalow' },
+  { value: 'small_cottage', label: 'Small Cottage' },
+  { value: 'dos_andanas_down', label: 'Dos Andanas Down' },
+  { value: 'dos_andanas_up', label: 'Dos Andanas Up' },
+  { value: 'large_cottage', label: 'Large Cottage' },
+  { value: 'dos_andanas_room_sm', label: 'Dos Andanas Room (S)' },
+  { value: 'dos_andanas_room_lg', label: 'Dos Andanas Room (L)' },
+  { value: 'lavender_house', label: 'Lavender House' },
+  { value: 'ac_karaoke', label: 'Karaoke Room' },
+  { value: 'kubo_with_toilet', label: 'Kubo w/ Toilet' },
+  { value: 'kubo_without_toilet', label: 'Kubo w/o Toilet' },
+  { value: 'function_hall', label: 'Function Hall' },
+  { value: 'trapal_table', label: 'Trapal Table' },
 ]
 
 export default function RoomFilters({ onFilter }) {
@@ -36,11 +43,11 @@ export default function RoomFilters({ onFilter }) {
     <div className="bg-white rounded-2xl shadow-md p-5 mb-6">
       <div className="flex items-center gap-2 mb-4 text-gray-700 font-semibold">
         <SlidersHorizontal size={18} />
-        Filter Rooms
+        Filter Accommodations
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div>
-          <label className="block text-xs text-gray-500 mb-1 font-medium">Room Type</label>
+          <label className="block text-xs text-gray-500 mb-1 font-medium">Type</label>
           <select
             name="room_type"
             value={filters.room_type}
@@ -54,7 +61,7 @@ export default function RoomFilters({ onFilter }) {
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1 font-medium">Min Guests</label>
+          <label className="block text-xs text-gray-500 mb-1 font-medium">Min Persons</label>
           <input
             type="number"
             name="min_capacity"
@@ -67,20 +74,20 @@ export default function RoomFilters({ onFilter }) {
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1 font-medium">Min Price / Night</label>
+          <label className="block text-xs text-gray-500 mb-1 font-medium">Min Price</label>
           <input
             type="number"
             name="min_price"
             value={filters.min_price}
             onChange={handleChange}
             min="0"
-            placeholder="$0"
+            placeholder="₱0"
             className="input-field py-2 text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-500 mb-1 font-medium">Max Price / Night</label>
+          <label className="block text-xs text-gray-500 mb-1 font-medium">Max Price</label>
           <input
             type="number"
             name="max_price"

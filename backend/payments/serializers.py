@@ -5,9 +5,11 @@ from .models import Payment
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ('id', 'booking', 'stripe_payment_id', 'amount', 'currency', 'status', 'created_at')
+        fields = ('id', 'booking', 'gcash_reference', 'amount', 'currency', 'status', 'created_at')
         read_only_fields = fields
 
 
-class CreatePaymentIntentSerializer(serializers.Serializer):
+class SubmitProofSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
+    gcash_reference = serializers.CharField(max_length=200)
+    proof_of_payment = serializers.ImageField()

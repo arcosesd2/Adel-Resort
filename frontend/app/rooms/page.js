@@ -47,7 +47,7 @@ export default function RoomsPage() {
             Rooms & Accommodations
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Choose from our curated selection of beachfront rooms, suites, and private villas.
+            Choose from cottages, kubo rooms, fully furnished houses, karaoke rooms, and more.
           </p>
         </div>
 

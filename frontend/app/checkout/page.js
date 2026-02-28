@@ -4,14 +4,10 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { loadStripe } from '@stripe/stripe-js'
-import { Elements } from '@stripe/react-stripe-js'
 import { ArrowLeft, Shield, CalendarDays } from 'lucide-react'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
-import StripePaymentForm from '@/components/StripePaymentForm'
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
+import GCashPaymentForm from '@/components/GCashPaymentForm'
 
 function CheckoutContent() {
   const router = useRouter()
@@ -92,19 +88,19 @@ function CheckoutContent() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">
-                    ${booking.room_detail?.price_per_night} × {booking.nights} nights
+                    {booking.tour_type === 'night' ? 'Night Tour' : 'Day Tour'}
                   </span>
-                  <span className="font-medium">${booking.total_price}</span>
+                  <span className="font-medium">₱{booking.total_price}</span>
                 </div>
                 <div className="flex justify-between font-bold text-base border-t pt-3">
                   <span>Total</span>
-                  <span className="text-ocean-700">${booking.total_price}</span>
+                  <span className="text-ocean-700">₱{booking.total_price}</span>
                 </div>
               </div>
 
               <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
                 <Shield size={16} className="text-ocean-500 flex-shrink-0" />
-                <span>Your payment is secured and encrypted by Stripe.</span>
+                <span>Your payment will be verified by our team within 24 hours.</span>
               </div>
             </div>
           </div>
@@ -112,13 +108,11 @@ function CheckoutContent() {
           {/* Payment Form */}
           <div className="card p-6">
             <h2 className="font-semibold text-lg mb-4 text-gray-900">Payment Details</h2>
-            <Elements stripe={stripePromise}>
-              <StripePaymentForm
-                bookingId={booking.id}
-                totalAmount={booking.total_price}
-                onSuccess={handlePaymentSuccess}
-              />
-            </Elements>
+            <GCashPaymentForm
+              bookingId={booking.id}
+              totalAmount={booking.total_price}
+              onSuccess={handlePaymentSuccess}
+            />
           </div>
         </div>
       </div>

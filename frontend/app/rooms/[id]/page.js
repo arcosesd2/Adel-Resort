@@ -25,11 +25,18 @@ export async function generateMetadata({ params }) {
 }
 
 const typeColors = {
-  standard: 'bg-blue-100 text-blue-700',
-  deluxe: 'bg-purple-100 text-purple-700',
-  suite: 'bg-amber-100 text-amber-700',
-  villa: 'bg-emerald-100 text-emerald-700',
-  bungalow: 'bg-orange-100 text-orange-700',
+  small_cottage: 'bg-blue-100 text-blue-700',
+  dos_andanas_down: 'bg-sky-100 text-sky-700',
+  dos_andanas_up: 'bg-cyan-100 text-cyan-700',
+  large_cottage: 'bg-teal-100 text-teal-700',
+  dos_andanas_room_sm: 'bg-purple-100 text-purple-700',
+  dos_andanas_room_lg: 'bg-violet-100 text-violet-700',
+  lavender_house: 'bg-fuchsia-100 text-fuchsia-700',
+  ac_karaoke: 'bg-pink-100 text-pink-700',
+  kubo_with_toilet: 'bg-amber-100 text-amber-700',
+  kubo_without_toilet: 'bg-orange-100 text-orange-700',
+  function_hall: 'bg-emerald-100 text-emerald-700',
+  trapal_table: 'bg-lime-100 text-lime-700',
 }
 
 export default async function RoomDetailPage({ params }) {
@@ -67,7 +74,7 @@ export default async function RoomDetailPage({ params }) {
             <div className="flex flex-wrap gap-6 text-gray-600">
               <div className="flex items-center gap-2">
                 <Users className="text-ocean-500" size={20} />
-                <span>Up to <strong>{room.capacity}</strong> guests</span>
+                <span>Up to <strong>{room.capacity}</strong> persons</span>
               </div>
               {room.size_sqm && (
                 <div className="flex items-center gap-2">
