@@ -37,7 +37,7 @@ services:
       - key: FRONTEND_URL
         sync: false  # Set to frontend Render URL
       - key: PYTHON_VERSION
-        value: "3.11.0"
+        value: "3.12.0"
 
   # Next.js Frontend
   - type: web
