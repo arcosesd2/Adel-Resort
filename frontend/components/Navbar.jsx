@@ -11,9 +11,12 @@ import toast from 'react-hot-toast'
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const { isAuthenticated, hydrated, logout } = useAuthStore()
+  const [mounted, setMounted] = useState(false)
+  const { isAuthenticated, logout } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -72,7 +75,7 @@ export default function Navbar() {
 
           {/* Auth buttons */}
           <div className="hidden md:flex items-center gap-3">
-            {!hydrated ? null : isAuthenticated ? (
+            {!mounted ? null : isAuthenticated ? (
               <>
                 <Link
                   href="/dashboard"
@@ -131,7 +134,7 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="border-t pt-3 space-y-2">
-              {!hydrated ? null : isAuthenticated ? (
+              {!mounted ? null : isAuthenticated ? (
                 <>
                   <Link
                     href="/dashboard"

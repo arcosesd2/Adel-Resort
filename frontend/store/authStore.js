@@ -8,7 +8,6 @@ const useAuthStore = create(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      hydrated: false,
       lastActivity: Date.now(),
 
       login: async (email, password) => {
@@ -50,9 +49,6 @@ const useAuthStore = create(
     {
       name: 'auth-store',
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
-      onRehydrateStorage: () => () => {
-        useAuthStore.setState({ hydrated: true })
-      },
     }
   )
 )
