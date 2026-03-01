@@ -8,18 +8,20 @@ const useAuthStore = create(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+      hydrated: false,
+      lastActivity: Date.now(),
 
       login: async (email, password) => {
         const { data } = await api.post('/auth/login/', { email, password })
         setTokens(data.access, data.refresh)
-        set({ user: data.user, isAuthenticated: true })
+        set({ user: data.user, isAuthenticated: true, lastActivity: Date.now() })
         return data
       },
 
       register: async (userData) => {
         const { data } = await api.post('/auth/register/', userData)
         setTokens(data.access, data.refresh)
-        set({ user: data.user, isAuthenticated: true })
+        set({ user: data.user, isAuthenticated: true, lastActivity: Date.now() })
         return data
       },
 
@@ -29,6 +31,7 @@ const useAuthStore = create(
           await api.post('/auth/logout/', { refresh })
         } catch {}
         clearTokens()
+        document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
         set({ user: null, isAuthenticated: false })
       },
 
@@ -41,10 +44,15 @@ const useAuthStore = create(
           set({ user: null, isAuthenticated: false })
         }
       },
+
+      touchActivity: () => set({ lastActivity: Date.now() }),
     }),
     {
       name: 'auth-store',
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => () => {
+        useAuthStore.setState({ hydrated: true })
+      },
     }
   )
 )

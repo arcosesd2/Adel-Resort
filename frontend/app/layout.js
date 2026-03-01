@@ -2,6 +2,7 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import InactivityGuard from '@/components/InactivityGuard'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="font-sans bg-white text-gray-900 min-h-screen flex flex-col">
         <Navbar />
+        <InactivityGuard />
         <main className="flex-1">{children}</main>
         <Footer />
         <Toaster
