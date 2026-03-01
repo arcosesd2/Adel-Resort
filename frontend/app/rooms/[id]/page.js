@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { notFound } from 'next/navigation'
 import { Users, Maximize, Check } from 'lucide-react'
 import BookingForm from '@/components/BookingForm'
