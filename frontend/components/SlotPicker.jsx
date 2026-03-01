@@ -30,6 +30,7 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
   const [bookedSlots, setBookedSlots] = useState([])
   const [checkInDate, setCheckInDate] = useState(null)
   const [checkOutDate, setCheckOutDate] = useState(null)
+  const [toggledOff, setToggledOff] = useState(new Set()) // slots manually deselected within range
   const [loading, setLoading] = useState(true)
 
   const today = new Date()
@@ -60,20 +61,20 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
 
   const isBooked = (dateStr, slot) => bookedSet.has(`${dateStr}:${slot}`)
 
-  // Compute selected slots from check-in/check-out range
+  // Compute selected slots from check-in/check-out range minus toggled-off
   const selectedSlots = useMemo(() => {
     const rangeDates = datesToRange(checkInDate, checkOutDate)
     const slots = []
     for (const dateStr of rangeDates) {
-      if (!isBooked(dateStr, 'day')) {
+      if (!isBooked(dateStr, 'day') && !toggledOff.has(`${dateStr}:day`)) {
         slots.push({ date: dateStr, slot: 'day' })
       }
-      if (!isDayOnly && !isBooked(dateStr, 'night')) {
+      if (!isDayOnly && !isBooked(dateStr, 'night') && !toggledOff.has(`${dateStr}:night`)) {
         slots.push({ date: dateStr, slot: 'night' })
       }
     }
     return slots
-  }, [checkInDate, checkOutDate, bookedSet, isDayOnly])
+  }, [checkInDate, checkOutDate, bookedSet, isDayOnly, toggledOff])
 
   // Notify parent when selection changes
   useEffect(() => {
@@ -84,11 +85,14 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
     return new Set(datesToRange(checkInDate, checkOutDate))
   }, [checkInDate, checkOutDate])
 
+  const isSlotSelected = (dateStr, slot) => selectedSlots.some(s => s.date === dateStr && s.slot === slot)
+
   const handleDateClick = useCallback((dateStr) => {
     if (!checkInDate || checkOutDate) {
       // First click or third click (reset): set new check-in
       setCheckInDate(dateStr)
       setCheckOutDate(null)
+      setToggledOff(new Set())
     } else {
       // Second click
       if (dateStr > checkInDate) {
@@ -98,8 +102,24 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
         setCheckInDate(dateStr)
         setCheckOutDate(null)
       }
+      setToggledOff(new Set())
     }
   }, [checkInDate, checkOutDate])
+
+  const handleSlotToggle = useCallback((dateStr, slot) => {
+    if (isBooked(dateStr, slot)) return
+    if (!rangeDatesSet.has(dateStr)) return
+    const key = `${dateStr}:${slot}`
+    setToggledOff(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+      }
+      return next
+    })
+  }, [rangeDatesSet, bookedSet])
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1) }
@@ -202,7 +222,8 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
             const isCheckIn = dateStr === checkInDate
             const isCheckOut = dateStr === checkOutDate
             const inRange = rangeDatesSet.has(dateStr)
-            const isInSelected = selectedSlots.some(s => s.date === dateStr)
+            const daySelected = isSlotSelected(dateStr, 'day')
+            const nightSelected = isSlotSelected(dateStr, 'night')
 
             // Background styling for date cell
             let cellBg = ''
@@ -241,36 +262,46 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
                   {day}
                 </button>
 
-                {/* D | N slot indicators (read-only) */}
+                {/* D | N slot toggles */}
                 <div className={`flex gap-0.5 ${isDayOnly ? 'justify-center' : ''}`}>
                   {/* Day slot */}
-                  <div
-                    title={dayBooked ? 'Booked' : isInSelected ? 'Selected' : 'Day (8AM–5PM)'}
-                    className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center ${
+                  <button
+                    type="button"
+                    onClick={() => inRange && !isPast && handleSlotToggle(dateStr, 'day')}
+                    disabled={isPast || dayBooked || !inRange}
+                    title={dayBooked ? 'Booked' : daySelected ? 'Click to deselect Day' : inRange ? 'Click to select Day' : 'Day (8AM–5PM)'}
+                    className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center transition-all ${
                       dayBooked
-                        ? 'bg-red-400 text-white'
-                        : isInSelected
-                          ? 'bg-ocean-500 text-white'
-                          : 'bg-amber-50 text-amber-700'
+                        ? 'bg-red-400 text-white cursor-not-allowed'
+                        : daySelected
+                          ? 'bg-ocean-500 text-white shadow-sm'
+                          : inRange
+                            ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300 hover:bg-amber-100 cursor-pointer'
+                            : 'bg-amber-50 text-amber-700'
                     }`}
                   >
                     <Sun size={10} />
-                  </div>
+                  </button>
 
                   {/* Night slot */}
                   {!isDayOnly && (
-                    <div
-                      title={nightBooked ? 'Booked' : isInSelected ? 'Selected' : 'Night (5PM–8AM)'}
-                      className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center ${
+                    <button
+                      type="button"
+                      onClick={() => inRange && !isPast && handleSlotToggle(dateStr, 'night')}
+                      disabled={isPast || nightBooked || !inRange}
+                      title={nightBooked ? 'Booked' : nightSelected ? 'Click to deselect Night' : inRange ? 'Click to select Night' : 'Night (5PM–8AM)'}
+                      className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center transition-all ${
                         nightBooked
-                          ? 'bg-red-400 text-white'
-                          : isInSelected
-                            ? 'bg-slate-700 text-white'
-                            : 'bg-slate-100 text-slate-600'
+                          ? 'bg-red-400 text-white cursor-not-allowed'
+                          : nightSelected
+                            ? 'bg-slate-700 text-white shadow-sm'
+                            : inRange
+                              ? 'bg-slate-100 text-slate-600 ring-1 ring-slate-300 hover:bg-slate-200 cursor-pointer'
+                              : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       <Moon size={10} />
-                    </div>
+                    </button>
                   )}
                 </div>
               </div>
