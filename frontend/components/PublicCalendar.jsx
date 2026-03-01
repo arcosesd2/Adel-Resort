@@ -223,8 +223,8 @@ export default function PublicCalendar() {
             {groupedRooms.map(group => (
               <div key={group.type}>
                 <div
-                  className="flex items-center gap-2 px-3 py-1.5 font-semibold text-sm border-b border-r border-gray-200"
-                  style={{ backgroundColor: group.color.bg, color: group.color.text }}
+                  className="flex items-center gap-2 px-3 font-semibold text-sm border-b border-r border-gray-200"
+                  style={{ backgroundColor: group.color.bg, color: group.color.text, height: '33px' }}
                 >
                   <span
                     className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0"
@@ -235,9 +235,9 @@ export default function PublicCalendar() {
                 {group.rooms.map(room => (
                   <div
                     key={room.room_id}
-                    className="bg-white border-r border-b border-gray-100 px-3 py-2.5 text-sm text-gray-700 truncate"
+                    className="bg-white border-r border-b border-gray-100 px-3 text-sm text-gray-700 truncate flex items-center"
                     title={room.room_name}
-                    style={{ minHeight: '40px' }}
+                    style={{ height: '40px' }}
                   >
                     {room.room_name}
                   </div>
@@ -309,7 +309,7 @@ export default function PublicCalendar() {
                 <div key={group.type}>
                   {/* Group header spacer (matches sticky side) */}
                   <div
-                    className="border-b border-gray-200 px-3 py-1.5 text-sm"
+                    className="border-b border-gray-200"
                     style={{ backgroundColor: group.color.bg, height: '33px' }}
                   />
 
@@ -318,9 +318,11 @@ export default function PublicCalendar() {
                     const bookedCells = computeBookedCells(room)
                     const color = getTypeColor(room.room_type)
                     return (
-                      <div key={room.room_id} className="flex border-b border-gray-100" style={{ minHeight: '40px' }}>
+                      <div key={room.room_id} className="flex border-b border-gray-100" style={{ height: '40px' }}>
                         {daysArray.map(d => {
                           const booked = bookedCells[d.day] || {}
+                          const bothSameBooking = booked.day && booked.night && booked.day === booked.night
+
                           return (
                             <div
                               key={d.day}
@@ -331,49 +333,67 @@ export default function PublicCalendar() {
                                 borderRight: '2px solid #e5e7eb',
                               }}
                             >
-                              {/* Day sub-column */}
-                              <div
-                                className={`flex-1 flex items-center justify-center ${
-                                  d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
-                                }`}
-                                style={{ borderRight: '1px solid #e2e8f0' }}
-                                title={booked.day ? `${room.room_name} — Day Tour (8AM–5PM)` : ''}
-                              >
-                                {booked.day && (
+                              {bothSameBooking ? (
+                                /* Merged D+N — same booking */
+                                <div
+                                  className={`w-full flex items-center justify-center ${
+                                    d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
+                                  }`}
+                                  title={`${room.room_name} — Booked (Day + Night)`}
+                                >
                                   <div
-                                    className="w-full h-[24px] rounded-sm flex items-center justify-center mx-0.5"
+                                    className="w-full h-[24px] rounded-sm mx-0.5"
                                     style={{
-                                      backgroundColor: color.bar,
+                                      background: `linear-gradient(to right, ${color.bar} 50%, #334155 50%)`,
                                       opacity: 0.85,
                                       outline: `2px solid ${getOutlineColor(booked.day)}`,
                                       outlineOffset: '-1px',
                                     }}
-                                  >
-                                    <span className="text-[8px] font-bold text-white">D</span>
-                                  </div>
-                                )}
-                              </div>
-                              {/* Night sub-column */}
-                              <div
-                                className={`flex-1 flex items-center justify-center ${
-                                  d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
-                                }`}
-                                title={booked.night ? `${room.room_name} — Night Tour (5PM–8AM)` : ''}
-                              >
-                                {booked.night && (
+                                  />
+                                </div>
+                              ) : (
+                                <>
+                                  {/* Day sub-column */}
                                   <div
-                                    className="w-full h-[24px] rounded-sm flex items-center justify-center mx-0.5"
-                                    style={{
-                                      backgroundColor: '#334155',
-                                      opacity: 0.85,
-                                      outline: `2px solid ${getOutlineColor(booked.night)}`,
-                                      outlineOffset: '-1px',
-                                    }}
+                                    className={`flex-1 flex items-center justify-center ${
+                                      d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
+                                    }`}
+                                    style={{ borderRight: '1px solid #e2e8f0' }}
+                                    title={booked.day ? `${room.room_name} — Day Tour (8AM–5PM)` : ''}
                                   >
-                                    <span className="text-[8px] font-bold text-white">N</span>
+                                    {booked.day && (
+                                      <div
+                                        className="w-full h-[24px] rounded-sm mx-0.5"
+                                        style={{
+                                          backgroundColor: color.bar,
+                                          opacity: 0.85,
+                                          outline: `2px solid ${getOutlineColor(booked.day)}`,
+                                          outlineOffset: '-1px',
+                                        }}
+                                      />
+                                    )}
                                   </div>
-                                )}
-                              </div>
+                                  {/* Night sub-column */}
+                                  <div
+                                    className={`flex-1 flex items-center justify-center ${
+                                      d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
+                                    }`}
+                                    title={booked.night ? `${room.room_name} — Night Tour (5PM–8AM)` : ''}
+                                  >
+                                    {booked.night && (
+                                      <div
+                                        className="w-full h-[24px] rounded-sm mx-0.5"
+                                        style={{
+                                          backgroundColor: '#334155',
+                                          opacity: 0.85,
+                                          outline: `2px solid ${getOutlineColor(booked.night)}`,
+                                          outlineOffset: '-1px',
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                </>
+                              )}
                             </div>
                           )
                         })}
