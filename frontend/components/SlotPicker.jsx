@@ -78,14 +78,25 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
 
   const isBooked  = useCallback((d, s) => bookedSet.has(slotKey(d, s)), [bookedSet])
 
+  const yesterdayStr = useMemo(() => {
+    const y = new Date(now)
+    y.setDate(y.getDate() - 1)
+    return fmtDate(y.getFullYear(), y.getMonth(), y.getDate())
+  }, [])
+
   const isSlotPast = useCallback((dateStr, slot) => {
-    if (dateStr < todayStr) return true
-    if (dateStr === todayStr) {
-      if (slot === 'day' && curHour >= 17) return true
-      if (slot === 'night' && curHour >= 17) return true
+    if (slot === 'day') {
+      // Day tour (8AM–5PM): past if date is before today, or today after 5PM
+      if (dateStr < todayStr) return true
+      if (dateStr === todayStr && curHour >= 17) return true
+    } else {
+      // Night tour (5PM–8AM next day): past if date is before yesterday,
+      // or yesterday's night is past when today's hour >= 8 (8AM = night over)
+      if (dateStr < yesterdayStr) return true
+      if (dateStr === yesterdayStr && curHour >= 8) return true
     }
     return false
-  }, [todayStr, curHour])
+  }, [todayStr, yesterdayStr, curHour])
 
   /** For a date click: earliest available slot (check-in direction). */
   const earliestSlot = useCallback((dateStr) => {
