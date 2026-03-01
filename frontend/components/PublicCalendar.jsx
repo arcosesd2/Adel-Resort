@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { parseISO, addDays } from 'date-fns'
+import { parseISO } from 'date-fns'
 import api from '@/lib/api'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -139,24 +139,15 @@ export default function PublicCalendar() {
 
   // Returns a map: { [dayNumber]: { day: boolean, night: boolean } }
   function computeBookedCells(room) {
-    const monthStart = new Date(viewYear, viewMonth, 1)
-    const monthEnd = new Date(viewYear, viewMonth, daysInMonth)
     const cells = {}
+    const slots = room.booked_slots || []
 
-    for (const range of room.booked_ranges) {
-      const checkIn = parseISO(range.check_in)
-      const checkOut = addDays(parseISO(range.check_out), -1) // last occupied day
-
-      if (checkOut < monthStart || checkIn > monthEnd) continue
-
-      const clampedStart = checkIn < monthStart ? monthStart : checkIn
-      const clampedEnd = checkOut > monthEnd ? monthEnd : checkOut
-
-      for (let d = clampedStart.getDate(); d <= clampedEnd.getDate(); d++) {
-        if (!cells[d]) cells[d] = { day: false, night: false }
-        const tourType = range.tour_type || 'day'
-        cells[d][tourType] = true
-      }
+    for (const s of slots) {
+      const d = parseISO(s.date)
+      if (d.getFullYear() !== viewYear || d.getMonth() !== viewMonth) continue
+      const dayNum = d.getDate()
+      if (!cells[dayNum]) cells[dayNum] = { day: false, night: false }
+      cells[dayNum][s.slot] = true
     }
     return cells
   }

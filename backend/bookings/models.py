@@ -9,18 +9,13 @@ class BookingStatus(models.TextChoices):
     COMPLETED = 'completed', 'Completed'
 
 
-class TourType(models.TextChoices):
-    DAY = 'day', 'Day Tour (8AM – 5PM)'
-    NIGHT = 'night', 'Night Tour (5PM – 8AM)'
-
-
 class Booking(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
     room = models.ForeignKey('rooms.Room', on_delete=models.PROTECT, related_name='bookings')
     check_in = models.DateField()
     check_out = models.DateField()
     guests = models.PositiveIntegerField(default=1)
-    tour_type = models.CharField(max_length=10, choices=TourType.choices, default=TourType.DAY)
+    slots = models.JSONField(default=list)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=BookingStatus.choices, default=BookingStatus.PENDING)
 
@@ -35,5 +30,12 @@ class Booking(models.Model):
         return f'Booking #{self.id} - {self.user.email} - {self.room.name}'
 
     @property
-    def nights(self):
-        return (self.check_out - self.check_in).days
+    def slots_summary(self):
+        day_count = sum(1 for s in self.slots if s.get('slot') == 'day')
+        night_count = sum(1 for s in self.slots if s.get('slot') == 'night')
+        parts = []
+        if day_count:
+            parts.append(f'{day_count} day')
+        if night_count:
+            parts.append(f'{night_count} night')
+        return ' + '.join(parts) or 'No slots'

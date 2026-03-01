@@ -19,9 +19,13 @@ class PaymentInline(admin.StackedInline):
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'room', 'check_in', 'check_out', 'total_price', 'status')
+    list_display = ('id', 'user', 'room', 'check_in', 'check_out', 'get_slots_summary', 'total_price', 'status')
     list_filter = ('status',)
     list_editable = ('status',)
     search_fields = ('user__email', 'room__name')
-    readonly_fields = ('total_price', 'created_at')
+    readonly_fields = ('total_price', 'created_at', 'get_slots_summary')
     inlines = [PaymentInline]
+
+    @admin.display(description='Slots')
+    def get_slots_summary(self, obj):
+        return obj.slots_summary

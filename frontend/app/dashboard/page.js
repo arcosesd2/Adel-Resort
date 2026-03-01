@@ -61,7 +61,7 @@ function BookingCard({ booking, onCancel }) {
       <div className="flex items-center justify-between border-t pt-3">
         <div>
           <span className="text-xl font-bold text-ocean-700">₱{booking.total_price}</span>
-          <span className="text-gray-400 text-sm"> · {booking.tour_type === 'night' ? 'Night Tour' : 'Day Tour'}</span>
+          <span className="text-gray-400 text-sm capitalize"> · {booking.slots_summary}</span>
         </div>
 
         <div className="flex gap-2">

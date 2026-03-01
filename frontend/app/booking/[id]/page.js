@@ -124,8 +124,8 @@ export default function BookingDetailPage() {
                 </div>
               </div>
               <div>
-                <div className="text-gray-400">Tour Type</div>
-                <div className="font-medium text-gray-800">{booking.tour_type === 'night' ? 'Night Tour' : 'Day Tour'}</div>
+                <div className="text-gray-400">Slots</div>
+                <div className="font-medium text-gray-800 capitalize">{booking.slots_summary}</div>
               </div>
             </div>
           </div>

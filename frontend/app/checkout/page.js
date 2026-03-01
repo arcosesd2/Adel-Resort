@@ -87,8 +87,8 @@ function CheckoutContent() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">
-                    {booking.tour_type === 'night' ? 'Night Tour' : 'Day Tour'}
+                  <span className="text-gray-500 capitalize">
+                    {booking.slots_summary}
                   </span>
                   <span className="font-medium">₱{booking.total_price}</span>
                 </div>

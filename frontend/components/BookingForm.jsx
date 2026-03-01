@@ -2,31 +2,26 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
-import { Users, MessageSquare, Sun, Moon } from 'lucide-react'
+import { Users, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
-import AvailabilityCalendar from './AvailabilityCalendar'
+import SlotPicker from './SlotPicker'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
 export default function BookingForm({ room }) {
   const { isAuthenticated } = useAuthStore()
   const router = useRouter()
-  const [checkIn, setCheckIn] = useState(null)
-  const [checkOut, setCheckOut] = useState(null)
+  const [slots, setSlots] = useState([])
   const [guests, setGuests] = useState(1)
-  const [tourType, setTourType] = useState('day')
   const [specialRequests, setSpecialRequests] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const totalPrice = tourType === 'night' && room.night_price
-    ? parseFloat(room.night_price)
-    : parseFloat(room.day_price)
+  const dayPrice = parseFloat(room.day_price)
+  const nightPrice = parseFloat(room.night_price || room.day_price)
 
-  const handleDatesChange = (ci, co) => {
-    setCheckIn(ci)
-    setCheckOut(co)
-  }
+  const dayCount = slots.filter(s => s.slot === 'day').length
+  const nightCount = slots.filter(s => s.slot === 'night').length
+  const totalPrice = dayCount * dayPrice + nightCount * nightPrice
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -35,8 +30,8 @@ export default function BookingForm({ room }) {
       router.push(`/auth/login?redirect=/rooms/${room.id}`)
       return
     }
-    if (!checkIn || !checkOut) {
-      toast.error('Please select dates')
+    if (slots.length === 0) {
+      toast.error('Please select at least one slot')
       return
     }
 
@@ -44,16 +39,15 @@ export default function BookingForm({ room }) {
     try {
       const { data } = await api.post('/bookings/', {
         room: room.id,
-        check_in: format(checkIn, 'yyyy-MM-dd'),
-        check_out: format(checkOut, 'yyyy-MM-dd'),
         guests,
-        tour_type: tourType,
+        slots,
         special_requests: specialRequests,
       })
       toast.success('Booking created! Proceed to payment.')
       router.push(`/checkout?booking=${data.id}`)
     } catch (err) {
       const msg = err.response?.data?.non_field_errors?.[0]
+        || err.response?.data?.slots?.[0]
         || err.response?.data?.detail
         || 'Failed to create booking'
       toast.error(msg)
@@ -71,47 +65,16 @@ export default function BookingForm({ room }) {
           {!room.is_day_only && room.night_price && (
             <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
           )}
-          <div className="text-gray-400 text-xs">{room.is_day_only ? 'day tour' : 'day / night'}</div>
+          <div className="text-gray-400 text-xs">{room.is_day_only ? 'day tour' : 'per slot'}</div>
         </div>
       </div>
 
-      {/* Tour Type Selector */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Tour Type</label>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setTourType('day')}
-            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all ${
-              tourType === 'day'
-                ? 'border-ocean-500 bg-ocean-50 text-ocean-700'
-                : 'border-gray-200 text-gray-500 hover:border-gray-300'
-            }`}
-          >
-            <Sun size={16} />
-            Day Tour
-            <span className="text-xs">(8AM–5PM)</span>
-          </button>
-          {!room.is_day_only && (
-            <button
-              type="button"
-              onClick={() => setTourType('night')}
-              className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all ${
-                tourType === 'night'
-                  ? 'border-ocean-500 bg-ocean-50 text-ocean-700'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
-              }`}
-            >
-              <Moon size={16} />
-              Night Tour
-              <span className="text-xs">(5PM–8AM)</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Calendar */}
-      <AvailabilityCalendar roomId={room.id} onDatesChange={handleDatesChange} />
+      {/* Slot Picker */}
+      <SlotPicker
+        roomId={room.id}
+        isDayOnly={room.is_day_only}
+        onSlotsChange={setSlots}
+      />
 
       {/* Persons */}
       <div>
@@ -146,14 +109,24 @@ export default function BookingForm({ room }) {
       </div>
 
       {/* Price summary */}
-      {checkIn && checkOut && (
+      {slots.length > 0 && (
         <div className="bg-ocean-50 rounded-xl p-4 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-600">
-              {tourType === 'day' ? 'Day Tour' : 'Night Tour'} — {room.name}
-            </span>
-            <span className="font-medium">₱{totalPrice.toFixed(2)}</span>
-          </div>
+          {dayCount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {dayCount} day slot{dayCount !== 1 ? 's' : ''} x ₱{dayPrice.toFixed(2)}
+              </span>
+              <span className="font-medium">₱{(dayCount * dayPrice).toFixed(2)}</span>
+            </div>
+          )}
+          {nightCount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {nightCount} night slot{nightCount !== 1 ? 's' : ''} x ₱{nightPrice.toFixed(2)}
+              </span>
+              <span className="font-medium">₱{(nightCount * nightPrice).toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-base border-t border-ocean-200 pt-2">
             <span>Total</span>
             <span className="text-ocean-700">₱{totalPrice.toFixed(2)}</span>
@@ -163,7 +136,7 @@ export default function BookingForm({ room }) {
 
       <button
         type="submit"
-        disabled={loading || !checkIn || !checkOut}
+        disabled={loading || slots.length === 0}
         className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Creating Booking...' : isAuthenticated ? 'Book Now' : 'Login to Book'}

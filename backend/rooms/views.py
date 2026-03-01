@@ -25,6 +25,20 @@ class RoomDetailView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
 
 
+def _get_booked_slots(room):
+    """Collect all booked slots for active bookings of a room."""
+    bookings = Booking.objects.filter(
+        room=room,
+        status__in=['confirmed', 'pending']
+    ).values_list('slots', flat=True)
+
+    booked_slots = []
+    for slots in bookings:
+        if slots:
+            booked_slots.extend(slots)
+    return booked_slots
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def room_availability(request, pk):
@@ -33,20 +47,10 @@ def room_availability(request, pk):
     except Room.DoesNotExist:
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    bookings = Booking.objects.filter(
-        room=room,
-        status__in=['confirmed', 'pending']
-    ).values('check_in', 'check_out', 'tour_type')
-
-    booked_ranges = [
-        {'check_in': str(b['check_in']), 'check_out': str(b['check_out']), 'tour_type': b['tour_type']}
-        for b in bookings
-    ]
-
     return Response({
         'room_id': room.id,
         'room_name': room.name,
-        'booked_ranges': booked_ranges,
+        'booked_slots': _get_booked_slots(room),
     })
 
 
@@ -56,11 +60,6 @@ def all_rooms_availability(request):
     rooms = Room.objects.filter(is_active=True).prefetch_related('images')
     result = []
     for room in rooms:
-        bookings = Booking.objects.filter(
-            room=room,
-            status__in=['confirmed', 'pending']
-        ).values('check_in', 'check_out', 'tour_type')
-
         result.append({
             'room_id': room.id,
             'room_name': room.name,
@@ -68,10 +67,7 @@ def all_rooms_availability(request):
             'day_price': str(room.day_price),
             'night_price': str(room.night_price) if room.night_price else None,
             'is_day_only': room.is_day_only,
-            'booked_ranges': [
-                {'check_in': str(b['check_in']), 'check_out': str(b['check_out']), 'tour_type': b['tour_type']}
-                for b in bookings
-            ],
+            'booked_slots': _get_booked_slots(room),
         })
 
     return Response(result)
