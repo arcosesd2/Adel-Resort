@@ -30,12 +30,13 @@ def _get_booked_slots(room):
     bookings = Booking.objects.filter(
         room=room,
         status__in=['confirmed', 'pending']
-    ).values_list('slots', flat=True)
+    ).values('id', 'slots')
 
     booked_slots = []
-    for slots in bookings:
-        if slots:
-            booked_slots.extend(slots)
+    for booking in bookings:
+        if booking['slots']:
+            for slot in booking['slots']:
+                booked_slots.append({**slot, 'booking_id': booking['id']})
     return booked_slots
 
 

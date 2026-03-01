@@ -132,12 +132,11 @@ export default function PublicCalendar() {
       }))
   }, [roomsAvailability])
 
-  const activeTypes = useMemo(() => {
-    const types = new Set(roomsAvailability.map(r => r.room_type))
-    return ROOM_TYPES.filter(t => types.has(t.value))
-  }, [roomsAvailability])
+  const BOOKING_OUTLINE_COLORS = [
+    '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
+  ]
 
-  // Returns a map: { [dayNumber]: { day: boolean, night: boolean } }
+  // Returns a map: { [dayNumber]: { day: booking_id|false, night: booking_id|false } }
   function computeBookedCells(room) {
     const cells = {}
     const slots = room.booked_slots || []
@@ -147,9 +146,14 @@ export default function PublicCalendar() {
       if (d.getFullYear() !== viewYear || d.getMonth() !== viewMonth) continue
       const dayNum = d.getDate()
       if (!cells[dayNum]) cells[dayNum] = { day: false, night: false }
-      cells[dayNum][s.slot] = true
+      cells[dayNum][s.slot] = s.booking_id || true
     }
     return cells
+  }
+
+  function getOutlineColor(bookingId) {
+    if (!bookingId || bookingId === true) return 'transparent'
+    return BOOKING_OUTLINE_COLORS[bookingId % BOOKING_OUTLINE_COLORS.length]
   }
 
   if (loading) {
@@ -176,28 +180,14 @@ export default function PublicCalendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mb-5">
-        {activeTypes.map(t => {
-          const color = getTypeColor(t.value)
-          return (
-            <div key={t.value} className="flex items-center gap-1.5 text-sm">
-              <span
-                className="w-3 h-3 rounded-sm inline-block"
-                style={{ backgroundColor: color.bar }}
-              />
-              <span className="text-gray-600">{t.label}</span>
-            </div>
-          )
-        })}
-        <div className="border-l border-gray-300 pl-3 flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-4 h-4 rounded-sm inline-block bg-ocean-500" />
-            <span className="text-gray-600">Day (8AM–5PM)</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-4 h-4 rounded-sm inline-block bg-slate-700" />
-            <span className="text-gray-600">Night (5PM–8AM)</span>
-          </div>
+      <div className="flex items-center gap-4 mb-5">
+        <div className="flex items-center gap-1.5 text-sm">
+          <span className="w-4 h-4 rounded-sm inline-block bg-ocean-500" />
+          <span className="text-gray-600">D — Day (8AM–5PM)</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-sm">
+          <span className="w-4 h-4 rounded-sm inline-block bg-slate-700" />
+          <span className="text-gray-600">N — Night (5PM–8AM)</span>
         </div>
       </div>
 
@@ -352,7 +342,12 @@ export default function PublicCalendar() {
                                 {booked.day && (
                                   <div
                                     className="w-full h-[24px] rounded-sm flex items-center justify-center mx-0.5"
-                                    style={{ backgroundColor: color.bar, opacity: 0.85 }}
+                                    style={{
+                                      backgroundColor: color.bar,
+                                      opacity: 0.85,
+                                      outline: `2px solid ${getOutlineColor(booked.day)}`,
+                                      outlineOffset: '-1px',
+                                    }}
                                   >
                                     <span className="text-[8px] font-bold text-white">D</span>
                                   </div>
@@ -368,7 +363,12 @@ export default function PublicCalendar() {
                                 {booked.night && (
                                   <div
                                     className="w-full h-[24px] rounded-sm flex items-center justify-center mx-0.5"
-                                    style={{ backgroundColor: '#334155', opacity: 0.85 }}
+                                    style={{
+                                      backgroundColor: '#334155',
+                                      opacity: 0.85,
+                                      outline: `2px solid ${getOutlineColor(booked.night)}`,
+                                      outlineOffset: '-1px',
+                                    }}
                                   >
                                     <span className="text-[8px] font-bold text-white">N</span>
                                   </div>
