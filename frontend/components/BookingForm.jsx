@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -8,13 +8,40 @@ import SlotPicker from './SlotPicker'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
+function getDraft(roomId) {
+  try {
+    const raw = sessionStorage.getItem(`booking_draft_${roomId}`)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function saveDraft(roomId, data) {
+  try { sessionStorage.setItem(`booking_draft_${roomId}`, JSON.stringify(data)) } catch {}
+}
+
+function clearDraft(roomId) {
+  try { sessionStorage.removeItem(`booking_draft_${roomId}`) } catch {}
+}
+
 export default function BookingForm({ room }) {
   const { isAuthenticated } = useAuthStore()
   const router = useRouter()
+
+  const draft = getDraft(room.id)
   const [slots, setSlots] = useState([])
-  const [guests, setGuests] = useState(1)
-  const [specialRequests, setSpecialRequests] = useState('')
+  const [guests, setGuests] = useState(draft?.guests || 1)
+  const [specialRequests, setSpecialRequests] = useState(draft?.specialRequests || '')
+  const [savedCheckIn, setSavedCheckIn] = useState(draft?.checkIn || null)
+  const [savedCheckOut, setSavedCheckOut] = useState(draft?.checkOut || null)
+  const [rangeRef, setRangeRef] = useState({ checkIn: draft?.checkIn || null, checkOut: draft?.checkOut || null })
   const [loading, setLoading] = useState(false)
+
+  // Clear draft once restored
+  useEffect(() => { if (draft) clearDraft(room.id) }, [])
+
+  const handleRangeChange = useCallback((checkIn, checkOut) => {
+    setRangeRef({ checkIn, checkOut })
+  }, [])
 
   const dayPrice = parseFloat(room.day_price)
   const nightPrice = parseFloat(room.night_price || room.day_price)
@@ -26,6 +53,12 @@ export default function BookingForm({ room }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
+      saveDraft(room.id, {
+        guests,
+        specialRequests,
+        checkIn: rangeRef.checkIn,
+        checkOut: rangeRef.checkOut,
+      })
       toast.error('Please login to book')
       router.push(`/auth/login?redirect=/rooms/${room.id}`)
       return
@@ -74,6 +107,9 @@ export default function BookingForm({ room }) {
         roomId={room.id}
         isDayOnly={room.is_day_only}
         onSlotsChange={setSlots}
+        onRangeChange={handleRangeChange}
+        defaultCheckIn={savedCheckIn}
+        defaultCheckOut={savedCheckOut}
       />
 
       {/* Persons */}

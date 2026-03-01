@@ -1,14 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Waves } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/dashboard'
   const { register } = useAuthStore()
 
   const [form, setForm] = useState({
@@ -35,7 +37,8 @@ export default function RegisterPage() {
       const data = await register(form)
       document.cookie = `access_token=${data.access}; path=/; max-age=3600; SameSite=Lax`
       toast.success('Account created! Welcome to Adel Beach Resort.')
-      router.push('/dashboard')
+      router.replace(redirect)
+      router.refresh()
     } catch (err) {
       const data = err.response?.data
       if (data && typeof data === 'object') {
@@ -111,7 +114,7 @@ export default function RegisterPage() {
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                placeholder="+1 (555) 000-0000"
+                placeholder="09XX XXX XXXX"
                 className="input-field"
               />
             </div>
@@ -163,12 +166,24 @@ export default function RegisterPage() {
 
           <p className="text-center text-gray-500 text-sm mt-6">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-ocean-600 hover:underline font-medium">
+            <Link href={redirect !== '/dashboard' ? `/auth/login?redirect=${encodeURIComponent(redirect)}` : '/auth/login'} className="text-ocean-600 hover:underline font-medium">
               Sign in here
             </Link>
           </p>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pt-20 flex items-center justify-center bg-ocean-50 px-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean-600" />
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   )
 }

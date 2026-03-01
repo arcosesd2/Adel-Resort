@@ -47,10 +47,10 @@ function labelSlot(s) {
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()} (${s.slot === 'day' ? 'Day' : 'Night'})`
 }
 
-export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
+export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut }) {
   const [bookedSlots, setBookedSlots] = useState([])
-  const [checkIn, setCheckIn] = useState(null)   // { date, slot }
-  const [checkOut, setCheckOut] = useState(null)  // { date, slot }
+  const [checkIn, setCheckIn] = useState(defaultCheckIn || null)   // { date, slot }
+  const [checkOut, setCheckOut] = useState(defaultCheckOut || null)  // { date, slot }
   const [loading, setLoading] = useState(true)
 
   const now = new Date()
@@ -128,6 +128,7 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
   const selectedSet = useMemo(() => new Set(selectedSlots.map(s => slotKey(s.date, s.slot))), [selectedSlots])
 
   useEffect(() => { onSlotsChange?.(selectedSlots) }, [selectedSlots])
+  useEffect(() => { onRangeChange?.(checkIn, checkOut) }, [checkIn, checkOut])
 
   /* ---- helpers to set check-in / check-out ---- */
   const applySelection = useCallback((clicked) => {
