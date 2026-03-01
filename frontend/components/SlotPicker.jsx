@@ -51,7 +51,6 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
   const [bookedSlots, setBookedSlots] = useState([])
   const [checkIn, setCheckIn] = useState(null)   // { date, slot }
   const [checkOut, setCheckOut] = useState(null)  // { date, slot }
-  const [toggledOff, setToggledOff] = useState(new Set())
   const [loading, setLoading] = useState(true)
 
   const now = new Date()
@@ -82,13 +81,27 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
   const isSlotPast = useCallback((dateStr, slot) => {
     if (dateStr < todayStr) return true
     if (dateStr === todayStr) {
-      // Day tour (8AM-5PM): disabled once 5PM passes
       if (slot === 'day' && curHour >= 17) return true
-      // Night tour (5PM-8AM): disabled once 5PM passes (already started)
       if (slot === 'night' && curHour >= 17) return true
     }
     return false
   }, [todayStr, curHour])
+
+  /** For a date click: earliest available slot (check-in direction). */
+  const earliestSlot = useCallback((dateStr) => {
+    if (isDayOnly) return 'day'
+    if (!isSlotPast(dateStr, 'day') && !isBooked(dateStr, 'day')) return 'day'
+    if (!isSlotPast(dateStr, 'night') && !isBooked(dateStr, 'night')) return 'night'
+    return null
+  }, [isDayOnly, isSlotPast, isBooked])
+
+  /** For a date click: latest available slot (check-out direction). */
+  const latestSlot = useCallback((dateStr) => {
+    if (isDayOnly) return 'day'
+    if (!isSlotPast(dateStr, 'night') && !isBooked(dateStr, 'night')) return 'night'
+    if (!isSlotPast(dateStr, 'day') && !isBooked(dateStr, 'day')) return 'day'
+    return null
+  }, [isDayOnly, isSlotPast, isBooked])
 
   const rangeSlots = useMemo(() => buildRange(checkIn, checkOut, isDayOnly), [checkIn, checkOut, isDayOnly])
   const rangeSet   = useMemo(() => new Set(rangeSlots.map(s => slotKey(s.date, s.slot))), [rangeSlots])
@@ -98,48 +111,65 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
 
   const selectedSlots = useMemo(() => {
     if (hasOverlap) return []
-    return rangeSlots.filter(s => !toggledOff.has(slotKey(s.date, s.slot)))
-  }, [rangeSlots, toggledOff, hasOverlap])
+    return rangeSlots
+  }, [rangeSlots, hasOverlap])
 
   const selectedSet = useMemo(() => new Set(selectedSlots.map(s => slotKey(s.date, s.slot))), [selectedSlots])
 
   useEffect(() => { onSlotsChange?.(selectedSlots) }, [selectedSlots])
 
-  /* ---- click handler ---- */
-  const handleSlotClick = useCallback((dateStr, slot) => {
-    if (isBooked(dateStr, slot) || isSlotPast(dateStr, slot)) return
-    const clicked = { date: dateStr, slot }
-
-    if (!checkIn || !checkOut) {
-      // Setting check-in or check-out
-      if (!checkIn) {
-        setCheckIn(clicked); setCheckOut(null); setToggledOff(new Set())
-      } else {
-        if (cmpSlot(clicked, checkIn) > 0) {
-          setCheckOut(clicked); setToggledOff(new Set())
-        } else {
-          setCheckIn(clicked); setCheckOut(null); setToggledOff(new Set())
-        }
-      }
+  /* ---- helpers to set check-in / check-out ---- */
+  const applySelection = useCallback((clicked) => {
+    if (!checkIn || checkOut) {
+      // First click or reset: set new check-in
+      setCheckIn(clicked)
+      setCheckOut(null)
     } else {
-      // Both set — toggle within range or reset
-      const key = slotKey(dateStr, slot)
-      const inRange = rangeSet.has(key)
-      const isEndpoint =
-        (checkIn && dateStr === checkIn.date && slot === checkIn.slot) ||
-        (checkOut && dateStr === checkOut.date && slot === checkOut.slot)
-
-      if (inRange && !isEndpoint && !hasOverlap) {
-        setToggledOff(prev => {
-          const n = new Set(prev)
-          if (n.has(key)) n.delete(key); else n.add(key)
-          return n
-        })
+      // Second click
+      if (cmpSlot(clicked, checkIn) > 0) {
+        setCheckOut(clicked)
       } else {
-        setCheckIn(clicked); setCheckOut(null); setToggledOff(new Set())
+        // Same or earlier → new check-in
+        setCheckIn(clicked)
+        setCheckOut(null)
       }
     }
-  }, [checkIn, checkOut, rangeSet, hasOverlap, isBooked, isSlotPast])
+  }, [checkIn, checkOut])
+
+  /* Click on a specific D or N cell */
+  const handleSlotClick = useCallback((dateStr, slot) => {
+    if (isBooked(dateStr, slot) || isSlotPast(dateStr, slot)) return
+    applySelection({ date: dateStr, slot })
+  }, [isBooked, isSlotPast, applySelection])
+
+  /* Click on the date number → auto-select both D+N */
+  const handleDateClick = useCallback((dateStr) => {
+    if (!checkIn || checkOut) {
+      // Setting check-in: use earliest available slot
+      const slot = earliestSlot(dateStr)
+      if (!slot) return
+      setCheckIn({ date: dateStr, slot })
+      setCheckOut(null)
+    } else {
+      // Setting check-out: use latest available slot
+      const clicked = { date: dateStr, slot: latestSlot(dateStr) || 'day' }
+      if (cmpSlot(clicked, checkIn) > 0) {
+        setCheckOut(clicked)
+      } else if (dateStr === checkIn.date) {
+        // Same date → reset
+        const slot = earliestSlot(dateStr)
+        if (!slot) return
+        setCheckIn({ date: dateStr, slot })
+        setCheckOut(null)
+      } else {
+        // Earlier date → new check-in
+        const slot = earliestSlot(dateStr)
+        if (!slot) return
+        setCheckIn({ date: dateStr, slot })
+        setCheckOut(null)
+      }
+    }
+  }, [checkIn, checkOut, earliestSlot, latestSlot])
 
   /* ---- nav ---- */
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1) } else setViewMonth(m => m - 1) }
@@ -172,13 +202,12 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
     <div className="space-y-3">
       <label className="block text-sm font-medium text-gray-700">Select Dates</label>
 
-      {/* Instructions */}
       <p className="text-xs text-gray-500">
         {!checkIn
-          ? 'Click a Day or Night slot to set check-in'
+          ? 'Click a date or a Day/Night slot to set check-in'
           : !checkOut
-            ? 'Click a later slot to set check-out'
-            : 'Click a slot in range to toggle it, or click outside to start over'}
+            ? 'Click a later date or slot to set check-out'
+            : 'Click any date or slot to start a new selection'}
       </p>
 
       {/* Legend */}
@@ -227,26 +256,24 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
             const nightPast = fullyPast || isSlotPast(dateStr, 'night')
             const dayBk     = isBooked(dateStr, 'day')
             const nightBk   = isBooked(dateStr, 'night')
+            const allDisabled = (dayPast || dayBk) && (nightPast || nightBk || isDayOnly)
 
             const isCheckInDate  = checkIn?.date === dateStr
             const isCheckOutDate = checkOut?.date === dateStr
             const inRange = rangeSet.has(slotKey(dateStr, 'day')) || rangeSet.has(slotKey(dateStr, 'night'))
 
-            const dayKey   = slotKey(dateStr, 'day')
-            const nightKey = slotKey(dateStr, 'night')
-            const dayIsCheckIn  = checkIn  && checkIn.date  === dateStr && checkIn.slot  === 'day'
-            const dayIsCheckOut = checkOut && checkOut.date === dateStr && checkOut.slot === 'day'
-            const nightIsCheckIn  = checkIn  && checkIn.date  === dateStr && checkIn.slot  === 'night'
-            const nightIsCheckOut = checkOut && checkOut.date === dateStr && checkOut.slot === 'night'
-            const daySel   = selectedSet.has(dayKey)
-            const nightSel = selectedSet.has(nightKey)
+            const dayIsCI  = checkIn?.date  === dateStr && checkIn?.slot  === 'day'
+            const dayIsCO  = checkOut?.date === dateStr && checkOut?.slot === 'day'
+            const nightIsCI  = checkIn?.date  === dateStr && checkIn?.slot  === 'night'
+            const nightIsCO  = checkOut?.date === dateStr && checkOut?.slot === 'night'
+            const daySel   = selectedSet.has(slotKey(dateStr, 'day'))
+            const nightSel = selectedSet.has(slotKey(dateStr, 'night'))
 
             let cellBg = ''
             if (fullyPast) cellBg = 'bg-gray-50 opacity-50'
             else if (isCheckInDate || isCheckOutDate) cellBg = 'bg-ocean-50'
             else if (inRange) cellBg = 'bg-ocean-50/50'
 
-            // Helper to get D/N button classes
             function slotClass(slot, isBk, isPast, isSel, isCI, isCO) {
               if (isBk)   return 'bg-red-400 text-white cursor-not-allowed'
               if (isPast)  return 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -264,16 +291,25 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
 
             return (
               <div key={dateStr} className={`border-b border-r border-gray-100 p-0.5 ${cellBg}`}>
-                {/* Date label */}
-                <div className={`text-center text-xs font-medium mb-0.5 ${
-                  fullyPast ? 'text-gray-400'
-                  : isCheckInDate ? 'text-ocean-700 font-bold'
-                  : isCheckOutDate ? 'text-emerald-700 font-bold'
-                  : inRange ? 'text-ocean-600 font-semibold'
-                  : 'text-gray-600'
-                }`}>
+                {/* Date number — click to auto-select D+N */}
+                <button
+                  type="button"
+                  onClick={() => !allDisabled && handleDateClick(dateStr)}
+                  disabled={allDisabled}
+                  className={`w-full text-center text-xs font-medium mb-0.5 rounded transition-colors ${
+                    allDisabled
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : isCheckInDate
+                        ? 'text-ocean-700 font-bold'
+                        : isCheckOutDate
+                          ? 'text-emerald-700 font-bold'
+                          : inRange
+                            ? 'text-ocean-600 font-semibold'
+                            : 'text-gray-600 hover:bg-gray-100 cursor-pointer'
+                  }`}
+                >
                   {day}
-                </div>
+                </button>
 
                 {/* D / N buttons */}
                 <div className={`flex gap-0.5 ${isDayOnly ? 'justify-center' : ''}`}>
@@ -281,9 +317,9 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
                     type="button"
                     onClick={() => handleSlotClick(dateStr, 'day')}
                     disabled={dayPast || dayBk}
-                    title={dayBk ? 'Booked' : dayPast ? 'Past' : dayIsCheckIn ? 'Check-in (Day)' : dayIsCheckOut ? 'Check-out (Day)' : 'Day (8AM–5PM)'}
+                    title={dayBk ? 'Booked' : dayPast ? 'Past' : dayIsCI ? 'Check-in (Day)' : dayIsCO ? 'Check-out (Day)' : 'Day (8AM–5PM)'}
                     className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center transition-all ${
-                      slotClass('day', dayBk, dayPast, daySel, dayIsCheckIn, dayIsCheckOut)
+                      slotClass('day', dayBk, dayPast, daySel, dayIsCI, dayIsCO)
                     }`}
                   >
                     <Sun size={10} />
@@ -294,9 +330,9 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
                       type="button"
                       onClick={() => handleSlotClick(dateStr, 'night')}
                       disabled={nightPast || nightBk}
-                      title={nightBk ? 'Booked' : nightPast ? 'Past' : nightIsCheckIn ? 'Check-in (Night)' : nightIsCheckOut ? 'Check-out (Night)' : 'Night (5PM–8AM)'}
+                      title={nightBk ? 'Booked' : nightPast ? 'Past' : nightIsCI ? 'Check-in (Night)' : nightIsCO ? 'Check-out (Night)' : 'Night (5PM–8AM)'}
                       className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center transition-all ${
-                        slotClass('night', nightBk, nightPast, nightSel, nightIsCheckIn, nightIsCheckOut)
+                        slotClass('night', nightBk, nightPast, nightSel, nightIsCI, nightIsCO)
                       }`}
                     >
                       <Moon size={10} />
@@ -333,7 +369,7 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
           {' '}— {selectedSlots.length} slot{selectedSlots.length !== 1 ? 's' : ''}
           <button
             type="button"
-            onClick={() => { setCheckIn(null); setCheckOut(null); setToggledOff(new Set()) }}
+            onClick={() => { setCheckIn(null); setCheckOut(null) }}
             className="ml-2 text-red-500 hover:text-red-700 underline"
           >
             Clear
