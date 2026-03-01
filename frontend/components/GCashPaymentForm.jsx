@@ -71,9 +71,9 @@ export default function GCashPaymentForm({ bookingId, totalAmount, onSuccess }) 
           <Image
             src="/gcash-qr.png"
             alt="GCash QR Code"
-            width={200}
-            height={200}
-            className="rounded-lg border border-blue-200"
+            width={300}
+            height={360}
+            className="rounded-lg border border-blue-200 w-full max-w-[300px] h-auto"
           />
         </div>
         <div className="text-sm text-blue-700 space-y-1">
