@@ -246,7 +246,7 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
                   {/* Day slot */}
                   <div
                     title={dayBooked ? 'Booked' : isInSelected ? 'Selected' : 'Day (8AM–5PM)'}
-                    className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center gap-0.5 ${
+                    className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center ${
                       dayBooked
                         ? 'bg-red-400 text-white'
                         : isInSelected
@@ -255,14 +255,13 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
                     }`}
                   >
                     <Sun size={10} />
-                    <span>D</span>
                   </div>
 
                   {/* Night slot */}
                   {!isDayOnly && (
                     <div
                       title={nightBooked ? 'Booked' : isInSelected ? 'Selected' : 'Night (5PM–8AM)'}
-                      className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center gap-0.5 ${
+                      className={`flex-1 h-7 rounded text-[9px] font-bold flex items-center justify-center ${
                         nightBooked
                           ? 'bg-red-400 text-white'
                           : isInSelected
@@ -271,7 +270,6 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange }) {
                       }`}
                     >
                       <Moon size={10} />
-                      <span>N</span>
                     </div>
                   )}
                 </div>
