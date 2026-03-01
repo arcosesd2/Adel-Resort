@@ -5,7 +5,8 @@ import { parseISO, addDays } from 'date-fns'
 import api from '@/lib/api'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const DAY_COL_WIDTH = 70 // px per day column
+const SUB_COL_WIDTH = 38 // px per sub-column (Day or Night)
+const DAY_COL_WIDTH = SUB_COL_WIDTH * 2 // px per full day column
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
@@ -136,39 +137,28 @@ export default function PublicCalendar() {
     return ROOM_TYPES.filter(t => types.has(t.value))
   }, [roomsAvailability])
 
-  function computeBars(room) {
+  // Returns a map: { [dayNumber]: { day: boolean, night: boolean } }
+  function computeBookedCells(room) {
     const monthStart = new Date(viewYear, viewMonth, 1)
     const monthEnd = new Date(viewYear, viewMonth, daysInMonth)
-    const bars = []
+    const cells = {}
 
     for (const range of room.booked_ranges) {
       const checkIn = parseISO(range.check_in)
-      const checkOut = addDays(parseISO(range.check_out), -1) // last occupied night
+      const checkOut = addDays(parseISO(range.check_out), -1) // last occupied day
 
       if (checkOut < monthStart || checkIn > monthEnd) continue
 
       const clampedStart = checkIn < monthStart ? monthStart : checkIn
       const clampedEnd = checkOut > monthEnd ? monthEnd : checkOut
 
-      const startDay = clampedStart.getDate()
-      const endDay = clampedEnd.getDate()
-
-      const leftPct = ((startDay - 1) / daysInMonth) * 100
-      const widthPct = Math.max(((endDay - startDay + 1) / daysInMonth) * 100, (1 / daysInMonth) * 100)
-
-      const continuesBefore = checkIn < monthStart
-      const continuesAfter = checkOut > monthEnd
-
-      bars.push({
-        leftPct,
-        widthPct,
-        continuesBefore,
-        continuesAfter,
-        tourType: range.tour_type || 'day',
-        key: `${range.check_in}-${range.check_out}-${range.tour_type}`,
-      })
+      for (let d = clampedStart.getDate(); d <= clampedEnd.getDate(); d++) {
+        if (!cells[d]) cells[d] = { day: false, night: false }
+        const tourType = range.tour_type || 'day'
+        cells[d][tourType] = true
+      }
     }
-    return bars
+    return cells
   }
 
   if (loading) {
@@ -210,12 +200,12 @@ export default function PublicCalendar() {
         })}
         <div className="border-l border-gray-300 pl-3 flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-8 h-3 rounded-sm inline-block bg-ocean-500 text-[7px] text-white font-bold flex items-center justify-center">DAY</span>
-            <span className="text-gray-600">Day Tour</span>
+            <span className="w-4 h-4 rounded-sm inline-block bg-ocean-500" />
+            <span className="text-gray-600">Day (8AM–5PM)</span>
           </div>
           <div className="flex items-center gap-1.5 text-sm">
-            <span className="w-8 h-3 rounded-sm inline-block bg-slate-800 text-[7px] text-white font-bold flex items-center justify-center">NGT</span>
-            <span className="text-gray-600">Night Tour</span>
+            <span className="w-4 h-4 rounded-sm inline-block bg-slate-700" />
+            <span className="text-gray-600">Night (5PM–8AM)</span>
           </div>
         </div>
       </div>
@@ -242,9 +232,11 @@ export default function PublicCalendar() {
         <div className="flex">
           {/* Sticky room name column */}
           <div className="w-[140px] min-w-[140px] flex-shrink-0 z-20">
-            {/* Header cell */}
-            <div className="bg-gray-100 border-r border-b border-gray-200 px-3 py-2 font-semibold text-sm text-gray-700" style={{ height: '52px', display: 'flex', alignItems: 'center' }}>
+            {/* Header cells — 2 rows to match date + D/N header */}
+            <div className="bg-gray-100 border-r border-b border-gray-200 px-3 font-semibold text-sm text-gray-700" style={{ height: '34px', display: 'flex', alignItems: 'center' }}>
               Room
+            </div>
+            <div className="bg-gray-50 border-r border-b border-gray-200 px-3 text-xs text-gray-400" style={{ height: '22px', display: 'flex', alignItems: 'center' }}>
             </div>
             {/* Group headers + room name cells */}
             {groupedRooms.map(group => (
@@ -276,22 +268,57 @@ export default function PublicCalendar() {
           {/* Scrollable days area */}
           <div className="flex-1 overflow-x-auto" ref={scrollRef}>
             <div style={{ width: `${gridTotalWidth}px` }}>
-              {/* Header row */}
-              <div className="flex border-b border-gray-200" style={{ height: '52px' }}>
+              {/* Header row 1: Day name + number */}
+              <div className="flex border-b border-gray-200" style={{ height: '34px' }}>
                 {daysArray.map(d => (
                   <div
                     key={d.day}
-                    className={`py-1.5 text-center text-xs leading-tight border-r border-gray-100 last:border-r-0 flex flex-col justify-center ${
+                    className={`text-center text-xs leading-tight flex flex-col justify-center ${
                       d.isToday
                         ? 'bg-ocean-100 font-bold text-ocean-700'
                         : d.isWeekend
                           ? 'bg-gray-100 text-gray-500'
                           : 'bg-gray-50 text-gray-500'
                     }`}
-                    style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px` }}
+                    style={{
+                      width: `${DAY_COL_WIDTH}px`,
+                      minWidth: `${DAY_COL_WIDTH}px`,
+                      borderRight: '2px solid #d1d5db',
+                    }}
                   >
-                    <div className="font-medium">{d.abbr}</div>
-                    <div>{d.day}</div>
+                    <div className="font-medium text-[10px]">{d.abbr}</div>
+                    <div className="text-sm font-semibold">{d.day}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Header row 2: D | N sub-labels */}
+              <div className="flex border-b border-gray-300" style={{ height: '22px' }}>
+                {daysArray.map(d => (
+                  <div
+                    key={d.day}
+                    className="flex"
+                    style={{
+                      width: `${DAY_COL_WIDTH}px`,
+                      minWidth: `${DAY_COL_WIDTH}px`,
+                      borderRight: '2px solid #d1d5db',
+                    }}
+                  >
+                    <div
+                      className={`flex-1 text-center text-[9px] font-bold flex items-center justify-center ${
+                        d.isToday ? 'bg-ocean-50 text-ocean-600' : 'bg-amber-50 text-amber-700'
+                      }`}
+                      style={{ borderRight: '1px solid #cbd5e1' }}
+                    >
+                      D
+                    </div>
+                    <div
+                      className={`flex-1 text-center text-[9px] font-bold flex items-center justify-center ${
+                        d.isToday ? 'bg-ocean-50 text-ocean-600' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      N
+                    </div>
                   </div>
                 ))}
               </div>
@@ -307,52 +334,55 @@ export default function PublicCalendar() {
 
                   {/* Room rows */}
                   {group.rooms.map(room => {
-                    const bars = computeBars(room)
+                    const bookedCells = computeBookedCells(room)
                     const color = getTypeColor(room.room_type)
                     return (
-                      <div key={room.room_id} className="relative border-b border-gray-100" style={{ minHeight: '40px' }}>
-                        {/* Day cell backgrounds */}
-                        <div className="flex h-full">
-                          {daysArray.map(d => (
+                      <div key={room.room_id} className="flex border-b border-gray-100" style={{ minHeight: '40px' }}>
+                        {daysArray.map(d => {
+                          const booked = bookedCells[d.day] || {}
+                          return (
                             <div
                               key={d.day}
-                              className={`border-r border-gray-50 last:border-r-0 ${
-                                d.isToday
-                                  ? 'bg-ocean-50'
-                                  : d.isWeekend
-                                    ? 'bg-gray-50/70'
-                                    : ''
-                              }`}
+                              className="flex"
                               style={{
                                 width: `${DAY_COL_WIDTH}px`,
                                 minWidth: `${DAY_COL_WIDTH}px`,
-                                minHeight: '40px',
-                                ...(d.isToday ? { boxShadow: 'inset 0 0 0 1px rgba(14,165,233,0.25)' } : {}),
+                                borderRight: '2px solid #e5e7eb',
                               }}
-                            />
-                          ))}
-                        </div>
-
-                        {/* Booking bar overlays */}
-                        {bars.map(bar => {
-                          const isNight = bar.tourType === 'night'
-                          return (
-                            <div
-                              key={bar.key}
-                              className="absolute top-1/2 -translate-y-1/2 h-[22px] flex items-center justify-center overflow-hidden"
-                              style={{
-                                left: `${bar.leftPct}%`,
-                                width: `${bar.widthPct}%`,
-                                minWidth: '8px',
-                                backgroundColor: isNight ? '#1e293b' : color.bar,
-                                opacity: 0.85,
-                                borderRadius: `${bar.continuesBefore ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesAfter ? '0' : '4px'} ${bar.continuesBefore ? '0' : '4px'}`,
-                              }}
-                              title={`${room.room_name} — ${isNight ? 'Night Tour (5PM–8AM)' : 'Day Tour (8AM–5PM)'}`}
                             >
-                              <span className="text-[9px] font-bold text-white tracking-wide uppercase truncate px-1">
-                                {isNight ? 'Night' : 'Day'}
-                              </span>
+                              {/* Day sub-column */}
+                              <div
+                                className={`flex-1 flex items-center justify-center ${
+                                  d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
+                                }`}
+                                style={{ borderRight: '1px solid #e2e8f0' }}
+                                title={booked.day ? `${room.room_name} — Day Tour (8AM–5PM)` : ''}
+                              >
+                                {booked.day && (
+                                  <div
+                                    className="w-full h-[24px] rounded-sm flex items-center justify-center mx-0.5"
+                                    style={{ backgroundColor: color.bar, opacity: 0.85 }}
+                                  >
+                                    <span className="text-[8px] font-bold text-white">D</span>
+                                  </div>
+                                )}
+                              </div>
+                              {/* Night sub-column */}
+                              <div
+                                className={`flex-1 flex items-center justify-center ${
+                                  d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''
+                                }`}
+                                title={booked.night ? `${room.room_name} — Night Tour (5PM–8AM)` : ''}
+                              >
+                                {booked.night && (
+                                  <div
+                                    className="w-full h-[24px] rounded-sm flex items-center justify-center mx-0.5"
+                                    style={{ backgroundColor: '#334155', opacity: 0.85 }}
+                                  >
+                                    <span className="text-[8px] font-bold text-white">N</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )
                         })}
@@ -367,7 +397,7 @@ export default function PublicCalendar() {
       </div>
 
       <p className="text-center text-sm text-gray-400 mt-4">
-        Colored bars span the booked date range for each room
+        Each date is split into Day (D) and Night (N) slots
       </p>
     </div>
   )
