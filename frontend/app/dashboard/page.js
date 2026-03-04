@@ -105,8 +105,12 @@ export default function DashboardPage() {
       router.push('/auth/login?redirect=/dashboard')
       return
     }
+    if (user?.is_staff) {
+      router.replace('/admin-dashboard')
+      return
+    }
     fetchBookings()
-  }, [isAuthenticated])
+  }, [isAuthenticated, user])
 
   const fetchBookings = async () => {
     try {

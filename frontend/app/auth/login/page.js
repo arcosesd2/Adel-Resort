@@ -26,7 +26,8 @@ function LoginForm() {
       const data = await login(form.email, form.password)
       document.cookie = `access_token=${data.access}; path=/; max-age=3600; SameSite=Lax`
       toast.success('Welcome back!')
-      router.replace(redirect)
+      const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
+      router.replace(dest)
       router.refresh()
     } catch (err) {
       const msg = err.response?.data?.non_field_errors?.[0]
