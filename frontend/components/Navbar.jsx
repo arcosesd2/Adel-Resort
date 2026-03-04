@@ -12,7 +12,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const { isAuthenticated, logout } = useAuthStore()
+  const { isAuthenticated, logout, user } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -77,6 +77,16 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {!mounted ? null : isAuthenticated ? (
               <>
+                {user?.is_staff && (
+                  <Link
+                    href="/admin-dashboard"
+                    className={`font-medium transition-colors ${
+                      transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                    }`}
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/dashboard"
                   className={`font-medium transition-colors ${
@@ -136,6 +146,15 @@ export default function Navbar() {
             <div className="border-t pt-3 space-y-2">
               {!mounted ? null : isAuthenticated ? (
                 <>
+                  {user?.is_staff && (
+                    <Link
+                      href="/admin-dashboard"
+                      onClick={() => setMobileOpen(false)}
+                      className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <Link
                     href="/dashboard"
                     onClick={() => setMobileOpen(false)}
