@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'payments',
     'content',
     'analytics',
+    'vouchers',
+    'chat',
 ]
 
 MIDDLEWARE = [

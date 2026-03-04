@@ -6,7 +6,7 @@ import { Upload, CheckCircle, Smartphone } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-export default function GCashPaymentForm({ bookingId, totalAmount, onSuccess }) {
+export default function GCashPaymentForm({ bookingId, totalAmount, voucherCode, onSuccess }) {
   const [gcashReference, setGcashReference] = useState('')
   const [proofFile, setProofFile] = useState(null)
   const [proofPreview, setProofPreview] = useState(null)
@@ -45,6 +45,7 @@ export default function GCashPaymentForm({ bookingId, totalAmount, onSuccess }) 
       formData.append('booking_id', bookingId)
       formData.append('gcash_reference', gcashReference.trim())
       formData.append('proof_of_payment', proofFile)
+      if (voucherCode) formData.append('voucher_code', voucherCode)
 
       await api.post('/payments/submit-proof/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

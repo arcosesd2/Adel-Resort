@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Shield, CalendarDays } from 'lucide-react'
+import { ArrowLeft, Shield, CalendarDays, Tag, X } from 'lucide-react'
+import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 import GCashPaymentForm from '@/components/GCashPaymentForm'
@@ -16,6 +17,9 @@ function CheckoutContent() {
   const { isAuthenticated } = useAuthStore()
   const [booking, setBooking] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherApplied, setVoucherApplied] = useState(null)
+  const [applyingVoucher, setApplyingVoucher] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -43,6 +47,29 @@ function CheckoutContent() {
     }
     fetchBooking()
   }, [bookingId, isAuthenticated])
+
+  const handleApplyVoucher = async () => {
+    if (!voucherCode.trim()) return
+    setApplyingVoucher(true)
+    try {
+      const { data } = await api.post('/vouchers/validate/', {
+        code: voucherCode.trim(),
+        booking_id: bookingId,
+      })
+      setVoucherApplied(data)
+      toast.success('Voucher applied!')
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Invalid voucher code.'
+      toast.error(msg)
+    } finally {
+      setApplyingVoucher(false)
+    }
+  }
+
+  const handleRemoveVoucher = () => {
+    setVoucherApplied(null)
+    setVoucherCode('')
+  }
 
   const handlePaymentSuccess = (id) => {
     router.push(`/booking/${id}`)
@@ -92,10 +119,54 @@ function CheckoutContent() {
                   </span>
                   <span className="font-medium">₱{booking.total_price}</span>
                 </div>
+                {voucherApplied && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Voucher ({voucherApplied.code})</span>
+                    <span>-₱{voucherApplied.discount_amount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold text-base border-t pt-3">
                   <span>Total</span>
-                  <span className="text-ocean-700">₱{booking.total_price}</span>
+                  <span className="text-ocean-700">
+                    ₱{voucherApplied ? voucherApplied.final_price : booking.total_price}
+                  </span>
                 </div>
+              </div>
+
+              {/* Voucher Code Input */}
+              <div className="mt-4 border-t pt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Tag size={14} className="inline mr-1" />
+                  Voucher Code
+                </label>
+                {voucherApplied ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <span className="text-sm text-green-700 font-medium">
+                      {voucherApplied.code} applied — ₱{voucherApplied.discount_amount} off
+                    </span>
+                    <button type="button" onClick={handleRemoveVoucher} className="text-green-600 hover:text-green-800">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value)}
+                      placeholder="Enter voucher code"
+                      className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyVoucher}
+                      disabled={applyingVoucher || !voucherCode.trim()}
+                      className="btn-primary text-sm px-4 py-2 disabled:opacity-50"
+                    >
+                      {applyingVoucher ? 'Applying...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
@@ -110,7 +181,8 @@ function CheckoutContent() {
             <h2 className="font-semibold text-lg mb-4 text-gray-900">Payment Details</h2>
             <GCashPaymentForm
               bookingId={booking.id}
-              totalAmount={booking.total_price}
+              totalAmount={voucherApplied ? voucherApplied.final_price : booking.total_price}
+              voucherCode={voucherApplied?.code || ''}
               onSuccess={handlePaymentSuccess}
             />
           </div>

@@ -10,18 +10,24 @@ class BookingSerializer(serializers.ModelSerializer):
     room_detail = RoomListSerializer(source='room', read_only=True)
     slots_summary = serializers.CharField(read_only=True)
     payment_submitted = serializers.SerializerMethodField()
+    voucher_discount = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
         fields = (
             'id', 'room', 'room_detail', 'check_in', 'check_out', 'guests',
             'slots', 'slots_summary', 'total_price', 'status',
-            'special_requests', 'created_at', 'payment_submitted',
+            'special_requests', 'created_at', 'payment_submitted', 'voucher_discount',
         )
         read_only_fields = ('id', 'check_in', 'check_out', 'total_price', 'status', 'created_at')
 
     def get_payment_submitted(self, obj):
         return hasattr(obj, 'payment')
+
+    def get_voucher_discount(self, obj):
+        if hasattr(obj, 'voucher_usage'):
+            return str(obj.voucher_usage.discount_amount)
+        return None
 
     def _validate_slots(self, slots):
         """Validate slots structure: list of {date, slot}."""
