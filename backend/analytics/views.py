@@ -1,7 +1,8 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.throttling import ScopedRateThrottle
 from django.db.models import Count, Sum
 
 from .models import PageView
@@ -10,8 +11,13 @@ from bookings.models import Booking
 from payments.models import Payment
 
 
+class AnalyticsRateThrottle(ScopedRateThrottle):
+    scope = 'analytics'
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AnalyticsRateThrottle])
 def track_page_view(request):
     serializer = TrackPageViewSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)

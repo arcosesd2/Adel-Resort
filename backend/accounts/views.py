@@ -1,15 +1,25 @@
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 
+class LoginRateThrottle(ScopedRateThrottle):
+    scope = 'login'
+
+
+class RegisterRateThrottle(ScopedRateThrottle):
+    scope = 'register'
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([RegisterRateThrottle])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
@@ -25,6 +35,7 @@ def register(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
