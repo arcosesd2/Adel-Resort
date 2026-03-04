@@ -87,14 +87,16 @@ export default function Navbar() {
                     Admin
                   </Link>
                 )}
-                <Link
-                  href="/dashboard"
-                  className={`font-medium transition-colors ${
-                    transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
-                  }`}
-                >
-                  My Bookings
-                </Link>
+                {!user?.is_staff && (
+                  <Link
+                    href="/dashboard"
+                    className={`font-medium transition-colors ${
+                      transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                    }`}
+                  >
+                    My Bookings
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="btn-primary py-2 px-4 text-sm"
@@ -155,13 +157,15 @@ export default function Navbar() {
                       Admin
                     </Link>
                   )}
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMobileOpen(false)}
-                    className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
-                  >
-                    My Bookings
-                  </Link>
+                  {!user?.is_staff && (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMobileOpen(false)}
+                      className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                    >
+                      My Bookings
+                    </Link>
+                  )}
                   <button onClick={handleLogout} className="btn-primary w-full py-2">
                     Logout
                   </button>

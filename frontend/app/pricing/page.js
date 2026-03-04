@@ -31,7 +31,9 @@ export default function PricingPage() {
             Pricing
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Transparent pricing for all our accommodations. Day Tour: 8AM&ndash;5PM | Night Tour: 5PM&ndash;8AM
+            Transparent pricing for all our accommodations.
+            <br />
+            Day Tour: 8AM&ndash;5PM | Night Tour: 5PM&ndash;8AM
           </p>
         </div>
 

@@ -17,7 +17,7 @@ export default function Footer() {
               Your perfect beach getaway in Lawigan, Surigao Del Sur. Enjoy cottages, rooms, and event spaces right by the shore.
             </p>
             <div className="flex gap-4 mt-4">
-              <a href="https://facebook.com/AdelBeachResort" target="_blank" rel="noopener noreferrer" className="text-ocean-300 hover:text-white transition-colors"><Facebook size={20} /></a>
+              <a href="https://www.facebook.com/AdelBeachResort" target="_blank" rel="noopener noreferrer" className="text-ocean-300 hover:text-white transition-colors"><Facebook size={20} /></a>
             </div>
           </div>
 
