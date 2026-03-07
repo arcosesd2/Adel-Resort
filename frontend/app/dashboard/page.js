@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CalendarDays, Hotel, Clock, CheckCircle, XCircle, ArrowRight } from 'lucide-react'
+import { CalendarDays, Hotel, Clock, CheckCircle, XCircle, ArrowRight, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -16,10 +16,40 @@ const statusConfig = {
   completed: { label: 'Completed', icon: CheckCircle, color: 'bg-gray-100 text-gray-600' },
 }
 
+function DeadlineCountdown({ deadline }) {
+  const [timeLeft, setTimeLeft] = useState('')
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const diff = new Date(deadline) - new Date()
+      if (diff <= 0) {
+        setTimeLeft('expired')
+        return
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      setTimeLeft(`${hours}h ${minutes}m left`)
+    }
+    updateTimer()
+    const interval = setInterval(updateTimer, 60000)
+    return () => clearInterval(interval)
+  }, [deadline])
+
+  if (!timeLeft || timeLeft === 'expired') return null
+
+  return (
+    <span className="flex items-center gap-1 text-xs text-amber-600">
+      <AlertTriangle size={12} />
+      {timeLeft} to pay
+    </span>
+  )
+}
+
 function BookingCard({ booking, onCancel }) {
   const cfg = statusConfig[booking.status] || statusConfig.pending
   const Icon = cfg.icon
   const awaitingConfirmation = booking.status === 'pending' && booking.payment_submitted
+  const showDeadline = booking.status === 'pending' && !booking.payment_submitted && booking.payment_deadline
 
   return (
     <div className="card p-5">
@@ -28,18 +58,34 @@ function BookingCard({ booking, onCancel }) {
           <h3 className="font-semibold text-lg text-gray-900">{booking.room_detail?.name}</h3>
           <p className="text-gray-500 text-sm capitalize">{booking.room_detail?.room_type_display}</p>
         </div>
-        {awaitingConfirmation ? (
-          <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">
-            <Clock size={12} />
-            Awaiting Confirmation
-          </span>
-        ) : (
-          <span className={`flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full ${cfg.color}`}>
-            <Icon size={12} />
-            {cfg.label}
-          </span>
-        )}
+        <div className="flex flex-col items-end gap-1">
+          {awaitingConfirmation ? (
+            <span className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+              <Clock size={12} />
+              Awaiting Confirmation
+            </span>
+          ) : (
+            <span className={`flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full ${cfg.color}`}>
+              <Icon size={12} />
+              {cfg.label}
+            </span>
+          )}
+          {showDeadline && <DeadlineCountdown deadline={booking.payment_deadline} />}
+        </div>
       </div>
+
+      {booking.payment_type && (
+        <div className="mb-3 text-xs">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${
+            booking.payment_type === 'full'
+              ? 'bg-green-50 text-green-700'
+              : 'bg-blue-50 text-blue-700'
+          }`}>
+            {booking.payment_type === 'full' ? 'Full Payment' : '20% Downpayment'}
+            {booking.payment_amount && ` — ₱${booking.payment_amount}`}
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 mb-4 text-sm text-gray-600">
         <div className="flex items-center gap-1.5">

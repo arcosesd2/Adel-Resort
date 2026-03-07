@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, Clock } from 'lucide-react'
+import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, Clock, AlertTriangle } from 'lucide-react'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
@@ -79,6 +79,20 @@ export default function BookingDetailPage() {
           </div>
         )}
 
+        {booking.status === 'pending' && !booking.payment_submitted && booking.payment_deadline && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
+            <AlertTriangle className="text-amber-500 flex-shrink-0" size={28} />
+            <div>
+              <h2 className="font-semibold text-amber-800">Payment Required</h2>
+              <p className="text-amber-600 text-sm">
+                Please complete payment before{' '}
+                {format(parseISO(booking.payment_deadline), 'MMM d, yyyy h:mm a')}.
+                Unpaid reservations are automatically cancelled after 24 hours.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="card p-6 md:p-8">
           <div className="flex items-start justify-between mb-6">
             <div>
@@ -137,11 +151,27 @@ export default function BookingDetailPage() {
             </div>
           )}
 
-          <div className="border-t pt-5">
+          <div className="border-t pt-5 space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Total Amount</span>
               <span className="text-2xl font-bold text-ocean-700">₱{booking.total_price}</span>
             </div>
+            {booking.payment_type && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500">
+                  {booking.payment_type === 'full' ? 'Paid (Full Payment)' : 'Paid (20% Downpayment)'}
+                </span>
+                <span className="font-semibold text-gray-700">₱{booking.payment_amount}</span>
+              </div>
+            )}
+            {booking.payment_type === 'downpayment' && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500">Remaining Balance (due at check-in)</span>
+                <span className="font-semibold text-amber-600">
+                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 mt-6">

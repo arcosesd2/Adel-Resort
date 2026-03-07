@@ -8,10 +8,16 @@ class PaymentStatus(models.TextChoices):
     REFUNDED = 'refunded', 'Refunded'
 
 
+class PaymentType(models.TextChoices):
+    FULL = 'full', 'Full Payment'
+    DOWNPAYMENT = 'downpayment', '20% Downpayment'
+
+
 class Payment(models.Model):
     booking = models.OneToOneField('bookings.Booking', on_delete=models.CASCADE, related_name='payment')
     gcash_reference = models.CharField(max_length=200, blank=True, default='')
     proof_of_payment = models.ImageField(upload_to='payment_proofs/', blank=True)
+    payment_type = models.CharField(max_length=20, choices=PaymentType.choices, default=PaymentType.FULL)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default='php')
     status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)

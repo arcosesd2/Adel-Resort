@@ -1,9 +1,12 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from rest_framework import serializers
 from django.db.models import Q
+from django.utils import timezone
 from .models import Booking
 from rooms.serializers import RoomListSerializer
+
+PAYMENT_DEADLINE_HOURS = 24
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -11,6 +14,9 @@ class BookingSerializer(serializers.ModelSerializer):
     slots_summary = serializers.CharField(read_only=True)
     payment_submitted = serializers.SerializerMethodField()
     voucher_discount = serializers.SerializerMethodField()
+    payment_deadline = serializers.SerializerMethodField()
+    payment_type = serializers.SerializerMethodField()
+    payment_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -18,6 +24,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'id', 'room', 'room_detail', 'check_in', 'check_out', 'guests',
             'slots', 'slots_summary', 'total_price', 'status',
             'special_requests', 'created_at', 'payment_submitted', 'voucher_discount',
+            'payment_deadline', 'payment_type', 'payment_amount',
         )
         read_only_fields = ('id', 'check_in', 'check_out', 'total_price', 'status', 'created_at')
 
@@ -27,6 +34,20 @@ class BookingSerializer(serializers.ModelSerializer):
     def get_voucher_discount(self, obj):
         if hasattr(obj, 'voucher_usage'):
             return str(obj.voucher_usage.discount_amount)
+        return None
+
+    def get_payment_deadline(self, obj):
+        deadline = obj.created_at + timedelta(hours=PAYMENT_DEADLINE_HOURS)
+        return deadline.isoformat()
+
+    def get_payment_type(self, obj):
+        if hasattr(obj, 'payment'):
+            return obj.payment.payment_type
+        return None
+
+    def get_payment_amount(self, obj):
+        if hasattr(obj, 'payment'):
+            return str(obj.payment.amount)
         return None
 
     def _validate_slots(self, slots):

@@ -5,10 +5,10 @@ from .models import Payment
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'booking', 'gcash_reference', 'amount', 'currency', 'status', 'created_at')
-    list_filter = ('status', 'currency')
-    fields = ('booking', 'gcash_reference', 'proof_of_payment', 'proof_of_payment_preview', 'amount', 'currency', 'status', 'created_at', 'updated_at')
-    readonly_fields = ('booking', 'gcash_reference', 'proof_of_payment_preview', 'amount', 'currency', 'created_at', 'updated_at')
+    list_display = ('id', 'booking', 'gcash_reference', 'payment_type', 'amount', 'currency', 'status', 'created_at')
+    list_filter = ('status', 'payment_type', 'currency')
+    fields = ('booking', 'gcash_reference', 'proof_of_payment', 'proof_of_payment_preview', 'payment_type', 'amount', 'currency', 'status', 'created_at', 'updated_at')
+    readonly_fields = ('booking', 'gcash_reference', 'proof_of_payment_preview', 'payment_type', 'amount', 'currency', 'created_at', 'updated_at')
 
     @admin.display(description='Proof of Payment')
     def proof_of_payment_preview(self, obj):
