@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Max
 
 from .models import PageView
 from .serializers import TrackPageViewSerializer
@@ -32,8 +32,8 @@ def admin_dashboard(request):
     page_views = (
         PageView.objects
         .values('page_path')
-        .annotate(views=Count('id'))
-        .order_by('-views')
+        .annotate(views=Count('id'), last_viewed=Max('timestamp'))
+        .order_by('-last_viewed')
     )
     unique_visitors = PageView.objects.values('visitor_id').distinct().count()
     total_page_views = PageView.objects.count()

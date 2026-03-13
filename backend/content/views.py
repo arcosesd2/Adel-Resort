@@ -1,8 +1,16 @@
 from django.utils import timezone
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
-from .models import Event, Promotion, Pricing
-from .serializers import EventSerializer, PromotionSerializer, PricingSerializer
+from .models import News, Event, Promotion, Pricing
+from .serializers import NewsSerializer, EventSerializer, PromotionSerializer, PricingSerializer
+
+
+class NewsListView(ListAPIView):
+    serializer_class = NewsSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return News.objects.filter(is_active=True)
 
 
 class EventListView(ListAPIView):

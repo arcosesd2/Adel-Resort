@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import Event, Promotion, Pricing
+from .models import News, Event, Promotion, Pricing
+
+
+class NewsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = News
+        fields = ['id', 'title', 'content', 'image', 'published_date']
 
 
 class EventSerializer(serializers.ModelSerializer):

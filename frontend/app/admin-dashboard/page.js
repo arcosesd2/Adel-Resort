@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, Users, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle } from 'lucide-react'
+import { Eye, Users, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -31,6 +31,20 @@ export default function AdminDashboard() {
   })
   const [creatingVoucher, setCreatingVoucher] = useState(false)
 
+  // Onsite booking state
+  const [rooms, setRooms] = useState([])
+  const [showOnsiteForm, setShowOnsiteForm] = useState(false)
+  const [onsiteForm, setOnsiteForm] = useState({
+    guest_name: '', guest_email: '', guest_phone: '',
+    room: '', guests: 1, slots: [], special_requests: '',
+  })
+  const [onsiteSlotDate, setOnsiteSlotDate] = useState('')
+  const [onsiteSlotType, setOnsiteSlotType] = useState('day')
+  const [creatingOnsite, setCreatingOnsite] = useState(false)
+
+  // Page views collapse state
+  const [pageViewsOpen, setPageViewsOpen] = useState(false)
+
   // Chat state
   const [conversations, setConversations] = useState([])
   const [activeConvo, setActiveConvo] = useState(null)
@@ -54,6 +68,7 @@ export default function AdminDashboard() {
 
     fetchVouchers()
     fetchConversations()
+    fetchRooms()
   }, [user, router])
 
   // Poll for new messages in active conversation
@@ -94,6 +109,49 @@ export default function AdminDashboard() {
       const { data } = await api.get('/chat/admin/conversations/')
       setConversations(data)
     } catch {}
+  }
+
+  const fetchRooms = async () => {
+    try {
+      const { data } = await api.get('/rooms/')
+      setRooms(data.results || data)
+    } catch {}
+  }
+
+  const handleAddOnsiteSlot = () => {
+    if (!onsiteSlotDate) return
+    const exists = onsiteForm.slots.some(s => s.date === onsiteSlotDate && s.slot === onsiteSlotType)
+    if (exists) { toast.error('Slot already added.'); return }
+    setOnsiteForm(f => ({ ...f, slots: [...f.slots, { date: onsiteSlotDate, slot: onsiteSlotType }] }))
+    setOnsiteSlotDate('')
+  }
+
+  const handleRemoveOnsiteSlot = (idx) => {
+    setOnsiteForm(f => ({ ...f, slots: f.slots.filter((_, i) => i !== idx) }))
+  }
+
+  const handleCreateOnsiteBooking = async (e) => {
+    e.preventDefault()
+    if (onsiteForm.slots.length === 0) { toast.error('Add at least one slot.'); return }
+    setCreatingOnsite(true)
+    try {
+      const { data } = await api.post('/bookings/onsite/', {
+        guest_name: onsiteForm.guest_name,
+        guest_email: onsiteForm.guest_email || undefined,
+        guest_phone: onsiteForm.guest_phone || undefined,
+        room: parseInt(onsiteForm.room),
+        guests: parseInt(onsiteForm.guests),
+        slots: onsiteForm.slots,
+        special_requests: onsiteForm.special_requests,
+      })
+      toast.success(`Onsite booking created! #${data.id} - ${data.room} - ${data.total_price}`)
+      setOnsiteForm({ guest_name: '', guest_email: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '' })
+      setShowOnsiteForm(false)
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to create booking.')
+    } finally {
+      setCreatingOnsite(false)
+    }
   }
 
   const handleCreateVoucher = async (e) => {
@@ -216,34 +274,146 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Page Views Table */}
+      {/* Onsite Booking */}
       <div className="card overflow-hidden mb-10">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-ocean-800">Page Views by Path</h2>
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
+            <CalendarPlus size={20} /> Onsite Booking
+          </h2>
+          <button
+            onClick={() => setShowOnsiteForm(!showOnsiteForm)}
+            className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1"
+          >
+            <Plus size={14} /> Walk-in Booking
+          </button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Page Path</th>
-                <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {data.page_views.map((row) => (
-                <tr key={row.page_path} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.page_path}</td>
-                  <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{row.views.toLocaleString()}</td>
-                </tr>
-              ))}
-              {data.page_views.length === 0 && (
-                <tr>
-                  <td colSpan={2} className="px-6 py-8 text-center text-gray-400">No page views recorded yet</td>
-                </tr>
+
+        {showOnsiteForm && (
+          <form onSubmit={handleCreateOnsiteBooking} className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name *</label>
+                <input type="text" required value={onsiteForm.guest_name}
+                  onChange={e => setOnsiteForm(f => ({ ...f, guest_name: e.target.value }))}
+                  className="input-field" placeholder="e.g. Juan Dela Cruz" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+                <input type="email" value={onsiteForm.guest_email}
+                  onChange={e => setOnsiteForm(f => ({ ...f, guest_email: e.target.value }))}
+                  className="input-field" placeholder="guest@email.com" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+                <input type="text" value={onsiteForm.guest_phone}
+                  onChange={e => setOnsiteForm(f => ({ ...f, guest_phone: e.target.value }))}
+                  className="input-field" placeholder="09XX XXX XXXX" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Room *</label>
+                <select required value={onsiteForm.room}
+                  onChange={e => setOnsiteForm(f => ({ ...f, room: e.target.value }))}
+                  className="input-field">
+                  <option value="">Select a room</option>
+                  {rooms.map(r => (
+                    <option key={r.id} value={r.id}>{r.name} (max {r.capacity} pax)</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
+                <input type="number" min="1" required value={onsiteForm.guests}
+                  onChange={e => setOnsiteForm(f => ({ ...f, guests: e.target.value }))}
+                  className="input-field" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Special Requests</label>
+                <input type="text" value={onsiteForm.special_requests}
+                  onChange={e => setOnsiteForm(f => ({ ...f, special_requests: e.target.value }))}
+                  className="input-field" placeholder="Optional notes" />
+              </div>
+            </div>
+
+            {/* Slot picker */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Add Slots *</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input type="date" value={onsiteSlotDate}
+                  onChange={e => setOnsiteSlotDate(e.target.value)}
+                  className="input-field w-auto" />
+                <select value={onsiteSlotType} onChange={e => setOnsiteSlotType(e.target.value)} className="input-field w-auto">
+                  <option value="day">Day</option>
+                  <option value="night">Night</option>
+                </select>
+                <button type="button" onClick={handleAddOnsiteSlot}
+                  className="btn-outline text-sm px-3 py-2 flex items-center gap-1">
+                  <Plus size={14} /> Add
+                </button>
+              </div>
+              {onsiteForm.slots.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {onsiteForm.slots.map((s, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 bg-ocean-100 text-ocean-700 text-sm px-2 py-1 rounded-lg">
+                      {s.date} ({s.slot})
+                      <button type="button" onClick={() => handleRemoveOnsiteSlot(i)} className="text-ocean-500 hover:text-red-500">
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button type="submit" disabled={creatingOnsite} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
+                {creatingOnsite ? 'Creating...' : 'Create Booking'}
+              </button>
+              <button type="button" onClick={() => setShowOnsiteForm(false)} className="btn-outline text-sm px-4 py-2">Cancel</button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Page Views Table — collapsible, hidden by default */}
+      <div className="card overflow-hidden mb-10">
+        <button
+          onClick={() => setPageViewsOpen(!pageViewsOpen)}
+          className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
+            <Eye size={20} /> Page Views by Path
+          </h2>
+          {pageViewsOpen ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
+        </button>
+        {pageViewsOpen && (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Page Path</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Viewed</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {data.page_views.map((row) => (
+                  <tr key={row.page_path} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.page_path}</td>
+                    <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{row.views.toLocaleString()}</td>
+                    <td className="px-6 py-3 text-sm text-gray-500 text-right">
+                      {row.last_viewed ? new Date(row.last_viewed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                    </td>
+                  </tr>
+                ))}
+                {data.page_views.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-gray-400">No page views recorded yet</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Voucher Management */}

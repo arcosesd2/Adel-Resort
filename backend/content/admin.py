@@ -1,5 +1,13 @@
 from django.contrib import admin
-from .models import Event, Promotion, Pricing
+from .models import News, Event, Promotion, Pricing
+
+
+@admin.register(News)
+class NewsAdmin(admin.ModelAdmin):
+    list_display = ('title', 'published_date', 'is_active')
+    list_filter = ('is_active', 'published_date')
+    list_editable = ('is_active',)
+    search_fields = ('title',)
 
 
 @admin.register(Event)
