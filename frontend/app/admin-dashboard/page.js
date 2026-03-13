@@ -2,11 +2,15 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 import SlotPicker from '@/components/SlotPicker'
+import RevenueAnalyticsSection from '@/components/admin/RevenueAnalyticsSection'
+import BookingManagementSection from '@/components/admin/BookingManagementSection'
+import RoomOccupancySection from '@/components/admin/RoomOccupancySection'
+import UniqueVisitorsSection from '@/components/admin/UniqueVisitorsSection'
 
 const statCards = [
   { key: 'total_page_views', label: 'Total Page Views', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -16,6 +20,7 @@ const statCards = [
   { key: 'pending_sales', label: 'Pending Sales', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
   { key: 'pending_payments', label: 'Pending Payments', icon: CreditCard, color: 'text-red-600', bg: 'bg-red-50' },
   { key: 'unique_guests_count', label: 'Unique Guests', icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-50' },
+  { key: 'active_visitors_count', label: 'Active Visitors (90d)', icon: Activity, color: 'text-indigo-600', bg: 'bg-indigo-50' },
 ]
 
 export default function AdminDashboard() {
@@ -88,7 +93,11 @@ export default function AdminDashboard() {
     if (!user) return
 
     api.get('/analytics/dashboard/')
-      .then((res) => setData(res.data))
+      .then((res) => {
+        const d = res.data
+        d.active_visitors_count = (d.unique_visitors_list || []).length
+        setData(d)
+      })
       .catch(() => router.replace('/dashboard'))
       .finally(() => setLoading(false))
 
@@ -305,6 +314,9 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Revenue Analytics */}
+      <RevenueAnalyticsSection data={data} />
+
       {/* Onsite Booking */}
       <div className="card overflow-hidden mb-10">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -403,6 +415,9 @@ export default function AdminDashboard() {
           </form>
         )}
       </div>
+
+      {/* Booking Management */}
+      <BookingManagementSection />
 
       {/* Voucher Management */}
       <div className="card overflow-hidden mb-10">
@@ -614,6 +629,9 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Room Occupancy Overview */}
+      <RoomOccupancySection data={data} />
+
       {/* Unique Guests — collapsible, with per-guest booking breakdown */}
       <div className="card overflow-hidden mb-10">
         <button
@@ -707,6 +725,9 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Unique Visitors */}
+      <UniqueVisitorsSection data={data} />
 
       {/* Page Views Table — collapsible, at bottom, with daily breakdown */}
       <div className="card overflow-hidden">

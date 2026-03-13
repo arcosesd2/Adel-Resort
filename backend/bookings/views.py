@@ -10,7 +10,7 @@ from django.db.models import F
 from django.utils import timezone
 from rooms.models import Room
 from .models import Booking, BookingStatus
-from .serializers import BookingSerializer
+from .serializers import BookingSerializer, AdminBookingSerializer
 
 User = get_user_model()
 
@@ -186,3 +186,21 @@ def onsite_booking(request):
         response_data['voucher_code'] = voucher_code
 
     return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class AdminBookingListView(generics.ListAPIView):
+    serializer_class = AdminBookingSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        qs = Booking.objects.select_related('user', 'room').all()
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+
+class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AdminBookingSerializer
+    permission_classes = [IsAdminUser]
+    queryset = Booking.objects.select_related('user', 'room').all()
