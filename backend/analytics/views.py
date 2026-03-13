@@ -3,7 +3,8 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
-from django.db.models import Count, Sum, Max
+from django.db.models import Count, Sum, Max, F, Value
+from django.db.models.functions import Concat
 from datetime import timedelta
 from django.db.models.functions import TruncDate
 from django.utils import timezone
@@ -67,6 +68,35 @@ def admin_dashboard(request):
 
     pending_payments = Payment.objects.filter(status='pending').count()
 
+    # Unique guests — grouped by user, with booking stats
+    unique_guests = list(
+        Booking.objects
+        .filter(status__in=['confirmed', 'completed'])
+        .values('user__id')
+        .annotate(
+            guest_name=Concat(F('user__first_name'), Value(' '), F('user__last_name')),
+            email=F('user__email'),
+            phone=F('user__phone'),
+            total_bookings=Count('id'),
+            total_spent=Sum('total_price'),
+            last_booking=Max('created_at'),
+        )
+        .order_by('-last_booking')
+    )
+
+    # Per-guest booking details for expandable rows
+    guest_bookings = list(
+        Booking.objects
+        .filter(status__in=['confirmed', 'completed'])
+        .select_related('room')
+        .values(
+            'user__id', 'id', 'room__name',
+            'check_in', 'check_out', 'total_price',
+            'status', 'created_at', 'slots',
+        )
+        .order_by('user__id', '-created_at')
+    )
+
     return Response({
         'page_views': list(page_views),
         'daily_page_views': daily_page_views,
@@ -76,4 +106,7 @@ def admin_dashboard(request):
         'total_sales': total_sales,
         'pending_sales': pending_sales,
         'pending_payments': pending_payments,
+        'unique_guests_count': len(unique_guests),
+        'unique_guests': unique_guests,
+        'guest_bookings': guest_bookings,
     })
