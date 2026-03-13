@@ -25,7 +25,7 @@ export default function BookingManagementSection() {
     try {
       const params = filter !== 'all' ? `?status=${filter}` : ''
       const { data } = await api.get(`/bookings/admin/${params}`)
-      setBookings(data)
+      setBookings(data.results || data)
     } catch {
       toast.error('Failed to load bookings.')
     } finally {
