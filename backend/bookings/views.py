@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from django.contrib.auth import get_user_model
+from django.db.models import F
+from django.utils import timezone
 from rooms.models import Room
 from .models import Booking, BookingStatus
 from .serializers import BookingSerializer
@@ -125,6 +127,34 @@ def onsite_booking(request):
     night_price = room.night_price or room.day_price
     total = sum(night_price if s['slot'] == 'night' else day_price for s in slots)
 
+    # Voucher support
+    voucher_code = data.get('voucher_code', '').strip() if data.get('voucher_code') else ''
+    discount_amount = Decimal('0')
+    voucher = None
+
+    if voucher_code:
+        from vouchers.models import Voucher, VoucherUsage
+        try:
+            voucher = Voucher.objects.get(code__iexact=voucher_code)
+        except Voucher.DoesNotExist:
+            return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+        if not voucher.is_active or now < voucher.valid_from or now > voucher.valid_until:
+            return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
+        if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
+            return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
+        if voucher.min_booking_amount and total < voucher.min_booking_amount:
+            return Response({'detail': 'Booking amount does not meet voucher minimum.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if voucher.discount_type == 'percentage':
+            discount_amount = (total * voucher.discount_value / Decimal('100')).quantize(Decimal('0.01'))
+            discount_amount = min(discount_amount, total)
+        else:
+            discount_amount = min(voucher.discount_value, total)
+
+        total = total - discount_amount
+
     booking = Booking.objects.create(
         user=user, room=room,
         check_in=min_date, check_out=max_date,
@@ -133,11 +163,26 @@ def onsite_booking(request):
         special_requests=special_requests,
     )
 
-    return Response({
+    if voucher:
+        from vouchers.models import Voucher, VoucherUsage
+        Voucher.objects.filter(pk=voucher.pk).update(times_used=F('times_used') + 1)
+        VoucherUsage.objects.create(
+            voucher=voucher,
+            booking=booking,
+            user=user,
+            discount_amount=discount_amount,
+        )
+
+    response_data = {
         'id': booking.id,
         'guest_name': guest_name,
         'room': room.name,
         'total_price': str(booking.total_price),
         'status': booking.status,
         'slots_summary': booking.slots_summary,
-    }, status=status.HTTP_201_CREATED)
+    }
+    if discount_amount > 0:
+        response_data['discount'] = str(discount_amount)
+        response_data['voucher_code'] = voucher_code
+
+    return Response(response_data, status=status.HTTP_201_CREATED)

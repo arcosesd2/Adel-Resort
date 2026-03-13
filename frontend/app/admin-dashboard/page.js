@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, Users, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
+import SlotPicker from '@/components/SlotPicker'
 
 const statCards = [
   { key: 'total_page_views', label: 'Total Page Views', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -38,12 +39,12 @@ export default function AdminDashboard() {
     guest_name: '', guest_email: '', guest_phone: '',
     room: '', guests: 1, slots: [], special_requests: '',
   })
-  const [onsiteSlotDate, setOnsiteSlotDate] = useState('')
-  const [onsiteSlotType, setOnsiteSlotType] = useState('day')
   const [creatingOnsite, setCreatingOnsite] = useState(false)
+  const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
 
   // Page views collapse state
   const [pageViewsOpen, setPageViewsOpen] = useState(false)
+  const [expandedPaths, setExpandedPaths] = useState({})
 
   // Chat state
   const [conversations, setConversations] = useState([])
@@ -53,6 +54,26 @@ export default function AdminDashboard() {
   const [sendingReply, setSendingReply] = useState(false)
   const chatEndRef = useRef(null)
   const pollRef = useRef(null)
+
+  const selectedRoom = useMemo(() => {
+    if (!onsiteForm.room) return null
+    return rooms.find(r => r.id == onsiteForm.room) || null
+  }, [onsiteForm.room, rooms])
+
+  // Voucher preview for onsite booking
+  const onsiteVoucherPreview = useMemo(() => {
+    if (!onsiteVoucherCode.trim() || vouchers.length === 0) return null
+    const v = vouchers.find(v => v.code.toLowerCase() === onsiteVoucherCode.trim().toLowerCase())
+    if (!v) return { error: 'Voucher not found' }
+    if (!v.is_active) return { error: 'Voucher is inactive' }
+    const now = new Date()
+    if (now < new Date(v.valid_from) || now > new Date(v.valid_until)) return { error: 'Voucher expired' }
+    if (v.max_uses && v.times_used >= v.max_uses) return { error: 'Voucher fully used' }
+    return {
+      valid: true,
+      label: v.discount_type === 'percentage' ? `${v.discount_value}% off` : `₱${v.discount_value} off`,
+    }
+  }, [onsiteVoucherCode, vouchers])
 
   useEffect(() => {
     if (user && !user.is_staff) {
@@ -118,24 +139,12 @@ export default function AdminDashboard() {
     } catch {}
   }
 
-  const handleAddOnsiteSlot = () => {
-    if (!onsiteSlotDate) return
-    const exists = onsiteForm.slots.some(s => s.date === onsiteSlotDate && s.slot === onsiteSlotType)
-    if (exists) { toast.error('Slot already added.'); return }
-    setOnsiteForm(f => ({ ...f, slots: [...f.slots, { date: onsiteSlotDate, slot: onsiteSlotType }] }))
-    setOnsiteSlotDate('')
-  }
-
-  const handleRemoveOnsiteSlot = (idx) => {
-    setOnsiteForm(f => ({ ...f, slots: f.slots.filter((_, i) => i !== idx) }))
-  }
-
   const handleCreateOnsiteBooking = async (e) => {
     e.preventDefault()
     if (onsiteForm.slots.length === 0) { toast.error('Add at least one slot.'); return }
     setCreatingOnsite(true)
     try {
-      const { data } = await api.post('/bookings/onsite/', {
+      const payload = {
         guest_name: onsiteForm.guest_name,
         guest_email: onsiteForm.guest_email || undefined,
         guest_phone: onsiteForm.guest_phone || undefined,
@@ -143,9 +152,18 @@ export default function AdminDashboard() {
         guests: parseInt(onsiteForm.guests),
         slots: onsiteForm.slots,
         special_requests: onsiteForm.special_requests,
-      })
-      toast.success(`Onsite booking created! #${data.id} - ${data.room} - ${data.total_price}`)
+      }
+      if (onsiteVoucherCode.trim()) {
+        payload.voucher_code = onsiteVoucherCode.trim()
+      }
+      const { data } = await api.post('/bookings/onsite/', payload)
+      let msg = `Onsite booking created! #${data.id} - ${data.room} - ₱${data.total_price}`
+      if (data.discount) {
+        msg += ` (₱${data.discount} discount with ${data.voucher_code})`
+      }
+      toast.success(msg)
       setOnsiteForm({ guest_name: '', guest_email: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '' })
+      setOnsiteVoucherCode('')
       setShowOnsiteForm(false)
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to create booking.')
@@ -227,6 +245,10 @@ export default function AdminDashboard() {
       fetchConversations()
       toast.success('Conversation resolved.')
     } catch { toast.error('Failed to resolve.') }
+  }
+
+  const togglePathExpand = (path) => {
+    setExpandedPaths(prev => ({ ...prev, [path]: !prev[path] }))
   }
 
   if (loading || !data) {
@@ -312,7 +334,7 @@ export default function AdminDashboard() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Room *</label>
                 <select required value={onsiteForm.room}
-                  onChange={e => setOnsiteForm(f => ({ ...f, room: e.target.value }))}
+                  onChange={e => setOnsiteForm(f => ({ ...f, room: e.target.value, slots: [] }))}
                   className="input-field">
                   <option value="">Select a room</option>
                   {rooms.map(r => (
@@ -332,37 +354,36 @@ export default function AdminDashboard() {
                   onChange={e => setOnsiteForm(f => ({ ...f, special_requests: e.target.value }))}
                   className="input-field" placeholder="Optional notes" />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Voucher Code (optional)</label>
+                <input type="text" value={onsiteVoucherCode}
+                  onChange={e => setOnsiteVoucherCode(e.target.value)}
+                  className="input-field" placeholder="e.g. SUMMER20" />
+                {onsiteVoucherPreview && (
+                  <p className={`text-xs mt-1 ${onsiteVoucherPreview.valid ? 'text-green-600' : 'text-red-500'}`}>
+                    {onsiteVoucherPreview.valid ? onsiteVoucherPreview.label : onsiteVoucherPreview.error}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Slot picker */}
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Add Slots *</label>
-              <div className="flex items-center gap-2 flex-wrap">
-                <input type="date" value={onsiteSlotDate}
-                  onChange={e => setOnsiteSlotDate(e.target.value)}
-                  className="input-field w-auto" />
-                <select value={onsiteSlotType} onChange={e => setOnsiteSlotType(e.target.value)} className="input-field w-auto">
-                  <option value="day">Day</option>
-                  <option value="night">Night</option>
-                </select>
-                <button type="button" onClick={handleAddOnsiteSlot}
-                  className="btn-outline text-sm px-3 py-2 flex items-center gap-1">
-                  <Plus size={14} /> Add
-                </button>
+            {/* SlotPicker calendar */}
+            {selectedRoom && (
+              <div className="mt-4">
+                <SlotPicker
+                  key={selectedRoom.id}
+                  roomId={selectedRoom.id}
+                  isDayOnly={selectedRoom.is_day_only}
+                  onSlotsChange={(slots) => setOnsiteForm(f => ({ ...f, slots }))}
+                />
               </div>
-              {onsiteForm.slots.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {onsiteForm.slots.map((s, i) => (
-                    <span key={i} className="inline-flex items-center gap-1 bg-ocean-100 text-ocean-700 text-sm px-2 py-1 rounded-lg">
-                      {s.date} ({s.slot})
-                      <button type="button" onClick={() => handleRemoveOnsiteSlot(i)} className="text-ocean-500 hover:text-red-500">
-                        &times;
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
+
+            {!selectedRoom && (
+              <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-500 text-center">
+                Select a room to see the availability calendar
+              </div>
+            )}
 
             <div className="mt-4 flex gap-2">
               <button type="submit" disabled={creatingOnsite} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
@@ -371,48 +392,6 @@ export default function AdminDashboard() {
               <button type="button" onClick={() => setShowOnsiteForm(false)} className="btn-outline text-sm px-4 py-2">Cancel</button>
             </div>
           </form>
-        )}
-      </div>
-
-      {/* Page Views Table — collapsible, hidden by default */}
-      <div className="card overflow-hidden mb-10">
-        <button
-          onClick={() => setPageViewsOpen(!pageViewsOpen)}
-          className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
-        >
-          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
-            <Eye size={20} /> Page Views by Path
-          </h2>
-          {pageViewsOpen ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
-        </button>
-        {pageViewsOpen && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Page Path</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Viewed</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data.page_views.map((row) => (
-                  <tr key={row.page_path} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">{row.page_path}</td>
-                    <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{row.views.toLocaleString()}</td>
-                    <td className="px-6 py-3 text-sm text-gray-500 text-right">
-                      {row.last_viewed ? new Date(row.last_viewed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                    </td>
-                  </tr>
-                ))}
-                {data.page_views.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-gray-400">No page views recorded yet</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
         )}
       </div>
 
@@ -530,7 +509,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Chat Conversations */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden mb-10">
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
             <MessageCircle size={20} /> Chat Conversations
@@ -624,6 +603,78 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Page Views Table — collapsible, at bottom, with daily breakdown */}
+      <div className="card overflow-hidden">
+        <button
+          onClick={() => setPageViewsOpen(!pageViewsOpen)}
+          className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
+            <Eye size={20} /> Page Views by Path
+          </h2>
+          {pageViewsOpen ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
+        </button>
+        {pageViewsOpen && (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Page Path</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Last Viewed</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {data.page_views.map((row) => {
+                  const isExpanded = expandedPaths[row.page_path]
+                  const dailyRows = isExpanded
+                    ? (data.daily_page_views || []).filter(d => d.page_path === row.page_path)
+                    : []
+                  return (
+                    <React.Fragment key={row.page_path}>
+                      <tr
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => togglePathExpand(row.page_path)}
+                      >
+                        <td className="px-6 py-3 text-sm text-gray-700 font-mono flex items-center gap-2">
+                          {isExpanded
+                            ? <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+                            : <ChevronRight size={14} className="text-gray-400 flex-shrink-0" />}
+                          {row.page_path}
+                        </td>
+                        <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{row.views.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-sm text-gray-500 text-right">
+                          {row.last_viewed ? new Date(row.last_viewed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '\u2014'}
+                        </td>
+                      </tr>
+                      {isExpanded && dailyRows.map((d) => (
+                        <tr key={`${row.page_path}-${d.view_date}`} className="bg-gray-50/60">
+                          <td className="px-6 pl-14 py-2 text-xs text-gray-500">
+                            {new Date(d.view_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                          </td>
+                          <td className="px-6 py-2 text-xs text-gray-600 text-right">{d.views.toLocaleString()}</td>
+                          <td className="px-6 py-2"></td>
+                        </tr>
+                      ))}
+                      {isExpanded && dailyRows.length === 0 && (
+                        <tr className="bg-gray-50/60">
+                          <td colSpan={3} className="px-6 pl-14 py-2 text-xs text-gray-400">No daily data available</td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  )
+                })}
+                {data.page_views.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-gray-400">No page views recorded yet</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
