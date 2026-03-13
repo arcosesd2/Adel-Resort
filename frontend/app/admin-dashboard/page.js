@@ -7,10 +7,15 @@ import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 import SlotPicker from '@/components/SlotPicker'
-import RevenueAnalyticsSection from '@/components/admin/RevenueAnalyticsSection'
+import dynamic from 'next/dynamic'
 import BookingManagementSection from '@/components/admin/BookingManagementSection'
 import RoomOccupancySection from '@/components/admin/RoomOccupancySection'
 import UniqueVisitorsSection from '@/components/admin/UniqueVisitorsSection'
+
+const RevenueAnalyticsSection = dynamic(
+  () => import('@/components/admin/RevenueAnalyticsSection'),
+  { ssr: false }
+)
 
 const statCards = [
   { key: 'total_page_views', label: 'Total Page Views', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },
