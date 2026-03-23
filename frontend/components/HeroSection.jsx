@@ -15,31 +15,61 @@ export default function HeroSection({ heroConfig }) {
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(true)
 
-  // Force autoplay on mount and when video scrolls into view (Android Chrome fix)
+  // Fix React muted attribute bug — must set directly on the DOM element
+  const setVideoRef = (el) => {
+    if (el) {
+      el.setAttribute('muted', '')
+      el.setAttribute('playsinline', '')
+      el.setAttribute('webkit-playsinline', '')
+      el.defaultMuted = true
+      el.muted = true
+    }
+    videoRef.current = el
+  }
+
+  // Force autoplay — handles mount, data load, and scroll into view
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
     const tryPlay = () => {
       video.muted = true
-      video.play().catch(() => {})
+      const p = video.play()
+      if (p !== undefined) {
+        p.catch(() => {
+          // Last resort: try again after a short delay
+          setTimeout(() => {
+            video.muted = true
+            video.play().catch(() => {})
+          }, 500)
+        })
+      }
     }
 
-    // Play immediately on mount
+    // Try playing immediately
     tryPlay()
 
-    // Also play when video enters viewport (for scroll-into-view)
+    // Also try when video data is ready
+    const onCanPlay = () => tryPlay()
+    video.addEventListener('canplay', onCanPlay)
+    video.addEventListener('loadeddata', onCanPlay)
+
+    // Also play when video scrolls into viewport
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && isPlaying) {
           tryPlay()
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 }
     )
     observer.observe(video)
 
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      video.removeEventListener('canplay', onCanPlay)
+      video.removeEventListener('loadeddata', onCanPlay)
+    }
   }, [videoSrc, isPlaying])
 
   const togglePlay = () => {
@@ -131,13 +161,12 @@ export default function HeroSection({ heroConfig }) {
 
               <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
                 <video
-                  ref={videoRef}
+                  ref={setVideoRef}
                   autoPlay
                   muted
                   loop
                   playsInline
                   preload="auto"
-                  webkit-playsinline="true"
                   className="w-full aspect-video object-cover"
                 >
                   <source src={videoSrc} type="video/mp4" />
