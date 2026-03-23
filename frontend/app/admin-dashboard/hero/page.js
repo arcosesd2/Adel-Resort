@@ -33,7 +33,7 @@ export default function HeroSettingsPage() {
       setConfig(data)
       setVideoPreview(data.video_url)
       setPosterPreview(data.poster_url)
-    } catch { toast.error('Failed to load hero config.') }
+    } catch { toast.error('Failed to load homepage intro.') }
     finally { setLoading(false) }
   }
 
@@ -69,7 +69,7 @@ export default function HeroSettingsPage() {
       setPosterFile(null)
       setVideoPreview(data.video_url)
       setPosterPreview(data.poster_url)
-      toast.success('Hero settings updated!')
+      toast.success('Homepage intro updated!')
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to update.')
     } finally { setSaving(false) }
@@ -115,7 +115,7 @@ export default function HeroSettingsPage() {
     <div className="min-h-screen pt-24 pb-12 px-4 max-w-3xl mx-auto">
       <div className="flex items-center gap-4 mb-8">
         <Link href="/admin-dashboard" className="text-ocean-600 hover:text-ocean-800"><ArrowLeft size={20} /></Link>
-        <h1 className="text-3xl font-serif font-bold text-ocean-800">Hero Settings</h1>
+        <h1 className="text-3xl font-serif font-bold text-ocean-800">Homepage Intro</h1>
       </div>
 
       {loading ? (
@@ -128,7 +128,7 @@ export default function HeroSettingsPage() {
           {/* Video */}
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2 mb-4">
-              <Film size={20} /> Hero Video
+              <Film size={20} /> Intro Video
             </h2>
             <p className="text-sm text-gray-500 mb-4">Upload an MP4 video for the homepage hero background. If no video is set, only the poster image will show.</p>
 

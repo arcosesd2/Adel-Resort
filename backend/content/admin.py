@@ -52,3 +52,7 @@ class HeroConfigAdmin(admin.ModelAdmin):
         if obj.poster:
             return mark_safe(f'<img src="{obj.poster.url}" style="max-height:200px;" />')
         return '-'
+
+    class Media:
+        # Allow large video uploads in admin
+        pass

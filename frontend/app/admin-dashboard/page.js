@@ -317,7 +317,7 @@ export default function AdminDashboard() {
             <Smartphone size={16} /> GCash Settings
           </Link>
           <Link href="/admin-dashboard/hero" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Film size={16} /> Hero Video
+            <Film size={16} /> Homepage Intro
           </Link>
         </div>
       )}

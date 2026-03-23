@@ -1,5 +1,14 @@
+from django.conf import settings
+from django.core.files.storage import default_storage
 from django.db import models
 from rooms.models import RoomType
+
+
+def _get_video_storage():
+    if not settings.DEBUG:
+        from cloudinary_storage.storage import VideoMediaCloudinaryStorage
+        return VideoMediaCloudinaryStorage()
+    return default_storage
 
 
 class News(models.Model):
@@ -54,16 +63,16 @@ class Promotion(models.Model):
 
 
 class HeroConfig(models.Model):
-    video = models.FileField(upload_to='hero/', blank=True)
+    video = models.FileField(upload_to='hero/', blank=True, storage=_get_video_storage)
     poster = models.ImageField(upload_to='hero/', blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Hero Configuration'
-        verbose_name_plural = 'Hero Configuration'
+        verbose_name = 'Homepage Intro'
+        verbose_name_plural = 'Homepage Intro'
 
     def __str__(self):
-        return 'Hero Config'
+        return 'Homepage Intro'
 
     def save(self, *args, **kwargs):
         self.pk = 1
