@@ -2,15 +2,16 @@ from datetime import timedelta
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.db.models import F
 from django.utils import timezone
 
 from bookings.models import Booking, BookingStatus
-from .models import Payment, PaymentStatus, PaymentType
-from .serializers import SubmitProofSerializer
+from .models import Payment, PaymentStatus, PaymentType, GCashConfig
+from .serializers import SubmitProofSerializer, GCashConfigSerializer
+from accounts.permissions import IsSuperAdmin
 
 PAYMENT_DEADLINE_HOURS = 24
 
@@ -99,3 +100,22 @@ def submit_proof_of_payment(request):
     )
 
     return Response({'detail': 'Payment proof submitted. Awaiting admin confirmation.'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def gcash_config(request):
+    config = GCashConfig.load()
+    return Response(GCashConfigSerializer(config, context={'request': request}).data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsSuperAdmin])
+@parser_classes([MultiPartParser, FormParser])
+def gcash_config_update(request):
+    config = GCashConfig.load()
+    serializer = GCashConfigSerializer(config, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Upload, CheckCircle, Smartphone } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -11,7 +11,17 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
   const [proofFile, setProofFile] = useState(null)
   const [proofPreview, setProofPreview] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [config, setConfig] = useState(null)
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    api.get('/payments/gcash-config/')
+      .then(({ data }) => setConfig(data))
+      .catch(() => {
+        // Fallback to hardcoded values if API fails
+        setConfig({ gcash_number: '0916 315 2117', account_name: 'Ralph Arcos', qr_code_url: '/gcash-qr.png' })
+      })
+  }, [])
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]
@@ -69,19 +79,21 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
           <Smartphone size={18} />
           Pay via GCash
         </h3>
-        <div className="flex flex-col items-center gap-3 mb-3">
-          <Image
-            src="/gcash-qr.png"
-            alt="GCash QR Code"
-            width={300}
-            height={360}
-            className="rounded-lg border border-blue-200 w-full max-w-[300px] h-auto"
-          />
-        </div>
-        <div className="text-sm text-blue-700 space-y-1">
-          <p><span className="font-medium">GCash Number:</span> 0916 315 2117</p>
-          <p><span className="font-medium">Account Name:</span> Ralph Arcos</p>
-        </div>
+        {config?.qr_code_url && (
+          <div className="flex flex-col items-center gap-3 mb-3">
+            <img
+              src={config.qr_code_url}
+              alt="GCash QR Code"
+              className="rounded-lg border border-blue-200 w-full max-w-[300px] h-auto"
+            />
+          </div>
+        )}
+        {config && (
+          <div className="text-sm text-blue-700 space-y-1">
+            <p><span className="font-medium">GCash Number:</span> {config.gcash_number}</p>
+            <p><span className="font-medium">Account Name:</span> {config.account_name}</p>
+          </div>
+        )}
       </div>
 
       {/* Amount */}

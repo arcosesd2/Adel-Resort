@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -19,14 +19,14 @@ const RevenueAnalyticsSection = dynamic(
 )
 
 const statCards = [
-  { key: 'total_page_views', label: 'Total Page Views', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { key: 'unique_visitors', label: 'Unique Visitors', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { key: 'total_page_views', label: 'Total Page Views', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50', superadminOnly: true },
+  { key: 'unique_visitors', label: 'Unique Visitors', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50', superadminOnly: true },
   { key: 'net_income', label: 'Net Income', icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50', isCurrency: true },
   { key: 'total_sales', label: 'Total Sales', icon: ShoppingCart, color: 'text-ocean-600', bg: 'bg-ocean-50' },
   { key: 'pending_sales', label: 'Pending Sales', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
   { key: 'pending_payments', label: 'Pending Payments', icon: CreditCard, color: 'text-red-600', bg: 'bg-red-50' },
-  { key: 'unique_guests_count', label: 'Unique Guests', icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-50' },
-  { key: 'active_visitors_count', label: 'Active Visitors (90d)', icon: Activity, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { key: 'unique_guests_count', label: 'Unique Guests', icon: UserCheck, color: 'text-teal-600', bg: 'bg-teal-50', superadminOnly: true },
+  { key: 'active_visitors_count', label: 'Active Visitors (90d)', icon: Activity, color: 'text-indigo-600', bg: 'bg-indigo-50', superadminOnly: true },
 ]
 
 export default function AdminDashboard() {
@@ -313,12 +313,15 @@ export default function AdminDashboard() {
           <Link href="/admin-dashboard/devices" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
             <Fingerprint size={16} /> Devices
           </Link>
+          <Link href="/admin-dashboard/gcash" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Smartphone size={16} /> GCash Settings
+          </Link>
         </div>
       )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        {statCards.map(({ key, label, icon: Icon, color, bg, isCurrency }) => (
+        {statCards.filter(c => !c.superadminOnly || user?.is_superadmin).map(({ key, label, icon: Icon, color, bg, isCurrency }) => (
           <div key={key} className="card p-6 flex items-center gap-4">
             <div className={`${bg} p-3 rounded-xl`}>
               <Icon className={`${color} w-6 h-6`} />
@@ -653,8 +656,8 @@ export default function AdminDashboard() {
       {/* Room Occupancy Overview */}
       <RoomOccupancySection data={data} />
 
-      {/* Unique Guests — collapsible, with per-guest booking breakdown */}
-      <div className="card overflow-hidden mb-10">
+      {/* Unique Guests — superadmin only */}
+      {user?.is_superadmin && <div className="card overflow-hidden mb-10">
         <button
           onClick={() => setGuestsOpen(!guestsOpen)}
           className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -745,13 +748,13 @@ export default function AdminDashboard() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
 
-      {/* Unique Visitors */}
-      <UniqueVisitorsSection data={data} />
+      {/* Unique Visitors — superadmin only */}
+      {user?.is_superadmin && <UniqueVisitorsSection data={data} />}
 
-      {/* Page Views Table — collapsible, at bottom, with daily breakdown */}
-      <div className="card overflow-hidden">
+      {/* Page Views Table — superadmin only */}
+      {user?.is_superadmin && <div className="card overflow-hidden">
         <button
           onClick={() => setPageViewsOpen(!pageViewsOpen)}
           className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
@@ -820,7 +823,7 @@ export default function AdminDashboard() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

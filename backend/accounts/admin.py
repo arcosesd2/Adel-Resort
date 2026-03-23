@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, RegisteredDevice, LoginAttempt
 
@@ -35,3 +35,26 @@ class LoginAttemptAdmin(admin.ModelAdmin):
     list_filter = ('success', 'failure_reason')
     search_fields = ('email', 'ip_address')
     readonly_fields = ('user', 'email', 'fingerprint', 'ip_address', 'user_agent', 'device_info', 'success', 'failure_reason', 'created_at')
+    actions = ['approve_device']
+
+    @admin.action(description='Approve device (register from selected attempts)')
+    def approve_device(self, request, queryset):
+        approved = 0
+        skipped = 0
+        for attempt in queryset:
+            if not attempt.user or not attempt.fingerprint:
+                skipped += 1
+                continue
+            device, created = RegisteredDevice.objects.get_or_create(
+                user=attempt.user,
+                fingerprint=attempt.fingerprint,
+                defaults={
+                    'device_name': attempt.device_info.get('device_name', '') if attempt.device_info else '',
+                    'user_agent': attempt.user_agent,
+                }
+            )
+            if not created and not device.is_active:
+                device.is_active = True
+                device.save()
+            approved += 1
+        self.message_user(request, f'{approved} device(s) approved, {skipped} skipped (no user/fingerprint).', messages.SUCCESS)

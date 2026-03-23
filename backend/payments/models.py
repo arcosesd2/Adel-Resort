@@ -26,3 +26,30 @@ class Payment(models.Model):
 
     def __str__(self):
         return f'Payment for Booking #{self.booking_id} - {self.status}'
+
+
+class GCashConfig(models.Model):
+    gcash_number = models.CharField(max_length=30)
+    account_name = models.CharField(max_length=200)
+    qr_code = models.ImageField(upload_to='gcash/')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'GCash Configuration'
+        verbose_name_plural = 'GCash Configuration'
+
+    def __str__(self):
+        return f'GCash - {self.account_name} ({self.gcash_number})'
+
+    def save(self, *args, **kwargs):
+        # Singleton: always use pk=1
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={'gcash_number': '0916 315 2117', 'account_name': 'Ralph Arcos'},
+        )
+        return obj
