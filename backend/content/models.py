@@ -53,6 +53,28 @@ class Promotion(models.Model):
         return self.title
 
 
+class HeroConfig(models.Model):
+    video = models.FileField(upload_to='hero/', blank=True)
+    poster = models.ImageField(upload_to='hero/', blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Hero Configuration'
+        verbose_name_plural = 'Hero Configuration'
+
+    def __str__(self):
+        return 'Hero Config'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class Pricing(models.Model):
     room_type = models.CharField(max_length=25, choices=RoomType.choices)
     label = models.CharField(max_length=200)

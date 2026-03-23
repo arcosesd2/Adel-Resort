@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import News, Event, Promotion, Pricing
+from django.utils.safestring import mark_safe
+from .models import News, Event, Promotion, Pricing, HeroConfig
 
 
 @admin.register(News)
@@ -32,3 +33,22 @@ class PricingAdmin(admin.ModelAdmin):
     list_filter = ('room_type',)
     list_editable = ('day_price', 'night_price', 'order')
     ordering = ('order',)
+
+
+@admin.register(HeroConfig)
+class HeroConfigAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'updated_at')
+    fields = ('video', 'poster', 'poster_preview', 'updated_at')
+    readonly_fields = ('poster_preview', 'updated_at')
+
+    def has_add_permission(self, request):
+        return not HeroConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='Poster Preview')
+    def poster_preview(self, obj):
+        if obj.poster:
+            return mark_safe(f'<img src="{obj.poster.url}" style="max-height:200px;" />')
+        return '-'
