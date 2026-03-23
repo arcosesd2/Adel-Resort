@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity } from 'lucide-react'
+import Link from 'next/link'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -299,6 +300,21 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">
       <h1 className="text-3xl font-serif font-bold text-ocean-800 mb-8">Admin Dashboard</h1>
+
+      {/* Superadmin Tabs */}
+      {user?.is_superadmin && (
+        <div className="flex gap-2 mb-8 flex-wrap">
+          <Link href="/admin-dashboard/users" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Shield size={16} /> Users
+          </Link>
+          <Link href="/admin-dashboard/login-activity" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <ScrollText size={16} /> Login Activity
+          </Link>
+          <Link href="/admin-dashboard/devices" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Fingerprint size={16} /> Devices
+          </Link>
+        </div>
+      )}
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">

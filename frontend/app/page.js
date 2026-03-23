@@ -30,13 +30,17 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=90"
-            alt="Adel Beach Resort hero"
-            fill
-            className="object-cover"
-            priority
-          />
+          {/* Place hero-video.mp4 in frontend/public/ to enable video background */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=90"
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src="/hero-video.mp4" type="video/mp4" />
+          </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
         </div>
 

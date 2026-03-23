@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { setTokens, clearTokens } from '@/lib/auth'
+import { getDeviceFingerprint, getDeviceInfo } from '@/lib/fingerprint'
 import api from '@/lib/api'
 
 const useAuthStore = create(
@@ -11,7 +12,9 @@ const useAuthStore = create(
       lastActivity: Date.now(),
 
       login: async (email, password) => {
-        const { data } = await api.post('/auth/login/', { email, password })
+        const device_fingerprint = await getDeviceFingerprint()
+        const device_info = getDeviceInfo()
+        const { data } = await api.post('/auth/login/', { email, password, device_fingerprint, device_info })
         setTokens(data.access, data.refresh)
         set({ user: data.user, isAuthenticated: true, lastActivity: Date.now() })
         return data
