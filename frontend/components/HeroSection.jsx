@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Play, Pause, Volume2, VolumeX } from 'lucide-react'
@@ -14,6 +14,33 @@ export default function HeroSection({ heroConfig }) {
 
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(true)
+
+  // Force autoplay on mount and when video scrolls into view (Android Chrome fix)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const tryPlay = () => {
+      video.muted = true
+      video.play().catch(() => {})
+    }
+
+    // Play immediately on mount
+    tryPlay()
+
+    // Also play when video enters viewport (for scroll-into-view)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && isPlaying) {
+          tryPlay()
+        }
+      },
+      { threshold: 0.3 }
+    )
+    observer.observe(video)
+
+    return () => observer.disconnect()
+  }, [videoSrc, isPlaying])
 
   const togglePlay = () => {
     if (!videoRef.current) return
@@ -34,13 +61,14 @@ export default function HeroSection({ heroConfig }) {
   return (
     <>
       {/* Hero — poster image background */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen h-[100dvh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <Image
             src={posterSrc}
             alt="Adel Beach Resort hero"
             fill
-            className="object-cover"
+            sizes="100vw"
+            className="object-cover object-center"
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
@@ -108,6 +136,8 @@ export default function HeroSection({ heroConfig }) {
                   muted
                   loop
                   playsInline
+                  preload="auto"
+                  webkit-playsinline="true"
                   className="w-full aspect-video object-cover"
                 >
                   <source src={videoSrc} type="video/mp4" />
@@ -116,8 +146,8 @@ export default function HeroSection({ heroConfig }) {
                 {/* Video overlay gradient (subtle) */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
 
-                {/* Video controls */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {/* Video controls — always visible on mobile, hover on desktop */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-center justify-between md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                   <button
                     onClick={togglePlay}
                     className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
