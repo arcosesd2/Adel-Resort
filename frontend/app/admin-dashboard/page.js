@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   const [rooms, setRooms] = useState([])
   const [showOnsiteForm, setShowOnsiteForm] = useState(false)
   const [onsiteForm, setOnsiteForm] = useState({
-    guest_name: '', guest_email: '', guest_phone: '',
+    guest_name: '', guest_username: '', guest_phone: '',
     room: '', guests: 1, slots: [], special_requests: '',
   })
   const [creatingOnsite, setCreatingOnsite] = useState(false)
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
     try {
       const payload = {
         guest_name: onsiteForm.guest_name,
-        guest_email: onsiteForm.guest_email || undefined,
+        guest_username: onsiteForm.guest_username || undefined,
         guest_phone: onsiteForm.guest_phone || undefined,
         room: parseInt(onsiteForm.room),
         guests: parseInt(onsiteForm.guests),
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
         msg += ` (₱${data.discount} discount with ${data.voucher_code})`
       }
       toast.success(msg)
-      setOnsiteForm({ guest_name: '', guest_email: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '' })
+      setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '' })
       setOnsiteVoucherCode('')
       setShowOnsiteForm(false)
     } catch (err) {
@@ -368,10 +368,10 @@ export default function AdminDashboard() {
                   className="input-field" placeholder="e.g. Juan Dela Cruz" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
-                <input type="email" value={onsiteForm.guest_email}
-                  onChange={e => setOnsiteForm(f => ({ ...f, guest_email: e.target.value }))}
-                  className="input-field" placeholder="guest@email.com" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username (optional)</label>
+                <input type="text" value={onsiteForm.guest_username}
+                  onChange={e => setOnsiteForm(f => ({ ...f, guest_username: e.target.value }))}
+                  className="input-field" placeholder="guest username" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
@@ -702,7 +702,7 @@ export default function AdminDashboard() {
                           <span className="font-medium">{guest.guest_name?.trim() || 'Unknown'}</span>
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-500">
-                          <div>{guest.email && !guest.email.includes('@onsite.local') ? guest.email : '\u2014'}</div>
+                          <div>{guest.username && !guest.username.startsWith('walkin-') ? guest.username : '\u2014'}</div>
                           {guest.phone && <div className="text-xs text-gray-400">{guest.phone}</div>}
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{guest.total_bookings}</td>

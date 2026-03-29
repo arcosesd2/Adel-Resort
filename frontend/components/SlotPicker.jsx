@@ -49,6 +49,7 @@ function labelSlot(s) {
 
 export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut }) {
   const [bookedSlots, setBookedSlots] = useState([])
+  const [maxRooms, setMaxRooms] = useState(1)
   const [checkIn, setCheckIn] = useState(defaultCheckIn || null)   // { date, slot }
   const [checkOut, setCheckOut] = useState(defaultCheckOut || null)  // { date, slot }
   const [loading, setLoading] = useState(true)
@@ -64,19 +65,23 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeCh
       try {
         const { data } = await api.get(`/rooms/${roomId}/availability/`)
         setBookedSlots(data.booked_slots || [])
+        setMaxRooms(data.max_rooms || 1)
       } catch (err) { console.error('Failed to load availability:', err) }
       finally { setLoading(false) }
     })()
   }, [roomId])
 
   /* ---- derived data ---- */
-  const bookedSet = useMemo(() => {
-    const s = new Set()
-    for (const x of bookedSlots) s.add(slotKey(x.date, x.slot))
-    return s
+  const bookedCounts = useMemo(() => {
+    const counts = {}
+    for (const x of bookedSlots) {
+      const key = slotKey(x.date, x.slot)
+      counts[key] = (counts[key] || 0) + 1
+    }
+    return counts
   }, [bookedSlots])
 
-  const isBooked  = useCallback((d, s) => bookedSet.has(slotKey(d, s)), [bookedSet])
+  const isBooked  = useCallback((d, s) => (bookedCounts[slotKey(d, s)] || 0) >= maxRooms, [bookedCounts, maxRooms])
 
   const yesterdayStr = useMemo(() => {
     const y = new Date(now)
@@ -117,7 +122,7 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeCh
   const rangeSlots = useMemo(() => buildRange(checkIn, checkOut, isDayOnly), [checkIn, checkOut, isDayOnly])
   const rangeSet   = useMemo(() => new Set(rangeSlots.map(s => slotKey(s.date, s.slot))), [rangeSlots])
 
-  const overlaps = useMemo(() => rangeSlots.filter(s => isBooked(s.date, s.slot)), [rangeSlots, bookedSet])
+  const overlaps = useMemo(() => rangeSlots.filter(s => isBooked(s.date, s.slot)), [rangeSlots, bookedCounts, maxRooms])
   const hasOverlap = overlaps.length > 0
 
   const selectedSlots = useMemo(() => {

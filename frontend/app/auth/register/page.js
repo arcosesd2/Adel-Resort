@@ -16,7 +16,7 @@ function RegisterForm() {
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
-    email: '',
+    username: '',
     phone: '',
     password: '',
     password2: '',
@@ -95,14 +95,14 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
               <input
-                type="email"
-                name="email"
-                value={form.email}
+                type="text"
+                name="username"
+                value={form.username}
                 onChange={handleChange}
                 required
-                placeholder="your@email.com"
+                placeholder="Choose a username"
                 className="input-field"
               />
             </div>

@@ -11,10 +11,10 @@ const useAuthStore = create(
       isAuthenticated: false,
       lastActivity: Date.now(),
 
-      login: async (email, password) => {
+      login: async (username, password) => {
         const device_fingerprint = await getDeviceFingerprint()
         const device_info = getDeviceInfo()
-        const { data } = await api.post('/auth/login/', { email, password, device_fingerprint, device_info })
+        const { data } = await api.post('/auth/login/', { username, password, device_fingerprint, device_info })
         setTokens(data.access, data.refresh)
         set({ user: data.user, isAuthenticated: true, lastActivity: Date.now() })
         return data

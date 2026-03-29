@@ -9,7 +9,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'phone', 'password', 'password2')
+        fields = ('username', 'first_name', 'last_name', 'phone', 'password', 'password2')
 
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -22,7 +22,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    username = serializers.CharField()
     password = serializers.CharField(write_only=True)
     device_fingerprint = serializers.CharField(required=False, allow_blank=True, default='')
     device_info = serializers.JSONField(required=False, default=dict)
@@ -31,8 +31,8 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'date_joined', 'is_staff', 'is_superadmin')
-        read_only_fields = ('id', 'email', 'date_joined', 'is_staff', 'is_superadmin')
+        fields = ('id', 'username', 'first_name', 'last_name', 'phone', 'date_joined', 'is_staff', 'is_superadmin')
+        read_only_fields = ('id', 'username', 'date_joined', 'is_staff', 'is_superadmin')
 
 
 class UserManagementSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class UserManagementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone', 'is_active', 'is_staff', 'is_superadmin', 'date_joined', 'password')
+        fields = ('id', 'username', 'first_name', 'last_name', 'phone', 'is_active', 'is_staff', 'is_superadmin', 'date_joined', 'password')
         read_only_fields = ('id', 'date_joined')
 
     def create(self, validated_data):
@@ -60,18 +60,18 @@ class UserManagementSerializer(serializers.ModelSerializer):
 
 
 class RegisteredDeviceSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = RegisteredDevice
-        fields = ('id', 'user', 'user_email', 'fingerprint', 'device_name', 'user_agent', 'registered_at', 'is_active')
+        fields = ('id', 'user', 'user_username', 'fingerprint', 'device_name', 'user_agent', 'registered_at', 'is_active')
         read_only_fields = ('id', 'registered_at')
 
 
 class LoginAttemptSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True, default='')
+    user_username = serializers.CharField(source='user.username', read_only=True, default='')
 
     class Meta:
         model = LoginAttempt
-        fields = ('id', 'user', 'user_email', 'email', 'fingerprint', 'ip_address', 'user_agent', 'device_info', 'success', 'failure_reason', 'created_at')
+        fields = ('id', 'user', 'user_username', 'username', 'fingerprint', 'ip_address', 'user_agent', 'device_info', 'success', 'failure_reason', 'created_at')
         read_only_fields = fields

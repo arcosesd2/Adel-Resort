@@ -105,7 +105,7 @@ export default function DevicesPage() {
               <tbody className="divide-y divide-gray-100">
                 {devices.map(d => (
                   <tr key={d.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-sm text-gray-800">{d.user_email}</td>
+                    <td className="px-6 py-3 text-sm text-gray-800">{d.user_username}</td>
                     <td className="px-6 py-3 text-sm text-gray-600">{d.device_name || '—'}</td>
                     <td className="px-6 py-3 text-sm text-gray-500 font-mono">{d.fingerprint.slice(0, 12)}...</td>
                     <td className="px-6 py-3 text-sm text-gray-500">{new Date(d.registered_at).toLocaleDateString()}</td>
@@ -147,7 +147,7 @@ export default function DevicesPage() {
                 <select required value={form.user} onChange={e => setForm(f => ({ ...f, user: e.target.value }))} className="input-field">
                   <option value="">Select user</option>
                   {users.filter(u => u.is_staff).map(u => (
-                    <option key={u.id} value={u.id}>{u.email}</option>
+                    <option key={u.id} value={u.id}>{u.username}</option>
                   ))}
                 </select>
               </div>

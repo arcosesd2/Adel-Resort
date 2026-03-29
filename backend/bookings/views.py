@@ -48,7 +48,7 @@ def onsite_booking(request):
     """Create a booking for a walk-in guest. Staff-only."""
     data = request.data
     guest_name = data.get('guest_name', '').strip()
-    guest_email = data.get('guest_email', '').strip()
+    guest_username = data.get('guest_username', '').strip()
     guest_phone = data.get('guest_phone', '').strip()
     room_id = data.get('room')
     guests = data.get('guests', 1)
@@ -64,9 +64,9 @@ def onsite_booking(request):
     last_name = name_parts[1] if len(name_parts) > 1 else ''
 
     # Find or create guest user
-    if guest_email:
+    if guest_username:
         user, created = User.objects.get_or_create(
-            email=guest_email,
+            username=guest_username,
             defaults={
                 'first_name': first_name,
                 'last_name': last_name,
@@ -77,11 +77,11 @@ def onsite_booking(request):
             user.set_unusable_password()
             user.save()
     else:
-        # Create a placeholder user with a generated email
+        # Create a placeholder user with a generated username
         import uuid
-        placeholder_email = f'walkin-{uuid.uuid4().hex[:8]}@onsite.local'
+        placeholder_username = f'walkin-{uuid.uuid4().hex[:8]}'
         user = User.objects.create(
-            email=placeholder_email,
+            username=placeholder_username,
             first_name=first_name,
             last_name=last_name,
             phone=guest_phone,
@@ -110,15 +110,17 @@ def onsite_booking(request):
         room=room, status__in=['confirmed', 'pending'],
         check_in__lte=max_date, check_out__gte=min_date,
     )
-    booked_set = set()
+    from collections import Counter
+    booked_counts = Counter()
     for b in existing:
         for s in b.slots:
-            booked_set.add((s['date'], s['slot']))
+            booked_counts[(s['date'], s['slot'])] += 1
 
+    max_rooms = room.max_rooms or 1
     for s in slots:
-        if (s['date'], s['slot']) in booked_set:
+        if booked_counts[(s['date'], s['slot'])] >= max_rooms:
             return Response(
-                {'detail': f"The {s['slot']} slot on {s['date']} is already booked."},
+                {'detail': f"The {s['slot']} slot on {s['date']} is fully booked."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

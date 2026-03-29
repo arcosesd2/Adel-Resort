@@ -51,6 +51,7 @@ def room_availability(request, pk):
     return Response({
         'room_id': room.id,
         'room_name': room.name,
+        'max_rooms': room.max_rooms,
         'booked_slots': _get_booked_slots(room),
     })
 
@@ -68,6 +69,7 @@ def all_rooms_availability(request):
             'day_price': str(room.day_price),
             'night_price': str(room.night_price) if room.night_price else None,
             'is_day_only': room.is_day_only,
+            'max_rooms': room.max_rooms,
             'booked_slots': _get_booked_slots(room),
         })
 

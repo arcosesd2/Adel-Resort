@@ -11,7 +11,7 @@ class RoomImageInline(admin.TabularInline):
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     form = RoomAdminForm
-    list_display = ('name', 'room_type', 'day_price', 'night_price', 'is_day_only', 'capacity', 'is_active')
+    list_display = ('name', 'room_type', 'day_price', 'night_price', 'is_day_only', 'capacity', 'max_rooms', 'is_active')
     list_filter = ('room_type', 'is_active')
     search_fields = ('name',)
     inlines = [RoomImageInline]

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
-const emptyForm = { email: '', first_name: '', last_name: '', phone: '', password: '', is_staff: false, is_superadmin: false }
+const emptyForm = { username: '', first_name: '', last_name: '', phone: '', password: '', is_staff: false, is_superadmin: false }
 
 export default function UsersPage() {
   const { user } = useAuthStore()
@@ -41,7 +41,7 @@ export default function UsersPage() {
   }
 
   const openEdit = (u) => {
-    setForm({ email: u.email, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '', password: '', is_staff: u.is_staff, is_superadmin: u.is_superadmin })
+    setForm({ username: u.username, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '', password: '', is_staff: u.is_staff, is_superadmin: u.is_superadmin })
     setEditId(u.id)
     setModal('edit')
   }
@@ -62,7 +62,7 @@ export default function UsersPage() {
       setModal(null)
       fetchUsers()
     } catch (err) {
-      const msg = err.response?.data?.email?.[0] || err.response?.data?.password?.[0] || err.response?.data?.detail || 'Failed to save.'
+      const msg = err.response?.data?.username?.[0] || err.response?.data?.password?.[0] || err.response?.data?.detail || 'Failed to save.'
       toast.error(msg)
     } finally { setSaving(false) }
   }
@@ -75,7 +75,7 @@ export default function UsersPage() {
   }
 
   const handleDelete = async (u) => {
-    if (!confirm(`Delete ${u.email}?`)) return
+    if (!confirm(`Delete ${u.username}?`)) return
     try {
       await api.delete(`/auth/users/${u.id}/`)
       fetchUsers()
@@ -115,7 +115,7 @@ export default function UsersPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Username</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
@@ -127,7 +127,7 @@ export default function UsersPage() {
               <tbody className="divide-y divide-gray-100">
                 {users.map(u => (
                   <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-sm text-gray-800">{u.email}</td>
+                    <td className="px-6 py-3 text-sm text-gray-800">{u.username}</td>
                     <td className="px-6 py-3 text-sm text-gray-600">{u.first_name} {u.last_name}</td>
                     <td className="px-6 py-3 text-sm text-gray-500">{u.phone || '—'}</td>
                     <td className="px-6 py-3 text-center">{roleBadge(u)}</td>
@@ -167,9 +167,9 @@ export default function UsersPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" required value={form.email} disabled={modal === 'edit'}
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input type="text" required value={form.username} disabled={modal === 'edit'}
+                  onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                   className="input-field disabled:bg-gray-100" />
               </div>
               <div className="grid grid-cols-2 gap-3">

@@ -17,8 +17,8 @@ class RoomSerializer(serializers.ModelSerializer):
         model = Room
         fields = (
             'id', 'name', 'room_type', 'room_type_display', 'description',
-            'day_price', 'night_price', 'is_day_only', 'capacity', 'size_sqm',
-            'amenities', 'is_active', 'images', 'primary_image', 'created_at',
+            'day_price', 'night_price', 'is_day_only', 'capacity', 'max_rooms',
+            'size_sqm', 'amenities', 'is_active', 'images', 'primary_image', 'created_at',
         )
 
     def get_primary_image(self, obj):
@@ -40,7 +40,7 @@ class RoomListSerializer(serializers.ModelSerializer):
         model = Room
         fields = (
             'id', 'name', 'room_type', 'room_type_display',
-            'day_price', 'night_price', 'is_day_only', 'capacity',
+            'day_price', 'night_price', 'is_day_only', 'capacity', 'max_rooms',
             'primary_image', 'amenities', 'images',
         )
 

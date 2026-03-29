@@ -19,6 +19,7 @@ class Room(models.Model):
     night_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_day_only = models.BooleanField(default=False)
     capacity = models.PositiveIntegerField(default=2)
+    max_rooms = models.PositiveIntegerField(default=1, help_text='Number of physical units available for this room type')
     size_sqm = models.PositiveIntegerField(null=True, blank=True)
     amenities = models.JSONField(default=list)
     is_active = models.BooleanField(default=True)

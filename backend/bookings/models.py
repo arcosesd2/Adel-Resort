@@ -27,7 +27,7 @@ class Booking(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f'Booking #{self.id} - {self.user.email} - {self.room.name}'
+        return f'Booking #{self.id} - {self.user.username} - {self.room.name}'
 
     @property
     def slots_summary(self):

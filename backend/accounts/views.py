@@ -57,19 +57,19 @@ def login(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    email = serializer.validated_data['email']
+    username = serializer.validated_data['username']
     password = serializer.validated_data['password']
     fingerprint = serializer.validated_data.get('device_fingerprint', '')
     device_info = serializer.validated_data.get('device_info', {})
     ip = get_client_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '')
 
-    user = authenticate(username=email, password=password)
+    user = authenticate(username=username, password=password)
 
     if not user:
         # Log failed credential attempt
         LoginAttempt.objects.create(
-            email=email, fingerprint=fingerprint, ip_address=ip,
+            username=username, fingerprint=fingerprint, ip_address=ip,
             user_agent=ua, device_info=device_info,
             success=False, failure_reason='invalid_credentials',
         )
@@ -77,7 +77,7 @@ def login(request):
 
     if not user.is_active:
         LoginAttempt.objects.create(
-            user=user, email=email, fingerprint=fingerprint, ip_address=ip,
+            user=user, username=username, fingerprint=fingerprint, ip_address=ip,
             user_agent=ua, device_info=device_info,
             success=False, failure_reason='account_disabled',
         )
@@ -90,7 +90,7 @@ def login(request):
         ).exists()
         if not device_exists:
             LoginAttempt.objects.create(
-                user=user, email=email, fingerprint=fingerprint, ip_address=ip,
+                user=user, username=username, fingerprint=fingerprint, ip_address=ip,
                 user_agent=ua, device_info=device_info,
                 success=False, failure_reason='unregistered_device',
             )
@@ -98,7 +98,7 @@ def login(request):
 
     # Success
     LoginAttempt.objects.create(
-        user=user, email=email, fingerprint=fingerprint, ip_address=ip,
+        user=user, username=username, fingerprint=fingerprint, ip_address=ip,
         user_agent=ua, device_info=device_info, success=True,
     )
     refresh = RefreshToken.for_user(user)

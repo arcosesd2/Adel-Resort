@@ -112,18 +112,21 @@ class BookingSerializer(serializers.ModelSerializer):
             if instance:
                 existing_bookings = existing_bookings.exclude(pk=instance.pk)
 
-            # Build set of already booked (date, slot) tuples
-            booked_set = set()
+            # Count bookings per (date, slot)
+            from collections import Counter
+            booked_counts = Counter()
             for booking in existing_bookings:
                 for s in booking.slots:
-                    booked_set.add((s['date'], s['slot']))
+                    booked_counts[(s['date'], s['slot'])] += 1
+
+            max_rooms = room.max_rooms or 1
 
             # Check for overlaps
             for s in slots:
                 key = (s['date'], s['slot'])
-                if key in booked_set:
+                if booked_counts[key] >= max_rooms:
                     raise serializers.ValidationError(
-                        f"The {s['slot']} slot on {s['date']} is already booked for this room."
+                        f"The {s['slot']} slot on {s['date']} is fully booked for this room."
                     )
 
         return data
@@ -162,22 +165,22 @@ class BookingCreateSerializer(BookingSerializer):
 
 class AdminBookingSerializer(serializers.ModelSerializer):
     guest_name = serializers.SerializerMethodField()
-    guest_email = serializers.CharField(source='user.email', read_only=True)
+    guest_username = serializers.CharField(source='user.username', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
     slots_summary = serializers.CharField(read_only=True)
 
     class Meta:
         model = Booking
         fields = (
-            'id', 'guest_name', 'guest_email', 'room', 'room_name',
+            'id', 'guest_name', 'guest_username', 'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'status', 'special_requests', 'created_at',
         )
         read_only_fields = (
-            'id', 'guest_name', 'guest_email', 'room', 'room_name',
+            'id', 'guest_name', 'guest_username', 'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'created_at',
         )
 
     def get_guest_name(self, obj):
-        return f'{obj.user.first_name} {obj.user.last_name}'.strip() or obj.user.email
+        return f'{obj.user.first_name} {obj.user.last_name}'.strip() or obj.user.username

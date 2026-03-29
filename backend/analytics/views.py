@@ -75,7 +75,7 @@ def admin_dashboard(request):
         .values('user__id')
         .annotate(
             guest_name=Concat(F('user__first_name'), Value(' '), F('user__last_name')),
-            email=F('user__email'),
+            username=F('user__username'),
             phone=F('user__phone'),
             total_bookings=Count('id'),
             total_spent=Sum('total_price'),

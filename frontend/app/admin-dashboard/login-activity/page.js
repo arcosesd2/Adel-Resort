@@ -103,7 +103,7 @@ export default function LoginActivityPage() {
                     <td className="px-6 py-3 text-sm text-gray-600">
                       {new Date(a.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    <td className="px-6 py-3 text-sm text-gray-800">{a.email}</td>
+                    <td className="px-6 py-3 text-sm text-gray-800">{a.username}</td>
                     <td className="px-6 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${a.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                         {a.success ? 'OK' : 'FAIL'}

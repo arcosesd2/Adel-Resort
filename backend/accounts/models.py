@@ -3,24 +3,23 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email is required')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('Username is required')
+        user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_superadmin', True)
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(username, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150, unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20, blank=True)
@@ -31,11 +30,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
-        return self.email
+        return self.username
 
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'.strip()
@@ -53,12 +52,12 @@ class RegisteredDevice(models.Model):
         unique_together = ('user', 'fingerprint')
 
     def __str__(self):
-        return f'{self.user.email} - {self.device_name or self.fingerprint[:12]}'
+        return f'{self.user.username} - {self.device_name or self.fingerprint[:12]}'
 
 
 class LoginAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='login_attempts')
-    email = models.EmailField()
+    username = models.CharField(max_length=150)
     fingerprint = models.CharField(max_length=64, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
@@ -72,4 +71,4 @@ class LoginAttempt(models.Model):
 
     def __str__(self):
         status = 'OK' if self.success else self.failure_reason
-        return f'{self.email} - {status} - {self.created_at}'
+        return f'{self.username} - {status} - {self.created_at}'

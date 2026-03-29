@@ -13,7 +13,7 @@ function LoginForm() {
   const redirect = searchParams.get('redirect') || '/dashboard'
   const { login } = useAuthStore()
 
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ username: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -23,7 +23,7 @@ function LoginForm() {
     e.preventDefault()
     setLoading(true)
     try {
-      const data = await login(form.email, form.password)
+      const data = await login(form.username, form.password)
       document.cookie = `access_token=${data.access}; path=/; max-age=3600; SameSite=Lax`
       toast.success('Welcome back!')
       const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
@@ -53,14 +53,14 @@ function LoginForm() {
       <div className="card p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <input
-              type="email"
-              name="email"
-              value={form.email}
+              type="text"
+              name="username"
+              value={form.username}
               onChange={handleChange}
               required
-              placeholder="your@email.com"
+              placeholder="Enter your username"
               className="input-field"
             />
           </div>
