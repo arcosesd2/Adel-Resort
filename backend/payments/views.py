@@ -49,51 +49,50 @@ def submit_proof_of_payment(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    payment_type = serializer.validated_data.get('payment_type', 'full')
     amount = booking.total_price
     discount_amount = Decimal('0')
     voucher_code = request.data.get('voucher_code', '').strip()
 
     if voucher_code:
+        from django.db import transaction
         from vouchers.models import Voucher, VoucherUsage
-        try:
-            voucher = Voucher.objects.get(code__iexact=voucher_code)
-        except Voucher.DoesNotExist:
-            return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        now = timezone.now()
-        if not voucher.is_active or now < voucher.valid_from or now > voucher.valid_until:
-            return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
-        if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
-            return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
-        if voucher.min_booking_amount and amount < voucher.min_booking_amount:
-            return Response({'detail': 'Booking amount does not meet voucher minimum.'}, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            try:
+                voucher = Voucher.objects.select_for_update().get(code__iexact=voucher_code)
+            except Voucher.DoesNotExist:
+                return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if voucher.discount_type == 'percentage':
-            discount_amount = (amount * voucher.discount_value / Decimal('100')).quantize(Decimal('0.01'))
-            discount_amount = min(discount_amount, amount)
-        else:
-            discount_amount = min(voucher.discount_value, amount)
+            now = timezone.now()
+            if not voucher.is_active or now < voucher.valid_from or now > voucher.valid_until:
+                return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
+            if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
+                return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
+            if voucher.min_booking_amount and amount < voucher.min_booking_amount:
+                return Response({'detail': 'Booking amount does not meet voucher minimum.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        amount = amount - discount_amount
+            if voucher.discount_type == 'percentage':
+                discount_amount = (amount * voucher.discount_value / Decimal('100')).quantize(Decimal('0.01'))
+                discount_amount = min(discount_amount, amount)
+            else:
+                discount_amount = min(voucher.discount_value, amount)
 
-        Voucher.objects.filter(pk=voucher.pk).update(times_used=F('times_used') + 1)
-        VoucherUsage.objects.create(
-            voucher=voucher,
-            booking=booking,
-            user=request.user,
-            discount_amount=discount_amount,
-        )
+            amount = amount - discount_amount
 
-    # Calculate amount based on payment type
-    if payment_type == PaymentType.DOWNPAYMENT:
-        amount = (amount * Decimal('0.20')).quantize(Decimal('0.01'))
+            voucher.times_used = F('times_used') + 1
+            voucher.save(update_fields=['times_used'])
+            VoucherUsage.objects.create(
+                voucher=voucher,
+                booking=booking,
+                user=request.user,
+                discount_amount=discount_amount,
+            )
 
     Payment.objects.create(
         booking=booking,
         gcash_reference=serializer.validated_data['gcash_reference'],
         proof_of_payment=serializer.validated_data['proof_of_payment'],
-        payment_type=payment_type,
+        payment_type=PaymentType.FULL,
         amount=amount,
         currency='php',
         status=PaymentStatus.PENDING,

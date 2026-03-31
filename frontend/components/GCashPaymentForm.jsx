@@ -26,8 +26,9 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file.')
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only JPEG, PNG, or WebP images are allowed.')
       return
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -138,7 +139,7 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
           className="hidden"
         />

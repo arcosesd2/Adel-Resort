@@ -204,7 +204,8 @@ def login_activity(request):
         since = timezone.now() - timedelta(days=int(days))
         qs = qs.filter(created_at__gte=since)
 
-    return Response(LoginAttemptSerializer(qs[:500], many=True).data)
+    page_size = min(int(request.query_params.get('limit', 100)), 200)
+    return Response(LoginAttemptSerializer(qs[:page_size], many=True).data)
 
 
 # ─── Superadmin: Device Management ────────────────────────────────────

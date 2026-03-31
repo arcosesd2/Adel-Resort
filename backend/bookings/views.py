@@ -65,17 +65,19 @@ def onsite_booking(request):
 
     # Find or create guest user
     if guest_username:
-        user, created = User.objects.get_or_create(
+        if User.objects.filter(username=guest_username).exists():
+            return Response(
+                {'detail': f'Username "{guest_username}" is already taken. Use a different username or leave blank for auto-generated.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user = User.objects.create(
             username=guest_username,
-            defaults={
-                'first_name': first_name,
-                'last_name': last_name,
-                'phone': guest_phone,
-            }
+            first_name=first_name,
+            last_name=last_name,
+            phone=guest_phone,
         )
-        if created:
-            user.set_unusable_password()
-            user.save()
+        user.set_unusable_password()
+        user.save()
     else:
         # Create a placeholder user with a generated username
         import uuid
@@ -135,27 +137,30 @@ def onsite_booking(request):
     voucher = None
 
     if voucher_code:
+        from django.db import transaction
         from vouchers.models import Voucher, VoucherUsage
-        try:
-            voucher = Voucher.objects.get(code__iexact=voucher_code)
-        except Voucher.DoesNotExist:
-            return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        now = timezone.now()
-        if not voucher.is_active or now < voucher.valid_from or now > voucher.valid_until:
-            return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
-        if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
-            return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
-        if voucher.min_booking_amount and total < voucher.min_booking_amount:
-            return Response({'detail': 'Booking amount does not meet voucher minimum.'}, status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            try:
+                voucher = Voucher.objects.select_for_update().get(code__iexact=voucher_code)
+            except Voucher.DoesNotExist:
+                return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if voucher.discount_type == 'percentage':
-            discount_amount = (total * voucher.discount_value / Decimal('100')).quantize(Decimal('0.01'))
-            discount_amount = min(discount_amount, total)
-        else:
-            discount_amount = min(voucher.discount_value, total)
+            now = timezone.now()
+            if not voucher.is_active or now < voucher.valid_from or now > voucher.valid_until:
+                return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
+            if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
+                return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
+            if voucher.min_booking_amount and total < voucher.min_booking_amount:
+                return Response({'detail': 'Booking amount does not meet voucher minimum.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        total = total - discount_amount
+            if voucher.discount_type == 'percentage':
+                discount_amount = (total * voucher.discount_value / Decimal('100')).quantize(Decimal('0.01'))
+                discount_amount = min(discount_amount, total)
+            else:
+                discount_amount = min(voucher.discount_value, total)
+
+            total = total - discount_amount
 
     booking = Booking.objects.create(
         user=user, room=room,
@@ -166,14 +171,18 @@ def onsite_booking(request):
     )
 
     if voucher:
-        from vouchers.models import Voucher, VoucherUsage
-        Voucher.objects.filter(pk=voucher.pk).update(times_used=F('times_used') + 1)
-        VoucherUsage.objects.create(
-            voucher=voucher,
-            booking=booking,
-            user=user,
-            discount_amount=discount_amount,
-        )
+        from django.db import transaction
+        from vouchers.models import Voucher as V, VoucherUsage
+        with transaction.atomic():
+            v = V.objects.select_for_update().get(pk=voucher.pk)
+            v.times_used = F('times_used') + 1
+            v.save(update_fields=['times_used'])
+            VoucherUsage.objects.create(
+                voucher=v,
+                booking=booking,
+                user=user,
+                discount_amount=discount_amount,
+            )
 
     response_data = {
         'id': booking.id,

@@ -49,8 +49,19 @@ class ConversationDetailSerializer(serializers.ModelSerializer):
 
 class StartConversationSerializer(serializers.Serializer):
     subject = serializers.CharField(max_length=200)
-    message = serializers.CharField()
+    message = serializers.CharField(max_length=2000)
+
+    def validate_message(self, value):
+        import re
+        cleaned = re.sub(r'<[^>]+>', '', value)
+        return cleaned.strip()
 
 
 class SendMessageSerializer(serializers.Serializer):
-    content = serializers.CharField()
+    content = serializers.CharField(max_length=2000)
+
+    def validate_content(self, value):
+        import re
+        # Strip HTML tags to prevent XSS
+        cleaned = re.sub(r'<[^>]+>', '', value)
+        return cleaned.strip()

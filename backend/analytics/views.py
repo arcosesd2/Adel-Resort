@@ -1,5 +1,6 @@
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
+from accounts.permissions import IsSuperAdmin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
@@ -30,7 +31,7 @@ def track_page_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsSuperAdmin])
 def admin_dashboard(request):
     # Page view analytics
     page_views = (

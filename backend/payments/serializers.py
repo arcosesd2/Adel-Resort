@@ -13,7 +13,14 @@ class SubmitProofSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
     gcash_reference = serializers.CharField(max_length=200)
     proof_of_payment = serializers.ImageField()
-    payment_type = serializers.ChoiceField(choices=['full', 'downpayment'], default='full')
+
+    def validate_proof_of_payment(self, value):
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+        if value.content_type not in allowed_types:
+            raise serializers.ValidationError('Only JPEG, PNG, or WebP images are allowed.')
+        if value.size > 10 * 1024 * 1024:
+            raise serializers.ValidationError('File size must be under 10MB.')
+        return value
 
 
 class GCashConfigSerializer(serializers.ModelSerializer):

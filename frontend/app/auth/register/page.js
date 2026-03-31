@@ -10,7 +10,8 @@ import useAuthStore from '@/store/authStore'
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/dashboard'
+  const rawRedirect = searchParams.get('redirect') || '/dashboard'
+  const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard'
   const { register } = useAuthStore()
 
   const [form, setForm] = useState({
@@ -128,8 +129,8 @@ function RegisterForm() {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  minLength={8}
-                  placeholder="At least 8 characters"
+                  minLength={10}
+                  placeholder="At least 10 characters"
                   className="input-field pr-10"
                 />
                 <button

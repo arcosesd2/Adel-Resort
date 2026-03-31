@@ -10,7 +10,8 @@ import useAuthStore from '@/store/authStore'
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/dashboard'
+  const rawRedirect = searchParams.get('redirect') || '/dashboard'
+  const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard'
   const { login } = useAuthStore()
 
   const [form, setForm] = useState({ username: '', password: '' })

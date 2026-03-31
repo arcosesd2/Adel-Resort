@@ -7,6 +7,10 @@ const nextConfig = {
         hostname: '**.onrender.com',
       },
       {
+        protocol: 'https',
+        hostname: '**.up.railway.app',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
       },
@@ -39,7 +43,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://*.onrender.com; media-src 'self' https://res.cloudinary.com https://*.onrender.com http://localhost:8000 blob:; font-src 'self'; connect-src 'self' https://*.onrender.com http://localhost:8000; frame-ancestors 'none';",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://*.onrender.com https://*.up.railway.app; media-src 'self' https://res.cloudinary.com https://*.onrender.com https://*.up.railway.app http://localhost:8000 blob:; font-src 'self'; connect-src 'self' https://*.onrender.com https://*.up.railway.app http://localhost:8000; frame-ancestors 'none';",
           },
         ],
       },
