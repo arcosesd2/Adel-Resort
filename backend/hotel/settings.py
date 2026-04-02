@@ -192,7 +192,7 @@ SESSION_COOKIE_HTTPONLY = True
 
 # Production-only security settings
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False  # Railway/PaaS handles SSL at proxy level
+    SECURE_SSL_REDIRECT = False  # Nginx handles SSL termination
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
