@@ -60,7 +60,7 @@ export default function PromotionsPage() {
               <StaggerItem key={promo.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={promo.image || PLACEHOLDER}
+                    src={promo.image_url || promo.image || PLACEHOLDER}
                     alt={promo.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"

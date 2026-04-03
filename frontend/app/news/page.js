@@ -57,7 +57,7 @@ export default function NewsPage() {
               <StaggerItem key={item.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={item.image || PLACEHOLDER}
+                    src={item.image_url || item.image || PLACEHOLDER}
                     alt={item.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"

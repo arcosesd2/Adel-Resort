@@ -2,22 +2,38 @@ from rest_framework import serializers
 from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings
 
 
-class NewsSerializer(serializers.ModelSerializer):
+class ImageURLMixin:
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+
+class NewsSerializer(ImageURLMixin, serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = News
-        fields = ['id', 'title', 'content', 'image', 'published_date']
+        fields = ['id', 'title', 'content', 'image', 'image_url', 'published_date']
 
 
-class EventSerializer(serializers.ModelSerializer):
+class EventSerializer(ImageURLMixin, serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Event
-        fields = ['id', 'title', 'description', 'image', 'date']
+        fields = ['id', 'title', 'description', 'image', 'image_url', 'date']
 
 
-class PromotionSerializer(serializers.ModelSerializer):
+class PromotionSerializer(ImageURLMixin, serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Promotion
-        fields = ['id', 'title', 'description', 'image', 'discount_info', 'valid_from', 'valid_until']
+        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_info', 'valid_from', 'valid_until']
 
 
 class PricingSerializer(serializers.ModelSerializer):

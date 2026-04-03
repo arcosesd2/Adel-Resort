@@ -57,7 +57,7 @@ export default function EventsPage() {
               <StaggerItem key={event.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={event.image || PLACEHOLDER}
+                    src={event.image_url || event.image || PLACEHOLDER}
                     alt={event.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
