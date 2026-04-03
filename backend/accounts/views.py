@@ -1,21 +1,29 @@
 from datetime import timedelta
 
 from django.contrib.auth import authenticate
+from django.contrib.auth.tokens import default_token_generator
 from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, parser_classes
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from .models import User, RegisteredDevice, LoginAttempt
+from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, create_notification
 from .permissions import IsSuperAdmin
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserManagementSerializer, RegisteredDeviceSerializer, LoginAttemptSerializer,
+    ChangePasswordSerializer, DeactivateAccountSerializer,
+    FavoriteRoomSerializer, NotificationSerializer,
 )
+from .tokens import email_verification_token
+from .emails import send_welcome_email, send_verification_email, send_password_reset_email
 
 
 def get_client_ip(request):
@@ -33,6 +41,10 @@ class RegisterRateThrottle(ScopedRateThrottle):
     scope = 'register'
 
 
+class PasswordResetRateThrottle(ScopedRateThrottle):
+    scope = 'password_reset'
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @throttle_classes([RegisterRateThrottle])
@@ -41,8 +53,15 @@ def register(request):
     if serializer.is_valid():
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
+        # Send welcome + verification emails (non-blocking)
+        try:
+            send_welcome_email(user)
+            if user.email:
+                send_verification_email(user)
+        except Exception:
+            pass
         return Response({
-            'user': UserSerializer(user).data,
+            'user': UserSerializer(user, context={'request': request}).data,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
         }, status=status.HTTP_201_CREATED)
@@ -67,7 +86,6 @@ def login(request):
     user = authenticate(username=username, password=password)
 
     if not user:
-        # Log failed credential attempt
         LoginAttempt.objects.create(
             username=username, fingerprint=fingerprint, ip_address=ip,
             user_agent=ua, device_info=device_info,
@@ -103,7 +121,7 @@ def login(request):
     )
     refresh = RefreshToken.for_user(user)
     return Response({
-        'user': UserSerializer(user).data,
+        'user': UserSerializer(user, context={'request': request}).data,
         'access': str(refresh.access_token),
         'refresh': str(refresh),
     })
@@ -135,12 +153,255 @@ def refresh_token(request):
 @permission_classes([IsAuthenticated])
 def me(request):
     if request.method == 'GET':
-        return Response(UserSerializer(request.user).data)
-    serializer = UserSerializer(request.user, data=request.data, partial=True)
+        return Response(UserSerializer(request.user, context={'request': request}).data)
+    old_email = request.user.email
+    serializer = UserSerializer(request.user, data=request.data, partial=True, context={'request': request})
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
+        user = serializer.save()
+        # Reset email_verified if email changed
+        new_email = request.data.get('email')
+        if new_email is not None and new_email != old_email:
+            user.email_verified = False
+            user.save(update_fields=['email_verified'])
+        return Response(UserSerializer(user, context={'request': request}).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ─── Avatar Upload ───────────────────────────────────────────────────
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser])
+def upload_avatar(request):
+    user = request.user
+    if request.method == 'DELETE':
+        if user.avatar:
+            user.avatar.delete(save=False)
+            user.avatar = None
+            user.save(update_fields=['avatar'])
+        return Response({'detail': 'Avatar removed.'})
+
+    avatar = request.FILES.get('avatar')
+    if not avatar:
+        return Response({'avatar': 'No file provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate file type and size
+    allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+    if avatar.content_type not in allowed_types:
+        return Response({'avatar': 'Only JPEG, PNG, and WebP images are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+    if avatar.size > 5 * 1024 * 1024:
+        return Response({'avatar': 'Image must be under 5MB.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Delete old avatar if exists
+    if user.avatar:
+        user.avatar.delete(save=False)
+    user.avatar = avatar
+    user.save(update_fields=['avatar'])
+    return Response(UserSerializer(user, context={'request': request}).data)
+
+
+# ─── Change Password ─────────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    serializer = ChangePasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    if not user.check_password(serializer.validated_data['current_password']):
+        return Response({'current_password': ['Current password is incorrect.']}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(serializer.validated_data['new_password'])
+    user.save()
+
+    # Blacklist all existing refresh tokens
+    _blacklist_all_tokens(user)
+
+    # Issue new tokens
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'detail': 'Password changed successfully.',
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+    })
+
+
+# ─── Email Verification ──────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_verification_email_view(request):
+    user = request.user
+    if not user.email:
+        return Response({'detail': 'No email address set.'}, status=status.HTTP_400_BAD_REQUEST)
+    if user.email_verified:
+        return Response({'detail': 'Email already verified.'})
+    send_verification_email(user)
+    return Response({'detail': 'Verification email sent.'})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_email(request):
+    uid = request.data.get('uid')
+    token = request.data.get('token')
+    if not uid or not token:
+        return Response({'detail': 'Missing uid or token.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_id)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({'detail': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not email_verification_token.check_token(user, token):
+        return Response({'detail': 'Invalid or expired link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.email_verified = True
+    user.save(update_fields=['email_verified'])
+    return Response({'detail': 'Email verified successfully.'})
+
+
+# ─── Forgot / Reset Password ─────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
+def forgot_password(request):
+    email = request.data.get('email', '').strip()
+    # Always return success to not reveal if email exists
+    if email:
+        try:
+            user = User.objects.get(email=email, email_verified=True)
+            send_password_reset_email(user)
+        except User.DoesNotExist:
+            pass
+    return Response({'detail': 'If an account with that email exists, a reset link has been sent.'})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    uid = request.data.get('uid')
+    token = request.data.get('token')
+    new_password = request.data.get('new_password')
+    new_password2 = request.data.get('new_password2')
+
+    if not all([uid, token, new_password, new_password2]):
+        return Response({'detail': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if new_password != new_password2:
+        return Response({'new_password': ['Passwords do not match.']}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_id)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({'detail': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not default_token_generator.check_token(user, token):
+        return Response({'detail': 'Invalid or expired link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Validate password
+    from django.contrib.auth.password_validation import validate_password
+    from django.core.exceptions import ValidationError
+    try:
+        validate_password(new_password, user)
+    except ValidationError as e:
+        return Response({'new_password': list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(new_password)
+    user.save()
+    _blacklist_all_tokens(user)
+    return Response({'detail': 'Password reset successfully.'})
+
+
+# ─── Account Deactivation ────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def deactivate_account(request):
+    serializer = DeactivateAccountSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    if not user.check_password(serializer.validated_data['password']):
+        return Response({'password': ['Password is incorrect.']}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.is_active = False
+    user.save(update_fields=['is_active'])
+    _blacklist_all_tokens(user)
+    return Response({'detail': 'Account deactivated.'})
+
+
+# ─── Favorites ────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def favorite_list(request):
+    favorites = FavoriteRoom.objects.filter(user=request.user).select_related('room')
+    serializer = FavoriteRoomSerializer(favorites, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite(request):
+    room_id = request.data.get('room_id')
+    if not room_id:
+        return Response({'room_id': 'This field is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        favorite = FavoriteRoom.objects.get(user=request.user, room_id=room_id)
+        favorite.delete()
+        return Response({'favorited': False})
+    except FavoriteRoom.DoesNotExist:
+        from rooms.models import Room
+        try:
+            Room.objects.get(pk=room_id, is_active=True)
+        except Room.DoesNotExist:
+            return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
+        FavoriteRoom.objects.create(user=request.user, room_id=room_id)
+        return Response({'favorited': True}, status=status.HTTP_201_CREATED)
+
+
+# ─── Notifications ────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def notification_list(request):
+    qs = Notification.objects.filter(user=request.user)
+    unread_only = request.query_params.get('unread_only')
+    if unread_only == 'true':
+        qs = qs.filter(is_read=False)
+    page_size = min(int(request.query_params.get('limit', 50)), 100)
+    return Response(NotificationSerializer(qs[:page_size], many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def notification_unread_count(request):
+    count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return Response({'count': count})
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def notification_read(request, pk):
+    try:
+        notification = Notification.objects.get(pk=pk, user=request.user)
+    except Notification.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    notification.is_read = True
+    notification.save(update_fields=['is_read'])
+    return Response(NotificationSerializer(notification).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def notification_read_all(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return Response({'detail': 'All notifications marked as read.'})
 
 
 # ─── Superadmin: User Management ──────────────────────────────────────
@@ -271,3 +532,15 @@ def device_detail(request, pk):
     if request.method == 'DELETE':
         device.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ─── Helpers ──────────────────────────────────────────────────────────
+
+def _blacklist_all_tokens(user):
+    """Blacklist all outstanding refresh tokens for a user."""
+    tokens = OutstandingToken.objects.filter(user=user)
+    for token in tokens:
+        try:
+            BlacklistedToken.objects.get_or_create(token=token)
+        except Exception:
+            pass

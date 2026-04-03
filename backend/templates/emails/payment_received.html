@@ -1,0 +1,27 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>Payment Received</h2>
+<p>Hi {{ user.first_name }},</p>
+<p>We've received your payment proof for your booking. Our team will verify it shortly.</p>
+
+<div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 20px 0;">
+  <div class="info-row">
+    <div class="info-label">Room</div>
+    <div class="info-value">{{ booking.room.name }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">Check-in</div>
+    <div class="info-value">{{ booking.check_in }}</div>
+  </div>
+  <div class="info-row" style="border-bottom: none;">
+    <div class="info-label">Total</div>
+    <div class="info-value" style="color: #0284c7;">PHP {{ booking.total_price }}</div>
+  </div>
+</div>
+
+<p style="text-align: center;">
+  <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">View Booking</a>
+</p>
+<p>You'll receive a confirmation once your payment is verified.</p>
+{% endblock %}

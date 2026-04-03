@@ -65,7 +65,7 @@ ROOT_URLCONF = 'hotel.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -167,6 +167,7 @@ REST_FRAMEWORK = {
         'login': '3/minute',
         'register': '3/hour',
         'analytics': '60/minute',
+        'password_reset': '3/hour',
     },
 }
 
@@ -187,6 +188,15 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
+# Email configuration
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Adel Beach Resort <noreply@adel-resort.ph>')
 
 # Security headers (always on)
 SECURE_CONTENT_TYPE_NOSNIFF = True

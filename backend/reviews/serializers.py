@@ -4,10 +4,11 @@ from .models import Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
+    room_name = serializers.CharField(source='room.name', read_only=True)
 
     class Meta:
         model = Review
-        fields = ['id', 'booking', 'user', 'room', 'rating', 'comment',
+        fields = ['id', 'booking', 'user', 'room', 'room_name', 'rating', 'comment',
                   'is_approved', 'user_name', 'created_at']
         read_only_fields = ['id', 'user', 'room', 'booking', 'is_approved', 'created_at']
 

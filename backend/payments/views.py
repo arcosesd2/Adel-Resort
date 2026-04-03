@@ -98,6 +98,20 @@ def submit_proof_of_payment(request):
         status=PaymentStatus.PENDING,
     )
 
+    # Send notification + email
+    try:
+        from accounts.models import create_notification
+        from accounts.emails import send_payment_received_email
+        create_notification(
+            request.user, 'payment_received',
+            'Payment Submitted',
+            f'Your payment proof for {booking.room.name} has been submitted and is awaiting verification.',
+            f'/booking/{booking.id}',
+        )
+        send_payment_received_email(request.user, booking)
+    except Exception:
+        pass
+
     return Response({'detail': 'Payment proof submitted. Awaiting admin confirmation.'}, status=status.HTTP_201_CREATED)
 
 

@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Users, Maximize } from 'lucide-react'
+import { Users, Maximize, Heart } from 'lucide-react'
 import ImageLightbox from '@/components/ImageLightbox'
+import useAuthStore from '@/store/authStore'
+import api from '@/lib/api'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80'
 
@@ -18,9 +20,20 @@ const typeColors = {
   trapal_table: 'bg-lime-100 text-lime-700',
 }
 
-export default function RoomCard({ room }) {
+export default function RoomCard({ room, initialFavorited = false }) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [favorited, setFavorited] = useState(initialFavorited)
+  const { isAuthenticated, user } = useAuthStore()
   const { id, name, room_type, room_type_display, day_price, night_price, is_day_only, capacity, size_sqm, primary_image, images, amenities } = room
+
+  const toggleFavorite = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      const { data } = await api.post('/auth/favorites/toggle/', { room_id: id })
+      setFavorited(data.favorited)
+    } catch {}
+  }
 
   return (
     <>
@@ -43,13 +56,24 @@ export default function RoomCard({ room }) {
               {room_type_display}
             </span>
           </div>
-          {is_day_only && (
-            <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 flex items-center gap-2">
+            {is_day_only && (
               <span className="text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700">
                 Day Only
               </span>
-            </div>
-          )}
+            )}
+            {isAuthenticated && !user?.is_staff && (
+              <button
+                onClick={toggleFavorite}
+                className="w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform"
+              >
+                <Heart
+                  size={16}
+                  className={favorited ? 'text-red-500 fill-red-500' : 'text-gray-400'}
+                />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="p-5">

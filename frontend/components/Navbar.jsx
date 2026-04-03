@@ -4,20 +4,35 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Bell, UserCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useAuthStore from '@/store/authStore'
+import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const { isAuthenticated, logout, user } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => { setMounted(true) }, [])
+
+  // Poll notification unread count
+  useEffect(() => {
+    if (!isAuthenticated || user?.is_staff) return
+    const fetchCount = () => {
+      api.get('/auth/notifications/unread-count/')
+        .then(res => setUnreadCount(res.data.count))
+        .catch(() => {})
+    }
+    fetchCount()
+    const interval = setInterval(fetchCount, 60000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated, user?.is_staff])
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -97,14 +112,38 @@ export default function Navbar() {
                   </Link>
                 )}
                 {!user?.is_staff && (
-                  <Link
-                    href="/dashboard"
-                    className={`font-medium transition-colors ${
-                      transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
-                    }`}
-                  >
-                    My Bookings
-                  </Link>
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className={`font-medium transition-colors ${
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                      }`}
+                    >
+                      My Bookings
+                    </Link>
+                    <Link
+                      href="/account/notifications"
+                      className={`relative font-medium transition-colors ${
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                      }`}
+                    >
+                      <Bell size={20} />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
+                      href="/account"
+                      className={`font-medium transition-colors flex items-center gap-1.5 ${
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                      }`}
+                    >
+                      <UserCircle size={20} />
+                      Account
+                    </Link>
+                  </>
                 )}
                 <button
                   onClick={handleLogout}
@@ -174,13 +213,36 @@ export default function Navbar() {
                       </Link>
                     )}
                     {!user?.is_staff && (
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setMobileOpen(false)}
-                        className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
-                      >
-                        My Bookings
-                      </Link>
+                      <>
+                        <Link
+                          href="/account"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
+                        >
+                          <UserCircle size={18} />
+                          My Account
+                        </Link>
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setMobileOpen(false)}
+                          className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                        >
+                          My Bookings
+                        </Link>
+                        <Link
+                          href="/account/notifications"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
+                        >
+                          <Bell size={18} />
+                          Notifications
+                          {unreadCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 ml-1">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </>
                     )}
                     <button onClick={handleLogout} className="btn-primary w-full py-2">
                       Logout

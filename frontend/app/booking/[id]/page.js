@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, Clock, AlertTriangle } from 'lucide-react'
+import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, FileText, Clock, AlertTriangle } from 'lucide-react'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
+import BookingReceipt from '@/components/BookingReceipt'
 
 const statusConfig = {
   pending: { label: 'Pending Payment', color: 'text-yellow-600 bg-yellow-50', border: 'border-yellow-200' },
@@ -21,6 +22,7 @@ export default function BookingDetailPage() {
   const { isAuthenticated } = useAuthStore()
   const [booking, setBooking] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showReceipt, setShowReceipt] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -181,6 +183,13 @@ export default function BookingDetailPage() {
               </Link>
             )}
             <button
+              onClick={() => setShowReceipt(true)}
+              className="flex items-center gap-2 py-3 px-5 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
+            >
+              <FileText size={16} />
+              Receipt
+            </button>
+            <button
               onClick={() => window.print()}
               className="flex items-center gap-2 py-3 px-5 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
             >
@@ -189,6 +198,32 @@ export default function BookingDetailPage() {
             </button>
           </div>
         </div>
+
+        {/* Receipt Modal */}
+        {showReceipt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowReceipt(false)}>
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b flex items-center justify-between no-print">
+                <h3 className="font-semibold text-gray-800">Booking Receipt</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="btn-primary py-2 px-4 text-sm flex items-center gap-1"
+                  >
+                    <Printer size={14} /> Print
+                  </button>
+                  <button
+                    onClick={() => setShowReceipt(false)}
+                    className="text-gray-400 hover:text-gray-600 py-2 px-3"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              <BookingReceipt booking={booking} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

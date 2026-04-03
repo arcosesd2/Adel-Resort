@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { Users, Maximize, Check } from 'lucide-react'
 import BookingForm from '@/components/BookingForm'
 import RoomGallery from '@/components/RoomGallery'
+import FavoriteButton from '@/components/FavoriteButton'
 import { FadeInUp } from '@/components/motions'
 import RoomReviews from '@/components/RoomReviews'
 import api from '@/lib/api'
@@ -59,7 +60,7 @@ export default async function RoomDetailPage({ params }) {
           <div className="lg:col-span-2 space-y-8">
             {/* Quick Info */}
             <FadeInUp>
-              <div className="flex flex-wrap gap-6 text-gray-600">
+              <div className="flex flex-wrap items-center gap-6 text-gray-600">
                 <div className="flex items-center gap-2">
                   <Users className="text-ocean-500" size={20} />
                   <span>Up to <strong>{room.capacity}</strong> persons</span>
@@ -70,6 +71,7 @@ export default async function RoomDetailPage({ params }) {
                     <span><strong>{room.size_sqm}</strong> m²</span>
                   </div>
                 )}
+                <FavoriteButton roomId={room.id} />
               </div>
             </FadeInUp>
 

@@ -20,6 +20,7 @@ function RegisterForm() {
     last_name: '',
     username: '',
     phone: '',
+    email: '',
     password: '',
     password2: '',
   })
@@ -114,6 +115,18 @@ function RegisterForm() {
                 onChange={handleChange}
                 required
                 placeholder="Choose a username"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="your@email.com"
                 className="input-field"
               />
             </div>

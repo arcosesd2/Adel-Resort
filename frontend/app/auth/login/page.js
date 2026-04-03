@@ -103,7 +103,13 @@ function LoginForm() {
           </button>
         </form>
 
-        <p className="text-center text-gray-500 text-sm mt-6">
+        <div className="text-center mt-4">
+          <Link href="/auth/forgot-password" className="text-sm text-ocean-600 hover:text-ocean-700 font-medium">
+            Forgot your password?
+          </Link>
+        </div>
+
+        <p className="text-center text-gray-500 text-sm mt-4">
           Don't have an account?{' '}
           <Link href={redirect !== '/dashboard' ? `/auth/register?redirect=${encodeURIComponent(redirect)}` : '/auth/register'} className="text-ocean-600 hover:underline font-medium">
             Register here

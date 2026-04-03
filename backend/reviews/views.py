@@ -72,4 +72,17 @@ def toggle_approval(request, pk):
     review = get_object_or_404(Review, pk=pk)
     review.is_approved = not review.is_approved
     review.save(update_fields=['is_approved'])
+
+    if review.is_approved:
+        try:
+            from accounts.models import create_notification
+            create_notification(
+                review.user, 'review_approved',
+                'Review Published',
+                f'Your review for {review.room.name} has been approved and is now visible.',
+                f'/rooms/{review.room.id}',
+            )
+        except Exception:
+            pass
+
     return Response(ReviewSerializer(review).data)

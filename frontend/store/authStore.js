@@ -47,6 +47,8 @@ const useAuthStore = create(
         }
       },
 
+      updateUser: (updates) => set((state) => ({ user: { ...state.user, ...updates } })),
+
       touchActivity: () => set({ lastActivity: Date.now() }),
     }),
     {

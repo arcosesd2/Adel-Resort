@@ -215,3 +215,37 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AdminBookingSerializer
     permission_classes = [IsAdminUser]
     queryset = Booking.objects.select_related('user', 'room').all()
+
+    def perform_update(self, serializer):
+        old_status = serializer.instance.status
+        booking = serializer.save()
+        new_status = booking.status
+
+        if old_status != new_status:
+            try:
+                from accounts.models import create_notification
+                from accounts.emails import send_booking_confirmation_email
+                if new_status == BookingStatus.CONFIRMED:
+                    create_notification(
+                        booking.user, 'booking_confirmed',
+                        'Booking Confirmed',
+                        f'Your booking for {booking.room.name} has been confirmed!',
+                        f'/booking/{booking.id}',
+                    )
+                    send_booking_confirmation_email(booking.user, booking)
+                elif new_status == BookingStatus.CANCELLED:
+                    create_notification(
+                        booking.user, 'booking_cancelled',
+                        'Booking Cancelled',
+                        f'Your booking for {booking.room.name} has been cancelled.',
+                        f'/booking/{booking.id}',
+                    )
+                elif new_status == BookingStatus.COMPLETED:
+                    create_notification(
+                        booking.user, 'booking_completed',
+                        'Booking Completed',
+                        f'Your stay at {booking.room.name} is complete. Leave a review!',
+                        f'/booking/{booking.id}',
+                    )
+            except Exception:
+                pass

@@ -6,7 +6,10 @@ class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
         if not username:
             raise ValueError('Username is required')
-        user = self.model(username=username, **extra_fields)
+        email = extra_fields.pop('email', None)
+        if email:
+            email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -20,9 +23,12 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(blank=True, null=True)
+    email_verified = models.BooleanField(default=False)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superadmin = models.BooleanField(default=False)
@@ -32,6 +38,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['first_name', 'last_name']
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['email'],
+                name='unique_email_when_not_null',
+                condition=models.Q(email__isnull=False),
+            ),
+        ]
 
     def __str__(self):
         return self.username
@@ -72,3 +87,50 @@ class LoginAttempt(models.Model):
     def __str__(self):
         status = 'OK' if self.success else self.failure_reason
         return f'{self.username} - {status} - {self.created_at}'
+
+
+class FavoriteRoom(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    room = models.ForeignKey('rooms.Room', on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'room')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.room.name}'
+
+
+class Notification(models.Model):
+    class NotificationType(models.TextChoices):
+        BOOKING_CONFIRMED = 'booking_confirmed', 'Booking Confirmed'
+        PAYMENT_RECEIVED = 'payment_received', 'Payment Received'
+        BOOKING_CANCELLED = 'booking_cancelled', 'Booking Cancelled'
+        BOOKING_COMPLETED = 'booking_completed', 'Booking Completed'
+        REVIEW_APPROVED = 'review_approved', 'Review Approved'
+        SYSTEM = 'system', 'System Message'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    notification_type = models.CharField(max_length=30, choices=NotificationType.choices)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    link = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.title}'
+
+
+def create_notification(user, notification_type, title, message, link=''):
+    return Notification.objects.create(
+        user=user,
+        notification_type=notification_type,
+        title=title,
+        message=message,
+        link=link,
+    )
