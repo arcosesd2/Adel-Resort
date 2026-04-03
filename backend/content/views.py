@@ -23,7 +23,7 @@ class EventListView(ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Event.objects.filter(is_active=True, date__gte=timezone.now().date())
+        return Event.objects.filter(is_active=True)
 
 
 class PromotionListView(ListAPIView):
