@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MessageCircle, X, Send, ArrowLeft, Plus } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -123,23 +124,37 @@ export default function ChatWidget() {
   return (
     <>
       {/* Floating bubble */}
-      {!open && (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-ocean-600 hover:bg-ocean-700 text-white rounded-full p-4 shadow-lg transition-transform hover:scale-105"
-        >
-          <MessageCircle size={24} />
-          {unreadTotal > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              {unreadTotal}
-            </span>
-          )}
-        </button>
-      )}
+      <AnimatePresence>
+        {!open && (
+          <motion.button
+            key="chat-bubble"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 1 }}
+            onClick={() => setOpen(true)}
+            className="fixed bottom-6 right-6 z-50 bg-ocean-600 hover:bg-ocean-700 text-white rounded-full p-4 shadow-lg transition-colors"
+          >
+            <MessageCircle size={24} />
+            {unreadTotal > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ring-2 ring-red-400 animate-pulse">
+                {unreadTotal}
+              </span>
+            )}
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Chat drawer */}
-      {open && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col" style={{ height: '480px' }}>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="chat-drawer"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col" style={{ height: '480px' }}>
           {/* Header */}
           <div className="bg-ocean-600 text-white px-4 py-3 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -255,8 +270,9 @@ export default function ChatWidget() {
               </>
             )}
           </div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

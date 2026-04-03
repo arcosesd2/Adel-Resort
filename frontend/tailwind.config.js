@@ -37,6 +37,35 @@ module.exports = {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         serif: ['var(--font-playfair)', 'Georgia', 'serif'],
       },
+      keyframes: {
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
+        },
+      },
+      animation: {
+        'fade-in-up': 'fade-in-up 0.6s ease-out',
+        float: 'float 3s ease-in-out infinite',
+        'float-delayed': 'float 4s ease-in-out 1s infinite',
+        shimmer: 'shimmer 2s linear infinite',
+      },
+      backgroundImage: {
+        'gradient-ocean': 'linear-gradient(135deg, #0c4a6e 0%, #0284c7 50%, #38bdf8 100%)',
+        'gradient-sand': 'linear-gradient(135deg, #6d3c1f 0%, #dc8f2d 50%, #eec683 100%)',
+      },
+      boxShadow: {
+        glass: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+        'glow-ocean': '0 0 20px rgba(2, 132, 199, 0.3)',
+        'glow-sand': '0 0 20px rgba(220, 143, 45, 0.3)',
+      },
     },
   },
   plugins: [],

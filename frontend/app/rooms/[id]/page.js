@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { Users, Maximize, Check } from 'lucide-react'
 import BookingForm from '@/components/BookingForm'
 import RoomGallery from '@/components/RoomGallery'
+import { FadeInUp } from '@/components/motions'
 import api from '@/lib/api'
 
 async function getRoom(id) {
@@ -56,28 +57,30 @@ export default async function RoomDetailPage({ params }) {
           {/* Details */}
           <div className="lg:col-span-2 space-y-8">
             {/* Quick Info */}
-            <div className="flex flex-wrap gap-6 text-gray-600">
-              <div className="flex items-center gap-2">
-                <Users className="text-ocean-500" size={20} />
-                <span>Up to <strong>{room.capacity}</strong> persons</span>
-              </div>
-              {room.size_sqm && (
+            <FadeInUp>
+              <div className="flex flex-wrap gap-6 text-gray-600">
                 <div className="flex items-center gap-2">
-                  <Maximize className="text-ocean-500" size={20} />
-                  <span><strong>{room.size_sqm}</strong> m²</span>
+                  <Users className="text-ocean-500" size={20} />
+                  <span>Up to <strong>{room.capacity}</strong> persons</span>
                 </div>
-              )}
-            </div>
+                {room.size_sqm && (
+                  <div className="flex items-center gap-2">
+                    <Maximize className="text-ocean-500" size={20} />
+                    <span><strong>{room.size_sqm}</strong> m²</span>
+                  </div>
+                )}
+              </div>
+            </FadeInUp>
 
             {/* Description */}
-            <div>
+            <FadeInUp delay={0.1}>
               <h2 className="font-serif text-2xl font-bold text-gray-900 mb-3">About This Room</h2>
               <p className="text-gray-600 leading-relaxed text-lg">{room.description}</p>
-            </div>
+            </FadeInUp>
 
             {/* Amenities */}
             {room.amenities?.length > 0 && (
-              <div>
+              <FadeInUp delay={0.2}>
                 <h2 className="font-serif text-2xl font-bold text-gray-900 mb-4">Amenities</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {room.amenities.map((amenity) => (
@@ -89,7 +92,7 @@ export default async function RoomDetailPage({ params }) {
                     </div>
                   ))}
                 </div>
-              </div>
+              </FadeInUp>
             )}
           </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { DollarSign } from 'lucide-react'
+import { FadeInUp } from '@/components/motions'
 import api from '@/lib/api'
 
 export default function PricingPage() {
@@ -26,7 +27,8 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <FadeInUp className="text-center mb-10">
+          <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">Our Rates</p>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Pricing
           </h1>
@@ -35,7 +37,7 @@ export default function PricingPage() {
             <br />
             Day Tour: 8AM&ndash;5PM | Night Tour: 5PM&ndash;8AM
           </p>
-        </div>
+        </FadeInUp>
 
         {loading ? (
           <div className="space-y-4">

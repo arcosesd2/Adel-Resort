@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Waves } from 'lucide-react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 
@@ -55,8 +56,17 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-ocean-50 px-4 py-10">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-ocean-50 via-white to-sand-50 px-4 py-10 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-[10%] w-64 h-64 bg-ocean-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-[10%] w-48 h-48 bg-sand-200/30 rounded-full blur-3xl pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 font-serif font-bold text-2xl text-ocean-700 mb-2">
             <Waves className="w-7 h-7" />
@@ -66,7 +76,7 @@ function RegisterForm() {
           <p className="text-gray-500 mt-2">Join us and start planning your dream escape</p>
         </div>
 
-        <div className="card p-8">
+        <div className="glass-card p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -172,7 +182,7 @@ function RegisterForm() {
             </Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

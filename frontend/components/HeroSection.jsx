@@ -4,16 +4,27 @@ import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Play, Pause, Volume2, VolumeX } from 'lucide-react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 
 const FALLBACK_POSTER = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=90'
 
 export default function HeroSection({ heroConfig }) {
   const videoRef = useRef(null)
+  const heroRef = useRef(null)
   const posterSrc = heroConfig?.poster_url || FALLBACK_POSTER
   const videoSrc = heroConfig?.video_url || null
 
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(true)
+
+  // Parallax scroll effect
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start'],
+  })
+  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1])
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
   // Fix React muted attribute bug — must set directly on the DOM element
   const setVideoRef = (el) => {
@@ -37,7 +48,6 @@ export default function HeroSection({ heroConfig }) {
       const p = video.play()
       if (p !== undefined) {
         p.catch(() => {
-          // Last resort: try again after a short delay
           setTimeout(() => {
             video.muted = true
             video.play().catch(() => {})
@@ -46,15 +56,12 @@ export default function HeroSection({ heroConfig }) {
       }
     }
 
-    // Try playing immediately
     tryPlay()
 
-    // Also try when video data is ready
     const onCanPlay = () => tryPlay()
     video.addEventListener('canplay', onCanPlay)
     video.addEventListener('loadeddata', onCanPlay)
 
-    // Also play when video scrolls into viewport
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && isPlaying) {
@@ -90,9 +97,9 @@ export default function HeroSection({ heroConfig }) {
 
   return (
     <>
-      {/* Hero — poster image background */}
-      <section className="relative h-screen h-[100dvh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
+      {/* Hero — poster image background with parallax */}
+      <section ref={heroRef} className="relative h-screen h-[100dvh] flex items-center justify-center overflow-hidden">
+        <motion.div className="absolute inset-0" style={{ y: bgY, scale: bgScale }}>
           <Image
             src={posterSrc}
             alt="Adel Beach Resort hero"
@@ -102,19 +109,50 @@ export default function HeroSection({ heroConfig }) {
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
+        </motion.div>
+
+        {/* Floating decorative particles */}
+        <div className="absolute inset-0 z-[5] pointer-events-none overflow-hidden">
+          <div className="absolute top-1/4 left-[15%] w-2 h-2 bg-white/15 rounded-full animate-float" />
+          <div className="absolute top-1/3 right-[20%] w-3 h-3 bg-white/10 rounded-full animate-float-delayed" />
+          <div className="absolute bottom-1/3 left-[30%] w-1.5 h-1.5 bg-sand-300/20 rounded-full animate-float" />
+          <div className="absolute top-[60%] right-[35%] w-2 h-2 bg-white/10 rounded-full animate-float-delayed" />
         </div>
 
-        <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-          <p className="text-sand-300 font-semibold tracking-widest text-sm uppercase mb-4">
+        <motion.div
+          className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto"
+          style={{ opacity: contentOpacity }}
+        >
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-sand-300 font-semibold tracking-widest text-sm uppercase mb-4"
+          >
             Lawigan, Surigao Del Sur
-          </p>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold mb-6 leading-tight">
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="font-serif text-5xl md:text-7xl font-bold mb-6 leading-tight text-shadow-hero"
+          >
             Adel Beach Resort
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed"
+          >
             Escape to the shores of Lawigan — affordable cottages, rooms, and event spaces right by the beach.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
             <Link href="/rooms" className="btn-primary px-8 py-4 text-lg flex items-center gap-2 justify-center">
               Browse Accommodations
               <ArrowRight size={20} />
@@ -122,15 +160,24 @@ export default function HeroSection({ heroConfig }) {
             <Link href="/availability" className="btn-outline px-8 py-4 text-lg border-white text-white hover:bg-white hover:text-ocean-700">
               Check Availability
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white rounded-full flex items-start justify-center p-1.5">
-            <div className="w-1.5 h-3 bg-white rounded-full animate-scroll" />
-          </div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+            className="w-6 h-10 border-2 border-white/60 rounded-full flex items-start justify-center p-1.5"
+          >
+            <div className="w-1.5 h-3 bg-white/80 rounded-full" />
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* Video showcase — below poster hero */}

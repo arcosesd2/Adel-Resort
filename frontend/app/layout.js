@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import InactivityGuard from '@/components/InactivityGuard'
 import PageViewTracker from '@/components/PageViewTracker'
 import ChatWidget from '@/components/ChatWidget'
+import PageTransitionWrapper from '@/components/PageTransitionWrapper'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -23,7 +24,9 @@ export default function RootLayout({ children }) {
         <Navbar />
         <InactivityGuard />
         <PageViewTracker />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1">
+          <PageTransitionWrapper>{children}</PageTransitionWrapper>
+        </main>
         <Footer />
         <ChatWidget />
         <Toaster

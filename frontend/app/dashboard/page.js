@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { CalendarDays, Hotel, Clock, CheckCircle, XCircle, ArrowRight, AlertTriangle } from 'lucide-react'
+import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -192,15 +193,15 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+        <FadeInUp className="mb-8">
           <h1 className="font-serif text-3xl font-bold text-gray-900">My Bookings</h1>
           {user && (
             <p className="text-gray-500 mt-1">Welcome back, {user.first_name}!</p>
           )}
-        </div>
+        </FadeInUp>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 bg-white rounded-xl p-1 shadow-sm w-fit">
+        <div className="flex gap-2 mb-6 glass-card p-1 w-fit">
           {tabs.map(tab => (
             <button
               key={tab.key}
@@ -243,11 +244,13 @@ export default function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <StaggerContainer className="space-y-4">
             {filtered.map(booking => (
-              <BookingCard key={booking.id} booking={booking} onCancel={handleCancel} />
+              <StaggerItem key={booking.id}>
+                <BookingCard booking={booking} onCancel={handleCancel} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         )}
       </div>
     </div>

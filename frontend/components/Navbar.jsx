@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Menu, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import useAuthStore from '@/store/authStore'
 import toast from 'react-hot-toast'
 
@@ -47,7 +48,7 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      transparent ? 'bg-transparent' : 'bg-white shadow-md'
+      transparent ? 'bg-transparent' : 'bg-white/80 backdrop-blur-lg shadow-md border-b border-white/20'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -65,11 +66,18 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`font-medium transition-colors ${
+                className={`relative font-medium transition-colors py-1 ${
                   transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                 } ${pathname === link.href ? (transparent ? 'text-sand-200' : 'text-ocean-600') : ''}`}
               >
                 {link.label}
+                {pathname === link.href && (
+                  <motion.div
+                    layoutId="nav-underline"
+                    className={`absolute -bottom-1 left-0 right-0 h-0.5 rounded-full ${transparent ? 'bg-sand-300' : 'bg-ocean-500'}`}
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
               </Link>
             ))}
           </div>
@@ -133,66 +141,74 @@ export default function Navbar() {
       </div>
 
       {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-white border-t shadow-lg">
-          <div className="px-4 py-4 space-y-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="border-t pt-3 space-y-2">
-              {!mounted ? null : isAuthenticated ? (
-                <>
-                  {user?.is_staff && (
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="md:hidden bg-white/95 backdrop-blur-lg border-t shadow-lg overflow-hidden"
+          >
+            <div className="px-4 py-4 space-y-3">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="border-t pt-3 space-y-2">
+                {!mounted ? null : isAuthenticated ? (
+                  <>
+                    {user?.is_staff && (
+                      <Link
+                        href="/admin-dashboard"
+                        onClick={() => setMobileOpen(false)}
+                        className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                      >
+                        Admin
+                      </Link>
+                    )}
+                    {!user?.is_staff && (
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setMobileOpen(false)}
+                        className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                      >
+                        My Bookings
+                      </Link>
+                    )}
+                    <button onClick={handleLogout} className="btn-primary w-full py-2">
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
                     <Link
-                      href="/admin-dashboard"
+                      href="/auth/login"
                       onClick={() => setMobileOpen(false)}
-                      className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                      className="block text-center border border-ocean-600 text-ocean-600 rounded-lg py-2 font-medium"
                     >
-                      Admin
+                      Login
                     </Link>
-                  )}
-                  {!user?.is_staff && (
                     <Link
-                      href="/dashboard"
+                      href="/auth/register"
                       onClick={() => setMobileOpen(false)}
-                      className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                      className="block btn-primary text-center py-2"
                     >
-                      My Bookings
+                      Register
                     </Link>
-                  )}
-                  <button onClick={handleLogout} className="btn-primary w-full py-2">
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setMobileOpen(false)}
-                    className="block text-center border border-ocean-600 text-ocean-600 rounded-lg py-2 font-medium"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/auth/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="block btn-primary text-center py-2"
-                  >
-                    Register
-                  </Link>
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

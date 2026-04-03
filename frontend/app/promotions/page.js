@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Tag } from 'lucide-react'
+import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 import api from '@/lib/api'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80'
@@ -24,14 +25,15 @@ export default function PromotionsPage() {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <FadeInUp className="text-center mb-10">
+          <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">Special Offers</p>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Promotions & Deals
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Take advantage of our special offers and seasonal promotions.
           </p>
-        </div>
+        </FadeInUp>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -53,9 +55,9 @@ export default function PromotionsPage() {
             <p className="text-gray-400">Stay tuned for upcoming deals and discounts!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {promos.map((promo) => (
-              <div key={promo.id} className="card group">
+              <StaggerItem key={promo.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
                     src={promo.image || PLACEHOLDER}
@@ -63,7 +65,7 @@ export default function PromotionsPage() {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
                     {promo.discount_info}
                   </div>
                 </div>
@@ -74,9 +76,9 @@ export default function PromotionsPage() {
                     Valid: {formatDate(promo.valid_from)} &ndash; {formatDate(promo.valid_until)}
                   </div>
                 </div>
-              </div>
+              </div></StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         )}
       </div>
     </div>

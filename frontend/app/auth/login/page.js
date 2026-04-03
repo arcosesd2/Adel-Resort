@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Waves } from 'lucide-react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 
@@ -41,7 +42,12 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-md"
+    >
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-2 font-serif font-bold text-2xl text-ocean-700 mb-2">
           <Waves className="w-7 h-7" />
@@ -51,7 +57,7 @@ function LoginForm() {
         <p className="text-gray-500 mt-2">Sign in to manage your bookings</p>
       </div>
 
-      <div className="card p-8">
+      <div className="glass-card p-8">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
@@ -104,13 +110,16 @@ function LoginForm() {
           </Link>
         </p>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-ocean-50 px-4">
+    <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-ocean-50 via-white to-sand-50 px-4 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-[10%] w-64 h-64 bg-ocean-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-[10%] w-48 h-48 bg-sand-200/30 rounded-full blur-3xl pointer-events-none" />
       <Suspense fallback={
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean-600" />
       }>

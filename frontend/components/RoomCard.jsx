@@ -36,6 +36,8 @@ export default function RoomCard({ room }) {
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          {/* Cinematic gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="absolute top-3 left-3">
             <span className={`text-xs font-semibold px-3 py-1 rounded-full ${typeColors[room_type] || 'bg-gray-100 text-gray-700'}`}>
               {room_type_display}
@@ -81,11 +83,11 @@ export default function RoomCard({ room }) {
 
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
             <div>
-              <span className="text-2xl font-bold text-ocean-700">₱{day_price}</span>
+              <span className="inline-block bg-ocean-50 rounded-full px-3 py-1 text-2xl font-bold text-ocean-700">₱{day_price}</span>
               {!is_day_only && night_price && (
                 <span className="text-gray-400 text-sm"> / ₱{night_price}</span>
               )}
-              <div className="text-gray-400 text-xs">
+              <div className="text-gray-400 text-xs mt-1">
                 {is_day_only ? 'day tour' : 'day / night'}
               </div>
             </div>

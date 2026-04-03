@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO, formatDistanceToNow } from 'date-fns'
 import { ArrowLeft, Shield, CalendarDays, Tag, X, AlertTriangle } from 'lucide-react'
+import { FadeInUp } from '@/components/motions'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -132,7 +133,9 @@ function CheckoutContent() {
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
 
-        <h1 className="font-serif text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
+        <FadeInUp>
+          <h1 className="font-serif text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
+        </FadeInUp>
 
         {/* Payment Deadline Warning */}
         {timeLeft && timeLeft !== 'expired' && (
@@ -149,8 +152,8 @@ function CheckoutContent() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Order Summary */}
-          <div>
-            <div className="card p-6">
+          <FadeInUp delay={0.1}>
+            <div className="glass-card p-6">
               <h2 className="font-semibold text-lg mb-4 text-gray-900">Booking Summary</h2>
 
               <div className="bg-ocean-50 rounded-xl p-4 mb-4">
@@ -283,10 +286,10 @@ function CheckoutContent() {
                 <span>Your payment will be verified by our team within 24 hours.</span>
               </div>
             </div>
-          </div>
+          </FadeInUp>
 
           {/* Payment Form */}
-          <div className="card p-6">
+          <FadeInUp delay={0.2}><div className="card p-6">
             <h2 className="font-semibold text-lg mb-4 text-gray-900">Payment Details</h2>
             <GCashPaymentForm
               bookingId={booking.id}
@@ -295,7 +298,7 @@ function CheckoutContent() {
               voucherCode={voucherApplied?.code || ''}
               onSuccess={handlePaymentSuccess}
             />
-          </div>
+          </div></FadeInUp>
         </div>
       </div>
     </div>

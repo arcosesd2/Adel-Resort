@@ -6,6 +6,7 @@ import RoomCard from '@/components/RoomCard'
 import RoomFilters from '@/components/RoomFilters'
 import api from '@/lib/api'
 import { Hotel } from 'lucide-react'
+import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 
 function RoomsContent() {
   const searchParams = useSearchParams()
@@ -72,11 +73,13 @@ function RoomsContent() {
       ) : (
         <>
           <p className="text-gray-500 text-sm mb-4">{rooms.length} room{rooms.length !== 1 ? 's' : ''} available</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rooms.map((room) => (
-              <RoomCard key={room.id} room={room} />
+              <StaggerItem key={room.id}>
+                <RoomCard room={room} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </>
       )}
     </>
@@ -85,17 +88,18 @@ function RoomsContent() {
 
 export default function RoomsPage() {
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-gray-50">
+    <div className="min-h-screen pt-24 pb-16 bg-gradient-to-b from-ocean-50 to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-10">
+        <FadeInUp className="text-center mb-10">
+          <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">Browse Our Rooms</p>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Rooms & Accommodations
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Choose from cottages, kubo rooms, fully furnished houses, karaoke rooms, and more.
           </p>
-        </div>
+        </FadeInUp>
 
         <Suspense fallback={
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
