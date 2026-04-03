@@ -5,8 +5,8 @@ from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .models import News, Event, Promotion, Pricing, HeroConfig
-from .serializers import NewsSerializer, EventSerializer, PromotionSerializer, PricingSerializer, HeroConfigSerializer
+from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings
+from .serializers import NewsSerializer, EventSerializer, PromotionSerializer, PricingSerializer, HeroConfigSerializer, SiteSettingsSerializer
 from accounts.permissions import IsSuperAdmin
 
 
@@ -41,6 +41,24 @@ class PricingListView(ListAPIView):
 
     def get_queryset(self):
         return Pricing.objects.all()
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def site_settings(request):
+    settings = SiteSettings.load()
+    return Response(SiteSettingsSerializer(settings).data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsSuperAdmin])
+def site_settings_update(request):
+    settings = SiteSettings.load()
+    serializer = SiteSettingsSerializer(settings, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(SiteSettingsSerializer(settings).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

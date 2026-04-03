@@ -4,7 +4,7 @@ from accounts.permissions import IsSuperAdmin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
-from django.db.models import Count, Sum, Max, F, Value, Q
+from django.db.models import Count, Sum, Max, Avg, F, Value, Q
 from django.db.models.functions import Concat, TruncDate, TruncMonth
 from datetime import timedelta, date
 from django.utils import timezone
@@ -14,6 +14,7 @@ from .serializers import TrackPageViewSerializer
 from bookings.models import Booking
 from payments.models import Payment
 from rooms.models import Room
+from reviews.models import Review
 
 
 class AnalyticsRateThrottle(ScopedRateThrottle):
@@ -28,6 +29,34 @@ def track_page_view(request):
     serializer.is_valid(raise_exception=True)
     PageView.objects.create(**serializer.validated_data)
     return Response(status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_stats(request):
+    total_guests = (
+        Booking.objects
+        .filter(status__in=['confirmed', 'completed'])
+        .values('user')
+        .distinct()
+        .count()
+    )
+    total_rooms = Room.objects.filter(is_active=True).count()
+
+    oldest_booking = Booking.objects.order_by('created_at').values_list('created_at', flat=True).first()
+    if oldest_booking:
+        years = (timezone.now() - oldest_booking).days / 365.25
+    else:
+        years = 1
+
+    avg_rating = Review.objects.filter(is_approved=True).aggregate(avg=Avg('rating'))['avg']
+
+    return Response({
+        'total_guests': total_guests,
+        'total_rooms': total_rooms,
+        'years_of_service': round(years, 1),
+        'average_rating': round(avg_rating, 1) if avg_rating else None,
+    })
 
 
 @api_view(['GET'])

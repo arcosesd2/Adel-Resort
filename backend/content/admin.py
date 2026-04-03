@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import News, Event, Promotion, Pricing, HeroConfig
+from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings
 
 
 @admin.register(News)
@@ -33,6 +33,17 @@ class PricingAdmin(admin.ModelAdmin):
     list_filter = ('room_type',)
     list_editable = ('day_price', 'night_price', 'order')
     ordering = ('order',)
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'show_stats', 'show_testimonials', 'updated_at')
+
+    def has_add_permission(self, request):
+        return not SiteSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(HeroConfig)

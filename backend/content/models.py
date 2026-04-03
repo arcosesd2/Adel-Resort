@@ -84,6 +84,28 @@ class HeroConfig(models.Model):
         return obj
 
 
+class SiteSettings(models.Model):
+    show_stats = models.BooleanField(default=True)
+    show_testimonials = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site Settings'
+        verbose_name_plural = 'Site Settings'
+
+    def __str__(self):
+        return 'Site Settings'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class Pricing(models.Model):
     room_type = models.CharField(max_length=25, choices=RoomType.choices)
     label = models.CharField(max_length=200)

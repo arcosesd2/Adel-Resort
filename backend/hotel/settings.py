@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'analytics',
     'vouchers',
     'chat',
+    'reviews',
 ]
 
 MIDDLEWARE = [

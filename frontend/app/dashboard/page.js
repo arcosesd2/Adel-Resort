@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CalendarDays, Hotel, Clock, CheckCircle, XCircle, ArrowRight, AlertTriangle } from 'lucide-react'
+import { CalendarDays, Hotel, Clock, CheckCircle, XCircle, ArrowRight, AlertTriangle, Star } from 'lucide-react'
 import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
+import ReviewForm from '@/components/ReviewForm'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -46,11 +47,13 @@ function DeadlineCountdown({ deadline }) {
   )
 }
 
-function BookingCard({ booking, onCancel }) {
+function BookingCard({ booking, onCancel, reviews, onReviewSubmitted }) {
   const cfg = statusConfig[booking.status] || statusConfig.pending
   const Icon = cfg.icon
   const awaitingConfirmation = booking.status === 'pending' && booking.payment_submitted
   const showDeadline = booking.status === 'pending' && !booking.payment_submitted && booking.payment_deadline
+  const hasReview = reviews?.some(r => r.booking === booking.id)
+  const [showReviewForm, setShowReviewForm] = useState(false)
 
   return (
     <div className="card p-5">
@@ -136,6 +139,35 @@ function BookingCard({ booking, onCancel }) {
           </Link>
         </div>
       </div>
+
+      {/* Review section for completed bookings */}
+      {booking.status === 'completed' && !hasReview && (
+        <div className="border-t pt-3 mt-3">
+          {showReviewForm ? (
+            <ReviewForm
+              bookingId={booking.id}
+              onSuccess={() => {
+                setShowReviewForm(false)
+                onReviewSubmitted?.()
+              }}
+            />
+          ) : (
+            <button
+              onClick={() => setShowReviewForm(true)}
+              className="flex items-center gap-2 text-sm text-ocean-600 hover:text-ocean-700 font-medium"
+            >
+              <Star size={16} /> Write a Review
+            </button>
+          )}
+        </div>
+      )}
+      {booking.status === 'completed' && hasReview && (
+        <div className="border-t pt-3 mt-3">
+          <span className="flex items-center gap-2 text-sm text-green-600">
+            <CheckCircle size={14} /> Review submitted
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -144,6 +176,7 @@ export default function DashboardPage() {
   const { user, isAuthenticated } = useAuthStore()
   const router = useRouter()
   const [bookings, setBookings] = useState([])
+  const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
 
@@ -157,6 +190,7 @@ export default function DashboardPage() {
       return
     }
     fetchBookings()
+    fetchReviews()
   }, [isAuthenticated, user])
 
   const fetchBookings = async () => {
@@ -168,6 +202,13 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchReviews = async () => {
+    try {
+      const { data } = await api.get('/reviews/mine/')
+      setReviews(data)
+    } catch {}
   }
 
   const handleCancel = async (id) => {
@@ -247,7 +288,7 @@ export default function DashboardPage() {
           <StaggerContainer className="space-y-4">
             {filtered.map(booking => (
               <StaggerItem key={booking.id}>
-                <BookingCard booking={booking} onCancel={handleCancel} />
+                <BookingCard booking={booking} onCancel={handleCancel} reviews={reviews} onReviewSubmitted={fetchReviews} />
               </StaggerItem>
             ))}
           </StaggerContainer>

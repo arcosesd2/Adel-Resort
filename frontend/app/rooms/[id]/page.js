@@ -5,6 +5,7 @@ import { Users, Maximize, Check } from 'lucide-react'
 import BookingForm from '@/components/BookingForm'
 import RoomGallery from '@/components/RoomGallery'
 import { FadeInUp } from '@/components/motions'
+import RoomReviews from '@/components/RoomReviews'
 import api from '@/lib/api'
 
 async function getRoom(id) {
@@ -94,6 +95,11 @@ export default async function RoomDetailPage({ params }) {
                 </div>
               </FadeInUp>
             )}
+
+            {/* Guest Reviews */}
+            <FadeInUp delay={0.3}>
+              <RoomReviews roomId={room.id} />
+            </FadeInUp>
           </div>
 
           {/* Booking Form */}

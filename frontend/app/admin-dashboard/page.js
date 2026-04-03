@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -318,6 +318,12 @@ export default function AdminDashboard() {
           </Link>
           <Link href="/admin-dashboard/hero" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
             <Film size={16} /> Homepage Intro
+          </Link>
+          <Link href="/admin-dashboard/settings" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Settings size={16} /> Site Settings
+          </Link>
+          <Link href="/admin-dashboard/reviews" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Star size={16} /> Reviews
           </Link>
         </div>
       )}

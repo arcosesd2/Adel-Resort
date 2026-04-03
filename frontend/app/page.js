@@ -27,6 +27,24 @@ async function getHeroConfig() {
   }
 }
 
+async function getPublicStats() {
+  try {
+    const { data } = await api.get('/analytics/stats/')
+    return data
+  } catch {
+    return null
+  }
+}
+
+async function getSiteSettings() {
+  try {
+    const { data } = await api.get('/content/settings/')
+    return data
+  } catch {
+    return null
+  }
+}
+
 const features = [
   { icon: Trophy, title: 'Multi-purpose Court', desc: 'Volleyball and basketball hard court for active fun with family and friends' },
   { icon: TreePalm, title: "Children's Playground", desc: 'A safe and fun play area to keep the little ones entertained all day' },
@@ -34,12 +52,14 @@ const features = [
   { icon: CarFront, title: 'Spacious Parking', desc: 'CCTV-monitored parking area so your vehicle stays safe while you relax' },
 ]
 
-const stats = [
-  { icon: Users, end: 500, suffix: '+', label: 'Happy Guests' },
-  { icon: Home, end: 15, suffix: '+', label: 'Rooms & Cottages' },
-  { icon: Clock, end: 5, suffix: '+', label: 'Years of Service' },
-  { icon: Award, end: 4.8, label: 'Average Rating', decimals: 1 },
-]
+function buildStats(data) {
+  return [
+    { icon: Users, end: data?.total_guests || 0, suffix: '+', label: 'Happy Guests' },
+    { icon: Home, end: data?.total_rooms || 0, suffix: '+', label: 'Rooms & Cottages' },
+    { icon: Clock, end: data?.years_of_service || 1, suffix: '+', label: 'Years of Service', decimals: 0 },
+    { icon: Award, end: data?.average_rating || 0, label: 'Average Rating', decimals: 1 },
+  ]
+}
 
 const testimonials = [
   {
@@ -60,7 +80,10 @@ const testimonials = [
 ]
 
 export default async function HomePage() {
-  const [rooms, heroConfig] = await Promise.all([getFeaturedRooms(), getHeroConfig()])
+  const [rooms, heroConfig, publicStats, siteSettings] = await Promise.all([getFeaturedRooms(), getHeroConfig(), getPublicStats(), getSiteSettings()])
+  const stats = buildStats(publicStats)
+  const showStats = siteSettings?.show_stats !== false
+  const showTestimonials = siteSettings?.show_testimonials !== false
 
   return (
     <>
@@ -98,10 +121,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Wave: features → stats */}
-      <WaveDivider color="#0c4a6e" />
-
       {/* Stats Counter Section */}
+      {showStats && <>
+      <WaveDivider color="#0c4a6e" />
       <section className="py-20 bg-gradient-to-r from-ocean-900 via-ocean-800 to-ocean-900 relative overflow-hidden">
         {/* Decorative bg elements */}
         <div className="absolute inset-0 pointer-events-none">
@@ -131,8 +153,9 @@ export default async function HomePage() {
           </StaggerContainer>
         </div>
       </section>
+      </>}
 
-      {/* Wave: stats → rooms */}
+      {/* Wave → rooms */}
       <WaveDivider color="#ffffff" />
 
       {/* Featured Rooms */}
@@ -159,10 +182,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Wave: rooms → testimonials */}
-      <WaveDivider color="#f0f9ff" />
-
       {/* Testimonials */}
+      {showTestimonials && <>
+      <WaveDivider color="#f0f9ff" />
       <section className="py-20 bg-ocean-50 relative overflow-hidden">
         {/* Decorative quote */}
         <div className="absolute top-10 left-10 opacity-[0.04] pointer-events-none">
@@ -196,8 +218,9 @@ export default async function HomePage() {
           </StaggerContainer>
         </div>
       </section>
+      </>}
 
-      {/* Wave: testimonials → CTA */}
+      {/* Wave → CTA */}
       <WaveDivider color="#0c4a6e" />
 
       {/* CTA Banner */}
