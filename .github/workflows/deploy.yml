@@ -1,0 +1,40 @@
+name: Deploy to IONOS VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/adel/adel-beach-resort
+
+            # Pull latest
+            git pull origin main
+
+            # Backend
+            cd backend
+            source venv/bin/activate
+            pip install -r requirements.txt -q
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            deactivate
+
+            # Frontend
+            cd ../frontend
+            npm install --legacy-peer-deps
+            npm run build
+
+            # Restart services
+            supervisorctl restart gunicorn
+            pm2 restart all
+
+            echo "Deploy complete!"
