@@ -33,6 +33,15 @@ api.interceptors.response.use(
         } catch {
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
+          // Clear persisted auth store so UI reflects logged-out state
+          const stored = localStorage.getItem('auth-store')
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored)
+              parsed.state = { ...parsed.state, user: null, isAuthenticated: false }
+              localStorage.setItem('auth-store', JSON.stringify(parsed))
+            } catch {}
+          }
           if (typeof window !== 'undefined') window.location.href = '/auth/login'
         }
       }
