@@ -30,7 +30,6 @@ function LoginForm() {
       toast.success('Welcome back!')
       const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
       router.replace(dest)
-      router.refresh()
     } catch (err) {
       const msg = err.response?.data?.non_field_errors?.[0]
         || err.response?.data?.detail

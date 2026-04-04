@@ -43,6 +43,7 @@ const useAuthStore = create(
           set({ user: data, isAuthenticated: true })
         } catch {
           clearTokens()
+          document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
           set({ user: null, isAuthenticated: false })
         }
       },

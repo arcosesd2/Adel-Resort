@@ -5,6 +5,7 @@ import Footer from '@/components/Footer'
 import InactivityGuard from '@/components/InactivityGuard'
 import PageViewTracker from '@/components/PageViewTracker'
 import ChatWidget from '@/components/ChatWidget'
+import AuthValidator from '@/components/AuthValidator'
 import PageTransitionWrapper from '@/components/PageTransitionWrapper'
 import JsonLd from '@/components/JsonLd'
 import './globals.css'
@@ -54,6 +55,7 @@ export default function RootLayout({ children }) {
             addressCountry: 'PH',
           },
         }} />
+        <AuthValidator />
         <Navbar />
         <InactivityGuard />
         <PageViewTracker />
