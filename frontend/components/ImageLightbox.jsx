@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination } from 'swiper/modules'
 import { X } from 'lucide-react'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -14,7 +14,7 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f
 
 export default function ImageLightbox({ images = [], primaryImage, roomName, isOpen, onClose }) {
   const slides = images.length > 0
-    ? images.map(img => ({ src: img.image || img, alt: img.alt_text || roomName }))
+    ? images.map(img => ({ src: img.image_url || img.image || img, alt: img.alt_text || roomName }))
     : [{ src: primaryImage || PLACEHOLDER, alt: roomName }]
 
   const close = useCallback(() => onClose(), [onClose])
@@ -59,11 +59,11 @@ export default function ImageLightbox({ images = [], primaryImage, roomName, isO
         >
           {slides.map((slide, idx) => (
             <SwiperSlide key={idx} className="relative">
-              <Image
-                src={slide.src}
+              <img
+                src={cloudinaryUrl(slide.src, { width: 1200, quality: 'auto:good' })}
                 alt={slide.alt}
-                fill
-                className="object-contain"
+                className="absolute inset-0 w-full h-full object-contain"
+                loading={idx === 0 ? 'eager' : 'lazy'}
               />
             </SwiperSlide>
           ))}

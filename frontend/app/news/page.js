@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Newspaper } from 'lucide-react'
 import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 import api from '@/lib/api'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80'
 
@@ -57,9 +58,10 @@ export default function NewsPage() {
               <StaggerItem key={item.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={item.image_url || item.image || PLACEHOLDER}
+                    src={cloudinaryUrl(item.image_url || item.image || PLACEHOLDER, { width: 600 })}
                     alt={item.title}
                     fill
+                    unoptimized={!!(item.image_url || item.image || '').includes('res.cloudinary.com')}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>

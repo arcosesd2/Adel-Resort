@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Tag } from 'lucide-react'
 import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 import api from '@/lib/api'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80'
 
@@ -60,9 +61,10 @@ export default function PromotionsPage() {
               <StaggerItem key={promo.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={promo.image_url || promo.image || PLACEHOLDER}
+                    src={cloudinaryUrl(promo.image_url || promo.image || PLACEHOLDER, { width: 600 })}
                     alt={promo.title}
                     fill
+                    unoptimized={!!(promo.image_url || promo.image || '').includes('res.cloudinary.com')}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">

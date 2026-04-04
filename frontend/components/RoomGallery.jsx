@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination } from 'swiper/modules'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 import 'swiper/css'
 import 'swiper/css/navigation'
@@ -23,6 +23,8 @@ export default function RoomGallery({ images = [], roomName }) {
 
   // If no images at all, show placeholder
   const slides = allImages || [{ id: 'placeholder', image: PLACEHOLDER, alt_text: roomName }]
+
+  const getUrl = (img) => img.image_url || img.image
 
   const openLightbox = (index) => {
     setLightboxIndex(index)
@@ -66,15 +68,20 @@ export default function RoomGallery({ images = [], roomName }) {
         >
           {slides.map((img, idx) => (
             <SwiperSlide key={img.id} className="relative">
-              <Image
-                src={img.image_url || img.image}
-                alt={img.alt_text || roomName}
-                fill
+              {/* Use native img with Cloudinary transforms — skips Next.js optimization */}
+              <img
+                src={cloudinaryUrl(getUrl(img), { width: 1200 })}
+                srcSet={
+                  getUrl(img).includes('res.cloudinary.com')
+                    ? `${cloudinaryUrl(getUrl(img), { width: 640 })} 640w, ${cloudinaryUrl(getUrl(img), { width: 828 })} 828w, ${cloudinaryUrl(getUrl(img), { width: 1200 })} 1200w`
+                    : undefined
+                }
                 sizes="100vw"
-                quality={75}
-                className="object-cover cursor-pointer"
-                priority={idx === 0}
+                alt={img.alt_text || roomName}
+                className="absolute inset-0 w-full h-full object-cover cursor-pointer"
                 loading={idx === 0 ? 'eager' : 'lazy'}
+                fetchPriority={idx === 0 ? 'high' : 'auto'}
+                decoding={idx === 0 ? 'sync' : 'async'}
                 onClick={() => openLightbox(idx)}
               />
             </SwiperSlide>
@@ -117,13 +124,10 @@ export default function RoomGallery({ images = [], roomName }) {
             className="relative w-full h-full max-w-5xl max-h-[85vh] m-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={slides[lightboxIndex].image_url || slides[lightboxIndex].image}
+            <img
+              src={cloudinaryUrl(getUrl(slides[lightboxIndex]), { width: 1600, quality: 'auto:good' })}
               alt={slides[lightboxIndex].alt_text || roomName}
-              fill
-              sizes="100vw"
-              quality={85}
-              className="object-contain"
+              className="w-full h-full object-contain"
             />
           </div>
 

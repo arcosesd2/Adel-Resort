@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Calendar } from 'lucide-react'
 import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 import api from '@/lib/api'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80'
 
@@ -57,9 +58,10 @@ export default function EventsPage() {
               <StaggerItem key={event.id}><div className="card group">
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={event.image_url || event.image || PLACEHOLDER}
+                    src={cloudinaryUrl(event.image_url || event.image || PLACEHOLDER, { width: 600 })}
                     alt={event.title}
                     fill
+                    unoptimized={!!(event.image_url || event.image || '').includes('res.cloudinary.com')}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>

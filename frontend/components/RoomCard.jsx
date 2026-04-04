@@ -7,6 +7,7 @@ import { Users, Maximize, Heart } from 'lucide-react'
 import ImageLightbox from '@/components/ImageLightbox'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80'
 
@@ -43,9 +44,10 @@ export default function RoomCard({ room, initialFavorited = false }) {
           onClick={() => setLightboxOpen(true)}
         >
           <Image
-            src={primary_image || PLACEHOLDER}
+            src={cloudinaryUrl(primary_image || PLACEHOLDER, { width: 600 })}
             alt={name}
             fill
+            unoptimized={!!primary_image?.includes('res.cloudinary.com')}
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />

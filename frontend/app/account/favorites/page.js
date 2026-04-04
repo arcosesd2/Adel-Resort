@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
+import { cloudinaryUrl } from '@/lib/cloudinary'
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState([])
@@ -82,7 +83,7 @@ export default function FavoritesPage() {
             <Link href={`/rooms/${fav.room_id}`}>
               <div className="aspect-[4/3] bg-ocean-100 overflow-hidden">
                 {fav.primary_image ? (
-                  <img src={fav.primary_image} alt={fav.room_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <img src={cloudinaryUrl(fav.primary_image, { width: 500 })} alt={fav.room_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-ocean-300">
                     <span className="text-4xl">🏖️</span>
