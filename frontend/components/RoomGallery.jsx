@@ -67,11 +67,14 @@ export default function RoomGallery({ images = [], roomName }) {
           {slides.map((img, idx) => (
             <SwiperSlide key={img.id} className="relative">
               <Image
-                src={img.image}
+                src={img.image_url || img.image}
                 alt={img.alt_text || roomName}
                 fill
+                sizes="100vw"
+                quality={75}
                 className="object-cover cursor-pointer"
                 priority={idx === 0}
+                loading={idx === 0 ? 'eager' : 'lazy'}
                 onClick={() => openLightbox(idx)}
               />
             </SwiperSlide>
@@ -115,9 +118,11 @@ export default function RoomGallery({ images = [], roomName }) {
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={slides[lightboxIndex].image}
+              src={slides[lightboxIndex].image_url || slides[lightboxIndex].image}
               alt={slides[lightboxIndex].alt_text || roomName}
               fill
+              sizes="100vw"
+              quality={85}
               className="object-contain"
             />
           </div>
