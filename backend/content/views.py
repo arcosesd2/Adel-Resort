@@ -57,6 +57,12 @@ def site_settings_update(request):
     serializer = SiteSettingsSerializer(settings, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
+        try:
+            from accounts.models import log_activity
+            changes = ', '.join(f'{k}={v}' for k, v in request.data.items())
+            log_activity(request.user, 'settings', 'Updated site settings', details=changes)
+        except Exception:
+            pass
         return Response(SiteSettingsSerializer(settings).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -85,5 +91,10 @@ def hero_config_update(request):
     serializer = HeroConfigSerializer(config, data=request.data, partial=True, context={'request': request})
     if serializer.is_valid():
         serializer.save()
+        try:
+            from accounts.models import log_activity
+            log_activity(request.user, 'content', 'Updated homepage hero config')
+        except Exception:
+            pass
         return Response(HeroConfigSerializer(config, context={'request': request}).data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

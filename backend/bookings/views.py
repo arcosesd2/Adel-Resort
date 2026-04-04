@@ -196,6 +196,14 @@ def onsite_booking(request):
         response_data['discount'] = str(discount_amount)
         response_data['voucher_code'] = voucher_code
 
+    try:
+        from accounts.models import log_activity
+        log_activity(request.user, 'booking',
+                     f'Created onsite booking #{booking.id} for "{guest_name}"',
+                     details=f'Room: {room.name}, Total: ₱{booking.total_price}')
+    except Exception:
+        pass
+
     return Response(response_data, status=status.HTTP_201_CREATED)
 
 
@@ -222,6 +230,13 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
         new_status = booking.status
 
         if old_status != new_status:
+            try:
+                from accounts.models import log_activity
+                log_activity(self.request.user, 'booking',
+                             f'Changed booking #{booking.id} status: {old_status} → {new_status}',
+                             details=f'Room: {booking.room.name}, Guest: {booking.user.get_full_name()}')
+            except Exception:
+                pass
             try:
                 from accounts.models import create_notification
                 from accounts.emails import send_booking_confirmation_email

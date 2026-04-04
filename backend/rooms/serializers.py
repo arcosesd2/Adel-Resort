@@ -3,9 +3,19 @@ from .models import Room, RoomImage
 
 
 class RoomImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = RoomImage
-        fields = ('id', 'image', 'alt_text', 'is_primary', 'order')
+        fields = ('id', 'image', 'image_url', 'alt_text', 'is_primary', 'order')
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class RoomSerializer(serializers.ModelSerializer):

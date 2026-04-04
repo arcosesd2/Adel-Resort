@@ -130,5 +130,10 @@ def gcash_config_update(request):
     serializer = GCashConfigSerializer(config, data=request.data, partial=True, context={'request': request})
     if serializer.is_valid():
         serializer.save()
+        try:
+            from accounts.models import log_activity
+            log_activity(request.user, 'settings', 'Updated GCash settings')
+        except Exception:
+            pass
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

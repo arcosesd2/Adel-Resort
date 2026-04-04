@@ -35,8 +35,9 @@ urlpatterns = [
     path('users/', views.user_list, name='user-list'),
     path('users/<int:pk>/', views.user_detail, name='user-detail'),
 
-    # Superadmin: Login activity
+    # Superadmin: Login activity & Activity log
     path('login-activity/', views.login_activity, name='login-activity'),
+    path('activity-log/', views.activity_log, name='activity-log'),
 
     # Superadmin: Device management
     path('devices/', views.device_list, name='device-list'),

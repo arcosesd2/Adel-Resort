@@ -73,6 +73,14 @@ def toggle_approval(request, pk):
     review.is_approved = not review.is_approved
     review.save(update_fields=['is_approved'])
 
+    try:
+        from accounts.models import log_activity
+        action = 'Approved' if review.is_approved else 'Unapproved'
+        log_activity(request.user, 'review',
+                     f'{action} review by {review.user.username} for {review.room.name}')
+    except Exception:
+        pass
+
     if review.is_approved:
         try:
             from accounts.models import create_notification

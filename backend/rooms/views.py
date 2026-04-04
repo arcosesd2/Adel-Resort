@@ -1,11 +1,13 @@
+from django.db import models as db_models
 from rest_framework import generics, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Room
-from .serializers import RoomSerializer, RoomListSerializer
+from .models import Room, RoomImage
+from .serializers import RoomSerializer, RoomListSerializer, RoomImageSerializer
 from .filters import RoomFilter
 from bookings.models import Booking
 
@@ -54,6 +56,113 @@ def room_availability(request, pk):
         'max_rooms': room.max_rooms,
         'booked_slots': _get_booked_slots(room),
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+@parser_classes([MultiPartParser, FormParser])
+def upload_room_images(request, pk):
+    """Upload multiple images to a room. Auto-assigns order numbers."""
+    try:
+        room = Room.objects.get(pk=pk)
+    except Room.DoesNotExist:
+        return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    files = request.FILES.getlist('images')
+    if not files:
+        return Response({'detail': 'No images provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+    for f in files:
+        if f.content_type not in allowed_types:
+            return Response({'detail': f'Invalid file type: {f.name}. Only JPEG, PNG, and WebP allowed.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if f.size > 10 * 1024 * 1024:
+            return Response({'detail': f'File too large: {f.name}. Max 10MB per image.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    # Auto-assign order starting from the current max
+    max_order = room.images.aggregate(db_models.Max('order'))['order__max'] or 0
+    is_first = not room.images.exists()
+
+    created = []
+    for i, f in enumerate(files):
+        img = RoomImage.objects.create(
+            room=room,
+            image=f,
+            alt_text=f'{room.name} photo',
+            is_primary=(is_first and i == 0),
+            order=max_order + i + 1,
+        )
+        created.append(img)
+
+    try:
+        from accounts.models import log_activity
+        log_activity(request.user, 'room', f'Uploaded {len(files)} image(s) to "{room.name}"')
+    except Exception:
+        pass
+
+    serializer = RoomImageSerializer(created, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def reorder_room_images(request, pk):
+    """Reorder room images. Expects {"order": [{"id": 1, "order": 0}, ...]}"""
+    try:
+        room = Room.objects.get(pk=pk)
+    except Room.DoesNotExist:
+        return Response({'detail': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    order_data = request.data.get('order', [])
+    if not order_data:
+        return Response({'detail': 'No order data provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    for item in order_data:
+        RoomImage.objects.filter(pk=item['id'], room=room).update(order=item['order'])
+
+    try:
+        from accounts.models import log_activity
+        log_activity(request.user, 'room', f'Reordered images for "{room.name}"')
+    except Exception:
+        pass
+
+    images = room.images.all()
+    return Response(RoomImageSerializer(images, many=True, context={'request': request}).data)
+
+
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([IsAdminUser])
+def room_image_detail(request, pk, image_pk):
+    """Update or delete a single room image."""
+    try:
+        image = RoomImage.objects.get(pk=image_pk, room_id=pk)
+    except RoomImage.DoesNotExist:
+        return Response({'detail': 'Image not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'DELETE':
+        room_name = image.room.name
+        image.image.delete(save=False)
+        image.delete()
+        try:
+            from accounts.models import log_activity
+            log_activity(request.user, 'room', f'Deleted image from "{room_name}"')
+        except Exception:
+            pass
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # PATCH - update is_primary, alt_text, order
+    if 'is_primary' in request.data:
+        if request.data['is_primary']:
+            RoomImage.objects.filter(room_id=pk).update(is_primary=False)
+        image.is_primary = request.data['is_primary']
+    if 'alt_text' in request.data:
+        image.alt_text = request.data['alt_text']
+    if 'order' in request.data:
+        image.order = request.data['order']
+    image.save()
+    return Response(RoomImageSerializer(image, context={'request': request}).data)
 
 
 @api_view(['GET'])

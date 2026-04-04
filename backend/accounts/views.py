@@ -14,13 +14,13 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, create_notification
+from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog, create_notification, log_activity
 from .permissions import IsSuperAdmin
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserManagementSerializer, RegisteredDeviceSerializer, LoginAttemptSerializer,
     ChangePasswordSerializer, DeactivateAccountSerializer,
-    FavoriteRoomSerializer, NotificationSerializer,
+    FavoriteRoomSerializer, NotificationSerializer, ActivityLogSerializer,
 )
 from .tokens import email_verification_token
 from .emails import send_welcome_email, send_verification_email, send_password_reset_email
@@ -119,6 +119,8 @@ def login(request):
         user=user, username=username, fingerprint=fingerprint, ip_address=ip,
         user_agent=ua, device_info=device_info, success=True,
     )
+    if user.is_staff or user.is_superadmin:
+        log_activity(user, 'auth', 'Logged in', ip_address=ip)
     refresh = RefreshToken.for_user(user)
     return Response({
         'user': UserSerializer(user, context={'request': request}).data,
@@ -415,7 +417,9 @@ def user_list(request):
 
     serializer = UserManagementSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        new_user = serializer.save()
+        log_activity(request.user, 'user', f'Created user "{new_user.username}"',
+                     ip_address=get_client_ip(request))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -435,12 +439,17 @@ def user_detail(request, pk):
         serializer = UserManagementSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            changes = ', '.join(f'{k}={v}' for k, v in request.data.items() if k != 'password')
+            log_activity(request.user, 'user', f'Updated user "{user.username}"',
+                         details=changes, ip_address=get_client_ip(request))
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'DELETE':
         if user == request.user:
             return Response({'detail': 'Cannot delete yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+        log_activity(request.user, 'user', f'Deleted user "{user.username}"',
+                     ip_address=get_client_ip(request))
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -532,6 +541,34 @@ def device_detail(request, pk):
     if request.method == 'DELETE':
         device.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ─── Superadmin: Activity Log ─────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def activity_log(request):
+    qs = ActivityLog.objects.select_related('user').all()
+
+    user_id = request.query_params.get('user')
+    if user_id:
+        qs = qs.filter(user_id=user_id)
+
+    category = request.query_params.get('category')
+    if category:
+        qs = qs.filter(category=category)
+
+    days = request.query_params.get('days')
+    if days:
+        since = timezone.now() - timedelta(days=int(days))
+        qs = qs.filter(created_at__gte=since)
+
+    search = request.query_params.get('search', '').strip()
+    if search:
+        qs = qs.filter(action__icontains=search)
+
+    page_size = min(int(request.query_params.get('limit', 100)), 500)
+    return Response(ActivityLogSerializer(qs[:page_size], many=True).data)
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────

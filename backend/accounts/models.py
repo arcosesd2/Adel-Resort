@@ -134,3 +134,39 @@ def create_notification(user, notification_type, title, message, link=''):
         message=message,
         link=link,
     )
+
+
+class ActivityLog(models.Model):
+    class ActionCategory(models.TextChoices):
+        BOOKING = 'booking', 'Booking'
+        PAYMENT = 'payment', 'Payment'
+        ROOM = 'room', 'Room'
+        CONTENT = 'content', 'Content'
+        USER = 'user', 'User Management'
+        REVIEW = 'review', 'Review'
+        VOUCHER = 'voucher', 'Voucher'
+        SETTINGS = 'settings', 'Settings'
+        AUTH = 'auth', 'Authentication'
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='activity_logs')
+    category = models.CharField(max_length=20, choices=ActionCategory.choices)
+    action = models.CharField(max_length=255)
+    details = models.TextField(blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user} - {self.action} - {self.created_at}'
+
+
+def log_activity(user, category, action, details='', ip_address=None):
+    return ActivityLog.objects.create(
+        user=user,
+        category=category,
+        action=action,
+        details=details,
+        ip_address=ip_address,
+    )

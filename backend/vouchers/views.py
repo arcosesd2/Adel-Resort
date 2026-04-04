@@ -78,7 +78,12 @@ def voucher_list_create(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     # Store code uppercase
-    serializer.save(code=serializer.validated_data['code'].upper())
+    voucher = serializer.save(code=serializer.validated_data['code'].upper())
+    try:
+        from accounts.models import log_activity
+        log_activity(request.user, 'voucher', f'Created voucher "{voucher.code}"')
+    except Exception:
+        pass
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -91,6 +96,12 @@ def voucher_toggle(request, pk):
         return Response({'detail': 'Voucher not found.'}, status=status.HTTP_404_NOT_FOUND)
     voucher.is_active = not voucher.is_active
     voucher.save(update_fields=['is_active'])
+    try:
+        from accounts.models import log_activity
+        state = 'activated' if voucher.is_active else 'deactivated'
+        log_activity(request.user, 'voucher', f'{state.capitalize()} voucher "{voucher.code}"')
+    except Exception:
+        pass
     return Response(VoucherSerializer(voucher).data)
 
 
@@ -101,5 +112,11 @@ def voucher_delete(request, pk):
         voucher = Voucher.objects.get(pk=pk)
     except Voucher.DoesNotExist:
         return Response({'detail': 'Voucher not found.'}, status=status.HTTP_404_NOT_FOUND)
+    code = voucher.code
     voucher.delete()
+    try:
+        from accounts.models import log_activity
+        log_activity(request.user, 'voucher', f'Deleted voucher "{code}"')
+    except Exception:
+        pass
     return Response(status=status.HTTP_204_NO_CONTENT)

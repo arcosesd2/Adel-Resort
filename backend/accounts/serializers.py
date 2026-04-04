@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification
+from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -144,3 +144,18 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ('id', 'notification_type', 'title', 'message', 'is_read', 'link', 'created_at')
         read_only_fields = fields
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True, default='')
+    user_full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ActivityLog
+        fields = ('id', 'user', 'user_username', 'user_full_name', 'category', 'action', 'details', 'ip_address', 'created_at')
+        read_only_fields = fields
+
+    def get_user_full_name(self, obj):
+        if obj.user:
+            return obj.user.get_full_name()
+        return ''
