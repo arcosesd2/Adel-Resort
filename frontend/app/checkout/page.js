@@ -288,6 +288,14 @@ function CheckoutContent() {
             </div>
           </FadeInUp>
 
+          {/* Cancellation Policy Notice */}
+          <FadeInUp delay={0.15}>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+              <p className="font-medium mb-1">Cancellation Policy</p>
+              <p>Confirmed bookings cancelled less than 3 days before check-in are non-refundable. <a href="/refund-policy" target="_blank" className="underline font-medium">View full policy</a></p>
+            </div>
+          </FadeInUp>
+
           {/* Payment Form */}
           <FadeInUp delay={0.2}><div className="card p-6">
             <h2 className="font-semibold text-lg mb-4 text-gray-900">Payment Details</h2>

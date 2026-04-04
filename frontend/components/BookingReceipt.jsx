@@ -23,7 +23,7 @@ const BookingReceipt = forwardRef(function BookingReceipt({ booking }, ref) {
       {/* Booking Reference */}
       <div className="text-center mb-6">
         <p className="text-sm text-gray-500">Booking Reference</p>
-        <p className="text-2xl font-bold text-gray-800">#{booking.id}</p>
+        <p className="text-2xl font-bold text-gray-800">{booking.reference_code || `#${booking.id}`}</p>
         <span className={`inline-block mt-1 text-xs font-semibold px-3 py-1 rounded-full ${
           booking.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' :
           booking.status === 'completed' ? 'bg-blue-100 text-blue-700' :

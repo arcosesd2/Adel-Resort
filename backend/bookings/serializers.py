@@ -21,12 +21,12 @@ class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = (
-            'id', 'room', 'room_detail', 'check_in', 'check_out', 'guests',
+            'id', 'reference_code', 'room', 'room_detail', 'check_in', 'check_out', 'guests',
             'slots', 'slots_summary', 'total_price', 'status',
             'special_requests', 'created_at', 'payment_submitted', 'voucher_discount',
             'payment_deadline', 'payment_type', 'payment_amount',
         )
-        read_only_fields = ('id', 'check_in', 'check_out', 'total_price', 'status', 'created_at')
+        read_only_fields = ('id', 'reference_code', 'check_in', 'check_out', 'total_price', 'status', 'created_at')
 
     def get_payment_submitted(self, obj):
         return hasattr(obj, 'payment')
@@ -158,7 +158,7 @@ class BookingSerializer(serializers.ModelSerializer):
 class BookingCreateSerializer(BookingSerializer):
     class Meta(BookingSerializer.Meta):
         fields = (
-            'id', 'room', 'check_in', 'check_out', 'guests',
+            'id', 'reference_code', 'room', 'check_in', 'check_out', 'guests',
             'slots', 'special_requests', 'total_price', 'status', 'created_at',
         )
 
@@ -172,12 +172,12 @@ class AdminBookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
         fields = (
-            'id', 'guest_name', 'guest_username', 'room', 'room_name',
+            'id', 'reference_code', 'guest_name', 'guest_username', 'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'status', 'special_requests', 'created_at',
         )
         read_only_fields = (
-            'id', 'guest_name', 'guest_username', 'room', 'room_name',
+            'id', 'reference_code', 'guest_name', 'guest_username', 'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'created_at',
         )

@@ -239,7 +239,7 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                 pass
             try:
                 from accounts.models import create_notification
-                from accounts.emails import send_booking_confirmation_email
+                from accounts.emails import send_booking_confirmation_email, send_booking_cancelled_email, send_booking_completed_email
                 if new_status == BookingStatus.CONFIRMED:
                     create_notification(
                         booking.user, 'booking_confirmed',
@@ -255,6 +255,7 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                         f'Your booking for {booking.room.name} has been cancelled.',
                         f'/booking/{booking.id}',
                     )
+                    send_booking_cancelled_email(booking.user, booking)
                 elif new_status == BookingStatus.COMPLETED:
                     create_notification(
                         booking.user, 'booking_completed',
@@ -262,5 +263,27 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                         f'Your stay at {booking.room.name} is complete. Leave a review!',
                         f'/booking/{booking.id}',
                     )
+                    send_booking_completed_email(booking.user, booking)
             except Exception:
                 pass
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def download_receipt(request, pk):
+    try:
+        booking = Booking.objects.select_related('user', 'room').get(pk=pk)
+    except Booking.DoesNotExist:
+        return Response({'detail': 'Booking not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Only allow the booking owner or staff to download
+    if booking.user != request.user and not request.user.is_staff:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    from django.http import FileResponse
+    from .pdf import generate_booking_receipt_pdf
+
+    pdf_buffer = generate_booking_receipt_pdf(booking)
+    response = FileResponse(pdf_buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{booking.reference_code}-receipt.pdf"'
+    return response

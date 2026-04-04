@@ -1,0 +1,33 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>Booking Cancelled</h2>
+<p>Hi {{ user.first_name }},</p>
+<p>Your booking <strong>{{ booking.reference_code }}</strong> has been cancelled.</p>
+
+<div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin: 20px 0;">
+  <div class="info-row">
+    <div class="info-label">Reference</div>
+    <div class="info-value">{{ booking.reference_code }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">Room</div>
+    <div class="info-value">{{ booking.room.name }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">Check-in</div>
+    <div class="info-value">{{ booking.check_in }}</div>
+  </div>
+  <div class="info-row" style="border-bottom: none;">
+    <div class="info-label">Total</div>
+    <div class="info-value">PHP {{ booking.total_price }}</div>
+  </div>
+</div>
+
+<p>If you believe this was a mistake or would like to rebook, please contact us or visit our website.</p>
+<p>For refund inquiries, please refer to our <a href="{{ frontend_url }}/refund-policy">Refund Policy</a>.</p>
+
+<p style="text-align: center;">
+  <a href="{{ frontend_url }}/rooms" class="btn">Browse Rooms</a>
+</p>
+{% endblock %}

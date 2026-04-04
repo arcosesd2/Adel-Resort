@@ -91,7 +91,7 @@ export default function BookingManagementSection() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">ID</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ref</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Guest</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Room</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Check-in/out</th>
@@ -104,7 +104,7 @@ export default function BookingManagementSection() {
               <tbody className="divide-y divide-gray-100">
                 {bookings.map(b => (
                   <tr key={b.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">#{b.id}</td>
+                    <td className="px-6 py-3 text-sm text-gray-700 font-mono">{b.reference_code || `#${b.id}`}</td>
                     <td className="px-6 py-3 text-sm">
                       <div className="font-medium text-gray-800">{b.guest_name}</div>
                       <div className="text-xs text-gray-400">{b.guest_email}</div>

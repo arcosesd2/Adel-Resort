@@ -6,21 +6,54 @@ import InactivityGuard from '@/components/InactivityGuard'
 import PageViewTracker from '@/components/PageViewTracker'
 import ChatWidget from '@/components/ChatWidget'
 import PageTransitionWrapper from '@/components/PageTransitionWrapper'
+import JsonLd from '@/components/JsonLd'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
 
 export const metadata = {
-  title: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
+  metadataBase: new URL('https://adel-resort.ph'),
+  title: {
+    default: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
+    template: '%s | Adel Beach Resort',
+  },
   description: 'Book cottages, rooms, and event spaces at Adel Beach Resort in Lawigan, Surigao Del Sur. Day tours and overnight stays available.',
   keywords: 'Adel Beach Resort, Lawigan, Surigao Del Sur, beach resort, cottages, kubo, function hall, day tour, night tour',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://adel-resort.ph',
+    siteName: 'Adel Beach Resort',
+    title: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
+    description: 'Book cottages, rooms, and event spaces at Adel Beach Resort in Lawigan, Surigao Del Sur.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
+    description: 'Book cottages, rooms, and event spaces at Adel Beach Resort in Lawigan, Surigao Del Sur.',
+  },
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="font-sans bg-white text-gray-900 min-h-screen flex flex-col">
+        <JsonLd data={{
+          '@context': 'https://schema.org',
+          '@type': 'Hotel',
+          name: 'Adel Beach Resort',
+          description: 'Beach resort in Lawigan, Surigao Del Sur offering cottages, rooms, and event spaces.',
+          url: 'https://adel-resort.ph',
+          telephone: '09685361395',
+          email: 'adelbeachresortph@gmail.com',
+          address: {
+            '@type': 'PostalAddress',
+            streetAddress: 'Lawigan',
+            addressLocality: 'Surigao Del Sur',
+            addressCountry: 'PH',
+          },
+        }} />
         <Navbar />
         <InactivityGuard />
         <PageViewTracker />

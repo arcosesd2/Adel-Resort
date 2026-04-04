@@ -52,7 +52,10 @@ export default function Footer() {
                   { href: '/', label: 'Home' },
                   { href: '/rooms', label: 'Accommodations' },
                   { href: '/availability', label: 'Check Availability' },
-                  { href: '/auth/register', label: 'Create Account' },
+                  { href: '/about', label: 'About Us' },
+                  { href: '/terms', label: 'Terms of Service' },
+                  { href: '/privacy', label: 'Privacy Policy' },
+                  { href: '/refund-policy', label: 'Refund Policy' },
                 ].map((link) => (
                   <li key={link.href}>
                     <Link href={link.href} className="hover:text-white transition-colors text-sm">

@@ -170,6 +170,11 @@ export default function BookingForm({ room }) {
         </div>
       )}
 
+      <p className="text-xs text-gray-500 text-center">
+        By booking, you agree to our{' '}
+        <a href="/refund-policy" target="_blank" className="text-ocean-600 underline">Refund & Cancellation Policy</a>.
+      </p>
+
       <button
         type="submit"
         disabled={loading || slots.length === 0}

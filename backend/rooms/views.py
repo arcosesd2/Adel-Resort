@@ -7,9 +7,11 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Room, RoomImage
-from .serializers import RoomSerializer, RoomListSerializer, RoomImageSerializer
+from .serializers import RoomSerializer, RoomListSerializer, RoomImageSerializer, AdminRoomSerializer
 from .filters import RoomFilter
 from bookings.models import Booking
+from accounts.permissions import IsSuperAdmin
+from accounts.models import log_activity
 
 
 class RoomListView(generics.ListAPIView):
@@ -183,3 +185,49 @@ def all_rooms_availability(request):
         })
 
     return Response(result)
+
+
+# ───── Admin Room CRUD ─────
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def admin_room_list(request):
+    rooms = Room.objects.all().prefetch_related('images')
+    return Response(AdminRoomSerializer(rooms, many=True, context={'request': request}).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def admin_room_create(request):
+    serializer = AdminRoomSerializer(data=request.data, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        log_activity(request.user, 'room', f'Created room: "{serializer.data["name"]}"')
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PATCH', 'DELETE'])
+@permission_classes([IsSuperAdmin])
+def admin_room_detail(request, pk):
+    try:
+        room = Room.objects.prefetch_related('images').get(pk=pk)
+    except Room.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        return Response(AdminRoomSerializer(room, context={'request': request}).data)
+
+    if request.method == 'DELETE':
+        name = room.name
+        room.is_active = False
+        room.save()
+        log_activity(request.user, 'room', f'Deactivated room: "{name}"')
+        return Response({'detail': f'Room "{name}" deactivated.'})
+
+    serializer = AdminRoomSerializer(room, data=request.data, partial=True, context={'request': request})
+    if serializer.is_valid():
+        serializer.save()
+        log_activity(request.user, 'room', f'Updated room: "{room.name}"')
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

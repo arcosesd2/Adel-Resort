@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, FileText, Clock, AlertTriangle } from 'lucide-react'
+import { CheckCircle, CalendarDays, Users, ArrowLeft, Printer, FileText, Clock, AlertTriangle, Download } from 'lucide-react'
+import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 import BookingReceipt from '@/components/BookingReceipt'
@@ -98,7 +99,7 @@ export default function BookingDetailPage() {
         <div className="card p-6 md:p-8">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="font-serif text-2xl font-bold text-gray-900">Booking #{booking.id}</h1>
+              <h1 className="font-serif text-2xl font-bold text-gray-900">{booking.reference_code || `Booking #${booking.id}`}</h1>
               <p className="text-gray-500 text-sm mt-1">
                 Created {format(parseISO(booking.created_at), 'MMM d, yyyy')}
               </p>
@@ -188,6 +189,23 @@ export default function BookingDetailPage() {
             >
               <FileText size={16} />
               Receipt
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await api.get(`/bookings/${booking.id}/receipt/`, { responseType: 'blob' })
+                  const url = URL.createObjectURL(res.data)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `${booking.reference_code || 'booking'}-receipt.pdf`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                } catch { toast.error('Failed to download receipt') }
+              }}
+              className="flex items-center gap-2 py-3 px-5 border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors text-sm"
+            >
+              <Download size={16} />
+              PDF
             </button>
             <button
               onClick={() => window.print()}

@@ -18,6 +18,7 @@ class Booking(models.Model):
     slots = models.JSONField(default=list)
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=BookingStatus.choices, default=BookingStatus.PENDING)
+    reference_code = models.CharField(max_length=20, unique=True, blank=True)
 
     special_requests = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -26,8 +27,15 @@ class Booking(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_code:
+            year = self.created_at.year if self.created_at else 2026
+            self.reference_code = f'ABR-{year}-{self.pk:04d}'
+            Booking.objects.filter(pk=self.pk).update(reference_code=self.reference_code)
+
     def __str__(self):
-        return f'Booking #{self.id} - {self.user.username} - {self.room.name}'
+        return f'{self.reference_code or f"Booking #{self.id}"} - {self.user.username} - {self.room.name}'
 
     @property
     def slots_summary(self):

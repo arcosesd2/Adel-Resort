@@ -5,4 +5,6 @@ urlpatterns = [
     path('track/', views.track_page_view, name='track-page-view'),
     path('stats/', views.public_stats, name='public-stats'),
     path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('export/bookings/', views.export_bookings_csv, name='export-bookings-csv'),
+    path('export/revenue/', views.export_revenue_csv, name='export-revenue-csv'),
 ]

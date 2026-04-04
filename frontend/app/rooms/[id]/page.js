@@ -22,8 +22,19 @@ export async function generateMetadata({ params }) {
   const room = await getRoom(params.id)
   if (!room) return { title: 'Room not found' }
   return {
-    title: `${room.name} | Adel Beach Resort`,
-    description: room.description,
+    title: room.name,
+    description: room.description?.slice(0, 160),
+    openGraph: {
+      title: `${room.name} | Adel Beach Resort`,
+      description: room.description?.slice(0, 160),
+      images: room.primary_image ? [{ url: room.primary_image }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${room.name} | Adel Beach Resort`,
+      description: room.description?.slice(0, 160),
+      images: room.primary_image ? [room.primary_image] : [],
+    },
   }
 }
 

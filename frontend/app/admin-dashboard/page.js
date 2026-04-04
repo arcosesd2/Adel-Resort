@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -328,9 +328,50 @@ export default function AdminDashboard() {
           <Link href="/admin-dashboard/rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
             <ImageIcon size={16} /> Room Photos
           </Link>
+          <Link href="/admin-dashboard/manage-rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <BedDouble size={16} /> Manage Rooms
+          </Link>
+          <Link href="/admin-dashboard/news" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Newspaper size={16} /> News
+          </Link>
+          <Link href="/admin-dashboard/events" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Calendar size={16} /> Events
+          </Link>
+          <Link href="/admin-dashboard/promotions" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <Percent size={16} /> Promotions
+          </Link>
+          <Link href="/admin-dashboard/pricing" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+            <DollarSign size={16} /> Pricing
+          </Link>
           <Link href="/admin-dashboard/activity-log" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
             <ClipboardList size={16} /> Activity Log
           </Link>
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/bookings/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'bookings-export.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
+          >
+            <FileDown size={16} /> Export Bookings
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/revenue/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'revenue-export.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
+          >
+            <FileDown size={16} /> Export Revenue
+          </button>
         </div>
       )}
 

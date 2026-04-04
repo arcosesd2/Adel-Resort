@@ -240,3 +240,71 @@ def admin_dashboard(request):
         'revenue_by_day': revenue_by_day,
         'room_occupancy': room_occupancy,
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def export_bookings_csv(request):
+    import csv
+    from django.http import HttpResponse
+
+    date_from = request.query_params.get('from')
+    date_to = request.query_params.get('to')
+
+    qs = Booking.objects.select_related('user', 'room').all().order_by('-created_at')
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="bookings-export.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Reference', 'Guest', 'Username', 'Room', 'Check-in', 'Check-out',
+                     'Guests', 'Slots Summary', 'Total Price', 'Status', 'Created'])
+
+    for b in qs:
+        guest_name = f'{b.user.first_name} {b.user.last_name}'.strip() or b.user.username
+        writer.writerow([
+            b.reference_code, guest_name, b.user.username, b.room.name,
+            b.check_in, b.check_out, b.guests, b.slots_summary,
+            b.total_price, b.status, b.created_at.strftime('%Y-%m-%d %H:%M'),
+        ])
+
+    return response
+
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def export_revenue_csv(request):
+    import csv
+    from django.http import HttpResponse
+
+    date_from = request.query_params.get('from')
+    date_to = request.query_params.get('to')
+
+    qs = Payment.objects.select_related('booking__user', 'booking__room').filter(
+        status='succeeded'
+    ).order_by('-created_at')
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="revenue-export.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Booking Ref', 'Guest', 'Room', 'Amount', 'Payment Type'])
+
+    for p in qs:
+        guest_name = f'{p.booking.user.first_name} {p.booking.user.last_name}'.strip() or p.booking.user.username
+        writer.writerow([
+            p.created_at.strftime('%Y-%m-%d %H:%M'),
+            p.booking.reference_code, guest_name, p.booking.room.name,
+            p.amount,
+            getattr(p, 'payment_type', 'full'),
+        ])
+
+    return response

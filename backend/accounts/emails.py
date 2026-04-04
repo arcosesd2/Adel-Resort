@@ -105,3 +105,33 @@ def send_payment_received_email(user, booking):
             'frontend_url': settings.FRONTEND_URL,
         },
     )
+
+
+def send_booking_cancelled_email(user, booking):
+    if not user.email:
+        return False
+    return _send_email(
+        subject=f'Booking Cancelled — {booking.reference_code}',
+        to_email=user.email,
+        template_name='booking_cancelled',
+        context={
+            'user': user,
+            'booking': booking,
+            'frontend_url': settings.FRONTEND_URL,
+        },
+    )
+
+
+def send_booking_completed_email(user, booking):
+    if not user.email:
+        return False
+    return _send_email(
+        subject=f'Thank you for staying with us — {booking.reference_code}',
+        to_email=user.email,
+        template_name='booking_completed',
+        context={
+            'user': user,
+            'booking': booking,
+            'frontend_url': settings.FRONTEND_URL,
+        },
+    )
