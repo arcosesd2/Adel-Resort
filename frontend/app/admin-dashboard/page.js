@@ -32,7 +32,12 @@ const statCards = [
 export default function AdminDashboard() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { user } = useAuthStore()
+  // Use selectors so this component doesn't re-render on unrelated store updates
+  // (InactivityGuard touches `lastActivity` on every mousemove/keydown/scroll/
+  // touchstart, which would otherwise churn this page constantly).
+  const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isReady = useAuthStore((s) => s.isReady)
   const router = useRouter()
 
   // Voucher state
@@ -92,25 +97,39 @@ export default function AdminDashboard() {
   }, [onsiteVoucherCode, vouchers])
 
   useEffect(() => {
-    if (user && !user.is_staff) {
+    // Wait for AuthValidator to finish bootstrapping before making any
+    // navigation decisions. Acting on partial auth state is what caused the
+    // original /admin-dashboard ↔ /dashboard redirect loop.
+    if (!isReady) return
+
+    if (!isAuthenticated) {
+      router.replace('/auth/login?redirect=/admin-dashboard')
+      return
+    }
+
+    if (!user?.is_staff) {
       router.replace('/dashboard')
       return
     }
-    if (!user) return
 
+    // Staff landed here. The analytics endpoint requires IsSuperAdmin on the
+    // backend, so only superadmins fetch it. For regular staff we just mark
+    // data as ready (empty object) so the page renders its staff-accessible
+    // sections. Crucially: we NEVER redirect on analytics failure — doing so
+    // previously caused an infinite loop with /dashboard.
     if (user.is_superadmin) {
       api.get('/analytics/dashboard/')
         .then((res) => {
           const d = res.data
           d.active_visitors_count = (d.unique_visitors_list || []).length
           setData(d)
+          setLoading(false)
         })
-        .catch(() => setData({}))
-        .finally(() => setLoading(false))
+        .catch(() => {
+          setData({})
+          setLoading(false)
+        })
     } else {
-      // Non-superadmin staff cannot access the analytics endpoint (it requires
-      // IsSuperAdmin on the backend). Skip the fetch to avoid a 403 → redirect
-      // loop with /dashboard, and render the staff-accessible sections only.
       setData({})
       setLoading(false)
     }
@@ -118,7 +137,7 @@ export default function AdminDashboard() {
     fetchVouchers()
     fetchConversations()
     fetchRooms()
-  }, [user, router])
+  }, [isReady, isAuthenticated, user, router])
 
   // Poll for new messages in active conversation
   useEffect(() => {
