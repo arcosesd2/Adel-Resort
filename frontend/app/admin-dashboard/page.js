@@ -98,14 +98,22 @@ export default function AdminDashboard() {
     }
     if (!user) return
 
-    api.get('/analytics/dashboard/')
-      .then((res) => {
-        const d = res.data
-        d.active_visitors_count = (d.unique_visitors_list || []).length
-        setData(d)
-      })
-      .catch(() => router.replace('/dashboard'))
-      .finally(() => setLoading(false))
+    if (user.is_superadmin) {
+      api.get('/analytics/dashboard/')
+        .then((res) => {
+          const d = res.data
+          d.active_visitors_count = (d.unique_visitors_list || []).length
+          setData(d)
+        })
+        .catch(() => setData({}))
+        .finally(() => setLoading(false))
+    } else {
+      // Non-superadmin staff cannot access the analytics endpoint (it requires
+      // IsSuperAdmin on the backend). Skip the fetch to avoid a 403 → redirect
+      // loop with /dashboard, and render the staff-accessible sections only.
+      setData({})
+      setLoading(false)
+    }
 
     fetchVouchers()
     fetchConversations()
@@ -378,27 +386,29 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-        {statCards.filter(c => !c.superadminOnly || user?.is_superadmin).map(({ key, label, icon: Icon, color, bg, isCurrency }) => (
-          <div key={key} className="card p-6 flex items-center gap-4">
-            <div className={`${bg} p-3 rounded-xl`}>
-              <Icon className={`${color} w-6 h-6`} />
+      {/* Stat Cards — superadmin only (analytics endpoint requires IsSuperAdmin) */}
+      {user?.is_superadmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {statCards.filter(c => !c.superadminOnly || user?.is_superadmin).map(({ key, label, icon: Icon, color, bg, isCurrency }) => (
+            <div key={key} className="card p-6 flex items-center gap-4">
+              <div className={`${bg} p-3 rounded-xl`}>
+                <Icon className={`${color} w-6 h-6`} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">{label}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {isCurrency
+                    ? `₱${Number(data[key]).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
+                    : Number(data[key]).toLocaleString()}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">{label}</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {isCurrency
-                  ? `₱${Number(data[key]).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
-                  : Number(data[key]).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {/* Revenue Analytics */}
-      <RevenueAnalyticsSection data={data} />
+      {/* Revenue Analytics — superadmin only */}
+      {user?.is_superadmin && <RevenueAnalyticsSection data={data} />}
 
       {/* Onsite Booking */}
       <div className="card overflow-hidden mb-10">
@@ -712,8 +722,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Room Occupancy Overview */}
-      <RoomOccupancySection data={data} />
+      {/* Room Occupancy Overview — superadmin only */}
+      {user?.is_superadmin && <RoomOccupancySection data={data} />}
 
       {/* Unique Guests — superadmin only */}
       {user?.is_superadmin && <div className="card overflow-hidden mb-10">
