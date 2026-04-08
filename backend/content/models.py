@@ -115,7 +115,7 @@ class NewsletterSubscriber(models.Model):
     is_active = models.BooleanField(default=True)
     is_confirmed = models.BooleanField(default=False)
     unsubscribe_token = models.CharField(max_length=64, unique=True, db_index=True)
-    confirmation_token = models.CharField(max_length=64, unique=True, db_index=True)
+    confirmation_token = models.CharField(max_length=64, unique=True)
     confirmed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

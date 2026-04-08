@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='newslettersubscriber',
             name='confirmation_token',
-            field=models.CharField(blank=True, db_index=True, default='', max_length=64),
+            field=models.CharField(max_length=64, null=True),
         ),
         migrations.AddField(
             model_name='newslettersubscriber',
@@ -37,6 +37,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='newslettersubscriber',
             name='confirmation_token',
-            field=models.CharField(db_index=True, max_length=64, unique=True),
+            field=models.CharField(max_length=64, unique=True),
         ),
     ]
