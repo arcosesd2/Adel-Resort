@@ -100,16 +100,24 @@ export default function RoomImagesPage() {
     newImages.splice(targetIdx, 0, moved)
 
     const reordered = newImages.map((img, i) => ({ ...img, order: i + 1 }))
+    const previousImages = images
     setImages(reordered)
     setDraggedIdx(null)
 
     try {
-      await api.patch(`/rooms/${selectedRoom.id}/images/reorder/`, {
+      const { data } = await api.patch(`/rooms/${selectedRoom.id}/images/reorder/`, {
         order: reordered.map(i => ({ id: i.id, order: i.order }))
       })
+      // Use server response as source of truth for both local images and the parent rooms list,
+      // so re-selecting this room from "All Rooms" shows the saved order (not the stale cached one).
+      const sorted = [...(data || reordered)].sort((a, b) => a.order - b.order)
+      setImages(sorted)
+      setSelectedRoom(prev => prev ? { ...prev, images: sorted } : prev)
+      setRooms(prev => prev.map(r => r.id === selectedRoom.id ? { ...r, images: sorted } : r))
+      toast.success('Order saved')
     } catch {
       toast.error('Failed to save order')
-      refreshRoom()
+      setImages(previousImages)
     }
   }
 

@@ -173,7 +173,7 @@ function BookingCard({ booking, onCancel, reviews, onReviewSubmitted }) {
 }
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuthStore()
+  const { user, isAuthenticated, isReady } = useAuthStore()
   const router = useRouter()
   const [bookings, setBookings] = useState([])
   const [reviews, setReviews] = useState([])
@@ -181,6 +181,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all')
 
   useEffect(() => {
+    if (!isReady) return
     if (!isAuthenticated) {
       router.push('/auth/login?redirect=/dashboard')
       return
@@ -191,7 +192,7 @@ export default function DashboardPage() {
     }
     fetchBookings()
     fetchReviews()
-  }, [isAuthenticated, user])
+  }, [isReady, isAuthenticated, user])
 
   const fetchBookings = async () => {
     try {

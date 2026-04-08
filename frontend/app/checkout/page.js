@@ -15,7 +15,7 @@ function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const bookingId = searchParams.get('booking')
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isReady } = useAuthStore()
   const [booking, setBooking] = useState(null)
   const [loading, setLoading] = useState(true)
   const [voucherCode, setVoucherCode] = useState('')
@@ -25,6 +25,7 @@ function CheckoutContent() {
   const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
+    if (!isReady) return
     if (!isAuthenticated) {
       router.push('/auth/login?redirect=/checkout')
       return
@@ -60,7 +61,7 @@ function CheckoutContent() {
       }
     }
     fetchBooking()
-  }, [bookingId, isAuthenticated])
+  }, [bookingId, isReady, isAuthenticated])
 
   // Countdown timer for payment deadline
   useEffect(() => {

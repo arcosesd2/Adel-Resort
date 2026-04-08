@@ -1,0 +1,37 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>See you tomorrow, {{ user.first_name }}!</h2>
+<p>This is a friendly reminder that your stay at Adel Beach Resort begins tomorrow. We can't wait to welcome you.</p>
+
+<div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 20px 0;">
+  <div class="info-row">
+    <div class="info-label">Reference</div>
+    <div class="info-value">{{ booking.reference_code }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">Room</div>
+    <div class="info-value">{{ booking.room.name }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">Check-in</div>
+    <div class="info-value">{{ booking.check_in|date:"F j, Y" }}</div>
+  </div>
+  <div class="info-row" style="border-bottom: none;">
+    <div class="info-label">Check-out</div>
+    <div class="info-value">{{ booking.check_out|date:"F j, Y" }}</div>
+  </div>
+</div>
+
+<h3 style="color: #0c4a6e; font-size: 16px; margin-top: 24px;">A few things to know</h3>
+<ul>
+  <li>Please bring a valid ID matching your booking name.</li>
+  <li>Contact us at 09685361395 if you'll arrive outside of regular hours.</li>
+  <li>Dress for the beach — sunblock, swimsuits, and towels recommended.</li>
+</ul>
+
+<p style="text-align: center;">
+  <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">View Booking</a>
+</p>
+<p>Safe travels — see you soon!</p>
+{% endblock %}

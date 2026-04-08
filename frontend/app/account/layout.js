@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { User, Shield, CalendarDays, Star, Heart, Bell } from 'lucide-react'
+import { User, Shield, CalendarDays, Star, Heart, Bell, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const sidebarLinks = [
@@ -12,6 +12,7 @@ const sidebarLinks = [
   { href: '/account/reviews', label: 'My Reviews', icon: Star },
   { href: '/account/favorites', label: 'Favorites', icon: Heart },
   { href: '/account/notifications', label: 'Notifications', icon: Bell },
+  { href: '/account/preferences', label: 'Email Preferences', icon: Mail },
 ]
 
 export default function AccountLayout({ children }) {

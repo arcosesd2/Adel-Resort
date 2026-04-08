@@ -30,6 +30,7 @@ urlpatterns = [
     path('notifications/unread-count/', views.notification_unread_count, name='notification-unread-count'),
     path('notifications/<int:pk>/read/', views.notification_read, name='notification-read'),
     path('notifications/read-all/', views.notification_read_all, name='notification-read-all'),
+    path('notification-preferences/', views.notification_preferences, name='notification-preferences'),
 
     # Superadmin: User management
     path('users/', views.user_list, name='user-list'),

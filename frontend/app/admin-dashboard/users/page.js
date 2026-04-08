@@ -132,19 +132,27 @@ export default function UsersPage() {
                     <td className="px-6 py-3 text-sm text-gray-500">{u.phone || '—'}</td>
                     <td className="px-6 py-3 text-center">{roleBadge(u)}</td>
                     <td className="px-6 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                        {u.is_active ? 'Active' : 'Inactive'}
-                      </span>
+                      {u.is_superadmin ? (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Always Active</span>
+                      ) : (
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                          {u.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-3 text-sm text-gray-500">{new Date(u.date_joined).toLocaleDateString()}</td>
                     <td className="px-6 py-3 text-right space-x-2">
                       <button onClick={() => openEdit(u)} className="text-gray-500 hover:text-ocean-600 text-xs underline">Edit</button>
-                      <button onClick={() => handleToggleActive(u)} className="text-gray-500 hover:text-ocean-600" title="Toggle active">
-                        {u.is_active ? <ToggleRight size={18} className="inline" /> : <ToggleLeft size={18} className="inline" />}
-                      </button>
-                      <button onClick={() => handleDelete(u)} className="text-gray-500 hover:text-red-600" title="Delete">
-                        <Trash2 size={16} className="inline" />
-                      </button>
+                      {!u.is_superadmin && (
+                        <>
+                          <button onClick={() => handleToggleActive(u)} className="text-gray-500 hover:text-ocean-600" title="Toggle active">
+                            {u.is_active ? <ToggleRight size={18} className="inline" /> : <ToggleLeft size={18} className="inline" />}
+                          </button>
+                          <button onClick={() => handleDelete(u)} className="text-gray-500 hover:text-red-600" title="Delete">
+                            <Trash2 size={16} className="inline" />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}

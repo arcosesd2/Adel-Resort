@@ -23,7 +23,8 @@ export default function AdminNewsPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!user?.is_superadmin) { router.push('/admin-dashboard'); return }
+    if (!user) return
+    if (!user.is_superadmin) { router.push('/admin-dashboard'); return }
     fetchItems()
   }, [user])
 

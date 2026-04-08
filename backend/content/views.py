@@ -5,11 +5,18 @@ from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings
+from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings, NewsletterSubscriber
 from .serializers import (
     NewsSerializer, EventSerializer, PromotionSerializer, PricingSerializer,
     HeroConfigSerializer, SiteSettingsSerializer,
     AdminNewsSerializer, AdminEventSerializer, AdminPromotionSerializer, AdminPricingSerializer,
+    NewsletterSubscribeSerializer, NewsletterSubscriberSerializer,
+)
+from .emails import (
+    send_newsletter_welcome,
+    send_subscription_confirmation,
+    send_event_announcement,
+    send_promotion_announcement,
 )
 from accounts.permissions import IsSuperAdmin
 from accounts.models import log_activity
@@ -278,3 +285,120 @@ def admin_pricing_detail(request, pk):
         log_activity(request.user, 'content', f'Updated pricing: "{pricing.label}"')
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ───── Newsletter (Public) ─────
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def newsletter_subscribe(request):
+    serializer = NewsletterSubscribeSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    email = serializer.validated_data['email'].strip().lower()
+    subscriber, created = NewsletterSubscriber.objects.get_or_create(email=email)
+
+    # Reactivate a previously unsubscribed record
+    if not created and not subscriber.is_active:
+        subscriber.is_active = True
+        subscriber.save(update_fields=['is_active'])
+
+    if not subscriber.is_confirmed:
+        send_subscription_confirmation(subscriber)
+        return Response(
+            {'detail': "Please check your email to confirm your subscription."},
+            status=status.HTTP_200_OK,
+        )
+
+    # Already confirmed — just acknowledge
+    return Response({'detail': 'You are already subscribed.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def newsletter_confirm(request):
+    token = (request.data.get('token') or '').strip()
+    if not token:
+        return Response({'detail': 'Token required.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        sub = NewsletterSubscriber.objects.get(confirmation_token=token)
+    except NewsletterSubscriber.DoesNotExist:
+        return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not sub.is_confirmed:
+        sub.is_confirmed = True
+        sub.is_active = True
+        sub.confirmed_at = timezone.now()
+        sub.save(update_fields=['is_confirmed', 'is_active', 'confirmed_at'])
+        send_newsletter_welcome(sub)
+    return Response({'detail': 'Subscription confirmed. Welcome aboard!'})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def newsletter_unsubscribe(request):
+    token = (request.data.get('token') or '').strip()
+    if not token:
+        return Response({'detail': 'Token required.'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        sub = NewsletterSubscriber.objects.get(unsubscribe_token=token)
+    except NewsletterSubscriber.DoesNotExist:
+        return Response({'detail': 'Invalid token.'}, status=status.HTTP_404_NOT_FOUND)
+    if sub.is_active:
+        sub.is_active = False
+        sub.save(update_fields=['is_active'])
+    return Response({'detail': 'Unsubscribed successfully.'}, status=status.HTTP_200_OK)
+
+
+# ───── Admin Newsletter & Broadcast ─────
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def admin_subscribers_list(request):
+    subs = NewsletterSubscriber.objects.all()
+    return Response(NewsletterSubscriberSerializer(subs, many=True).data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsSuperAdmin])
+def admin_subscriber_delete(request, pk):
+    try:
+        sub = NewsletterSubscriber.objects.get(pk=pk)
+    except NewsletterSubscriber.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    email = sub.email
+    sub.delete()
+    log_activity(request.user, 'content', f'Deleted subscriber: {email}')
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def admin_event_broadcast(request, pk):
+    try:
+        event = Event.objects.get(pk=pk)
+    except Event.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    if not event.is_active:
+        return Response({'detail': 'Event is not active.'}, status=status.HTTP_400_BAD_REQUEST)
+    sent = send_event_announcement(event)
+    event.announcement_sent_at = timezone.now()
+    event.save(update_fields=['announcement_sent_at'])
+    log_activity(request.user, 'content', f'Broadcast event "{event.title}" to {sent} recipients')
+    return Response({'sent': sent, 'announcement_sent_at': event.announcement_sent_at})
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def admin_promotion_broadcast(request, pk):
+    try:
+        promo = Promotion.objects.get(pk=pk)
+    except Promotion.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    if not promo.is_active:
+        return Response({'detail': 'Promotion is not active.'}, status=status.HTTP_400_BAD_REQUEST)
+    sent = send_promotion_announcement(promo)
+    promo.announcement_sent_at = timezone.now()
+    promo.save(update_fields=['announcement_sent_at'])
+    log_activity(request.user, 'content', f'Broadcast promotion "{promo.title}" to {sent} recipients')
+    return Response({'sent': sent, 'announcement_sent_at': promo.announcement_sent_at})

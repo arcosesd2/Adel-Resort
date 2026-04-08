@@ -1,0 +1,25 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<h2>How was your stay, {{ user.first_name }}?</h2>
+<p>It's been a couple of days since you checked out of <strong>{{ booking.room.name }}</strong>. We hope you enjoyed your time with us at Adel Beach Resort!</p>
+
+<p>Your honest feedback helps future guests decide and helps us keep improving. It only takes a minute.</p>
+
+<p style="text-align: center; font-size: 24px; letter-spacing: 8px; color: #f59e0b;">
+  ★ ★ ★ ★ ★
+</p>
+
+<p style="text-align: center;">
+  <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">Leave a Review</a>
+</p>
+
+<div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 20px 0; font-size: 14px;">
+  <div class="info-label">Your stay</div>
+  <div class="info-value">{{ booking.room.name }} — {{ booking.check_in|date:"M j" }} to {{ booking.check_out|date:"M j, Y" }}</div>
+  <div class="info-label" style="margin-top: 8px;">Reference</div>
+  <div class="info-value">{{ booking.reference_code }}</div>
+</div>
+
+<p>Thank you, and we hope to welcome you back soon!</p>
+{% endblock %}

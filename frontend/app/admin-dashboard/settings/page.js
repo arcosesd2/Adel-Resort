@@ -16,7 +16,8 @@ export default function SiteSettingsPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!user?.is_superadmin) {
+    if (!user) return
+    if (!user.is_superadmin) {
       router.push('/admin-dashboard')
       return
     }

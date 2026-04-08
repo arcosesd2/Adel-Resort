@@ -13,13 +13,10 @@ import toast from 'react-hot-toast'
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const { isAuthenticated, logout, user } = useAuthStore()
+  const { isAuthenticated, isReady, logout, user } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
-
-  useEffect(() => { setMounted(true) }, [])
 
   // Poll notification unread count
   useEffect(() => {
@@ -99,7 +96,7 @@ export default function Navbar() {
 
           {/* Auth buttons */}
           <div className="hidden md:flex items-center gap-3">
-            {!mounted ? null : isAuthenticated ? (
+            {!isReady ? null : isAuthenticated ? (
               <>
                 {user?.is_staff && (
                   <Link
@@ -201,7 +198,7 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="border-t pt-3 space-y-2">
-                {!mounted ? null : isAuthenticated ? (
+                {!isReady ? null : isAuthenticated ? (
                   <>
                     {user?.is_staff && (
                       <Link

@@ -20,12 +20,13 @@ const statusConfig = {
 export default function BookingDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isReady } = useAuthStore()
   const [booking, setBooking] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showReceipt, setShowReceipt] = useState(false)
 
   useEffect(() => {
+    if (!isReady) return
     if (!isAuthenticated) {
       router.push('/auth/login')
       return
@@ -41,7 +42,7 @@ export default function BookingDetailPage() {
       }
     }
     fetchBooking()
-  }, [params.id, isAuthenticated])
+  }, [params.id, isReady, isAuthenticated])
 
   if (loading) {
     return (

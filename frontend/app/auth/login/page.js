@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Waves } from 'lucide-react'
@@ -13,11 +13,20 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const rawRedirect = searchParams.get('redirect') || '/dashboard'
   const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/dashboard'
-  const { login } = useAuthStore()
+  const { login, isAuthenticated, isReady, user } = useAuthStore()
 
   const [form, setForm] = useState({ username: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // If a logged-in user lands on /auth/login, bounce them to where they belong.
+  useEffect(() => {
+    if (!isReady) return
+    if (isAuthenticated) {
+      const dest = user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
+      router.replace(dest)
+    }
+  }, [isReady, isAuthenticated, user, redirect, router])
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -26,7 +35,6 @@ function LoginForm() {
     setLoading(true)
     try {
       const data = await login(form.username, form.password)
-      document.cookie = `access_token=${data.access}; path=/; max-age=3600; SameSite=Lax`
       toast.success('Welcome back!')
       const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
       router.replace(dest)

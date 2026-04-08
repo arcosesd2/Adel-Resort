@@ -170,3 +170,21 @@ def log_activity(user, category, action, details='', ip_address=None):
         details=details,
         ip_address=ip_address,
     )
+
+
+class NotificationPreference(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_preferences')
+    receive_events = models.BooleanField(default=True)
+    receive_promotions = models.BooleanField(default=True)
+    receive_booking_updates = models.BooleanField(default=True)
+    receive_checkin_reminders = models.BooleanField(default=True)
+    receive_review_requests = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Preferences for {self.user.username}'
+
+
+def get_or_create_preferences(user):
+    prefs, _ = NotificationPreference.objects.get_or_create(user=user)
+    return prefs

@@ -17,7 +17,8 @@ export default function AdminReviewsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user?.is_superadmin) {
+    if (!user) return
+    if (!user.is_superadmin) {
       router.push('/admin-dashboard')
       return
     }

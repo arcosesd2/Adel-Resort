@@ -28,21 +28,18 @@ api.interceptors.response.use(
         try {
           const { data } = await axios.post(`${API_URL}/api/auth/refresh/`, { refresh })
           localStorage.setItem('access_token', data.access)
+          // Mirror the new token to the cookie so middleware stays in sync.
+          if (typeof document !== 'undefined') {
+            document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+          }
           original.headers.Authorization = `Bearer ${data.access}`
           return api(original)
         } catch {
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
-          // Clear persisted auth store so UI reflects logged-out state
-          const stored = localStorage.getItem('auth-store')
-          if (stored) {
-            try {
-              const parsed = JSON.parse(stored)
-              parsed.state = { ...parsed.state, user: null, isAuthenticated: false }
-              localStorage.setItem('auth-store', JSON.stringify(parsed))
-            } catch {}
+          if (typeof document !== 'undefined') {
+            document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
           }
-          if (typeof window !== 'undefined') window.location.href = '/auth/login'
         }
       }
     }

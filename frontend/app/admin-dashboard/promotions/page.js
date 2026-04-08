@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, Send } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
@@ -22,7 +22,8 @@ export default function AdminPromotionsPage() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!user?.is_superadmin) { router.push('/admin-dashboard'); return }
+    if (!user) return
+    if (!user.is_superadmin) { router.push('/admin-dashboard'); return }
     fetchItems()
   }, [user])
 
@@ -89,6 +90,21 @@ export default function AdminPromotionsPage() {
       setItems(prev => prev.map(i => i.id === item.id ? data : i))
       toast.success(data.is_active ? 'Published' : 'Unpublished')
     } catch { toast.error('Failed to update') }
+  }
+
+  const handleBroadcast = async (item) => {
+    const already = !!item.announcement_sent_at
+    const msg = already
+      ? `This promotion was already announced on ${format(parseISO(item.announcement_sent_at), 'MMM d, yyyy')}. Send again?`
+      : `Send "${item.title}" to all newsletter subscribers and registered users?`
+    if (!confirm(msg)) return
+    try {
+      const { data } = await api.post(`/content/admin/promotions/${item.id}/broadcast/`)
+      toast.success(`Announcement sent to ${data.sent} recipient(s)`)
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, announcement_sent_at: data.announcement_sent_at } : i))
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Broadcast failed')
+    }
   }
 
   if (loading) return <div className="min-h-screen pt-24 flex items-center justify-center"><div className="spinner" /></div>
@@ -164,10 +180,23 @@ export default function AdminPromotionsPage() {
                     {format(parseISO(item.valid_from), 'MMM d')} &ndash; {format(parseISO(item.valid_until), 'MMM d, yyyy')}
                   </p>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${item.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {item.is_active ? 'Active' : 'Inactive'}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={`text-xs px-2 py-1 rounded-full ${item.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {item.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                  {item.announcement_sent_at && (
+                    <span className="text-[10px] text-gray-400">Sent {format(parseISO(item.announcement_sent_at), 'MMM d')}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleBroadcast(item)}
+                    disabled={!item.is_active}
+                    className="p-2 text-gray-400 hover:text-ocean-600 disabled:opacity-30 disabled:hover:text-gray-400"
+                    title={item.is_active ? 'Send announcement to subscribers' : 'Activate to send'}
+                  >
+                    <Send size={16} />
+                  </button>
                   <button onClick={() => toggleActive(item)} className="p-2 text-gray-400 hover:text-ocean-600">
                     {item.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
                   </button>

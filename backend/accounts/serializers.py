@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog
+from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog, NotificationPreference
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -159,3 +159,17 @@ class ActivityLogSerializer(serializers.ModelSerializer):
         if obj.user:
             return obj.user.get_full_name()
         return ''
+
+
+class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationPreference
+        fields = (
+            'receive_events',
+            'receive_promotions',
+            'receive_booking_updates',
+            'receive_checkin_reminders',
+            'receive_review_requests',
+            'updated_at',
+        )
+        read_only_fields = ('updated_at',)

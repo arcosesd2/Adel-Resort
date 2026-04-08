@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings
+from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings, NewsletterSubscriber
 
 
 class ImageURLMixin:
@@ -58,8 +58,8 @@ class AdminEventSerializer(ImageURLMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ['id', 'title', 'description', 'image', 'image_url', 'date', 'is_active', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = ['id', 'title', 'description', 'image', 'image_url', 'date', 'is_active', 'announcement_sent_at', 'created_at', 'updated_at']
+        read_only_fields = ['announcement_sent_at', 'created_at', 'updated_at']
 
 
 class AdminPromotionSerializer(ImageURLMixin, serializers.ModelSerializer):
@@ -67,8 +67,8 @@ class AdminPromotionSerializer(ImageURLMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Promotion
-        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_info', 'valid_from', 'valid_until', 'is_active', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
+        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_info', 'valid_from', 'valid_until', 'is_active', 'announcement_sent_at', 'created_at', 'updated_at']
+        read_only_fields = ['announcement_sent_at', 'created_at', 'updated_at']
 
 
 class AdminPricingSerializer(serializers.ModelSerializer):
@@ -83,6 +83,17 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         fields = ['show_stats', 'show_testimonials', 'updated_at']
+
+
+class NewsletterSubscribeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class NewsletterSubscriberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsletterSubscriber
+        fields = ['id', 'email', 'is_active', 'created_at']
+        read_only_fields = fields
 
 
 class HeroConfigSerializer(serializers.ModelSerializer):

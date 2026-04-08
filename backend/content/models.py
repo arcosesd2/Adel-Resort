@@ -1,3 +1,5 @@
+import secrets
+
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import models
@@ -34,6 +36,7 @@ class Event(models.Model):
     image = models.ImageField(upload_to='events/', blank=True, null=True)
     date = models.DateField()
     is_active = models.BooleanField(default=True)
+    announcement_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -52,6 +55,7 @@ class Promotion(models.Model):
     valid_from = models.DateField()
     valid_until = models.DateField()
     is_active = models.BooleanField(default=True)
+    announcement_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -104,6 +108,29 @@ class SiteSettings(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class NewsletterSubscriber(models.Model):
+    email = models.EmailField(unique=True)
+    is_active = models.BooleanField(default=True)
+    is_confirmed = models.BooleanField(default=False)
+    unsubscribe_token = models.CharField(max_length=64, unique=True, db_index=True)
+    confirmation_token = models.CharField(max_length=64, unique=True, db_index=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.email
+
+    def save(self, *args, **kwargs):
+        if not self.unsubscribe_token:
+            self.unsubscribe_token = secrets.token_urlsafe(32)
+        if not self.confirmation_token:
+            self.confirmation_token = secrets.token_urlsafe(32)
+        super().save(*args, **kwargs)
 
 
 class Pricing(models.Model):

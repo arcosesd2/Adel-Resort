@@ -14,13 +14,17 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken, OutstandingToken, BlacklistedToken
 from rest_framework_simplejwt.exceptions import TokenError
 
-from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog, create_notification, log_activity
+from .models import (
+    User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog,
+    NotificationPreference, create_notification, log_activity, get_or_create_preferences,
+)
 from .permissions import IsSuperAdmin
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     UserManagementSerializer, RegisteredDeviceSerializer, LoginAttemptSerializer,
     ChangePasswordSerializer, DeactivateAccountSerializer,
     FavoriteRoomSerializer, NotificationSerializer, ActivityLogSerializer,
+    NotificationPreferenceSerializer,
 )
 from .tokens import email_verification_token
 from .emails import send_welcome_email, send_verification_email, send_password_reset_email
@@ -406,6 +410,22 @@ def notification_read_all(request):
     return Response({'detail': 'All notifications marked as read.'})
 
 
+# ─── Notification Preferences ─────────────────────────────────────────
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def notification_preferences(request):
+    prefs = get_or_create_preferences(request.user)
+    if request.method == 'GET':
+        return Response(NotificationPreferenceSerializer(prefs).data)
+
+    serializer = NotificationPreferenceSerializer(prefs, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # ─── Superadmin: User Management ──────────────────────────────────────
 
 @api_view(['GET', 'POST'])
@@ -436,6 +456,19 @@ def user_detail(request, pk):
         return Response(UserManagementSerializer(user).data)
 
     if request.method == 'PATCH':
+        # Protect superadmin: cannot be deactivated or have superadmin flag removed
+        if user.is_superadmin:
+            data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+            if 'is_active' in data and not data['is_active']:
+                return Response(
+                    {'detail': 'Superadmin accounts cannot be deactivated.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if 'is_superadmin' in data and not data['is_superadmin']:
+                return Response(
+                    {'detail': 'Superadmin status cannot be revoked.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         serializer = UserManagementSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -448,6 +481,9 @@ def user_detail(request, pk):
     if request.method == 'DELETE':
         if user == request.user:
             return Response({'detail': 'Cannot delete yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+        if user.is_superadmin:
+            return Response({'detail': 'Superadmin accounts cannot be deleted.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         log_activity(request.user, 'user', f'Deleted user "{user.username}"',
                      ip_address=get_client_ip(request))
         user.delete()

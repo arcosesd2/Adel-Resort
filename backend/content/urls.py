@@ -32,4 +32,15 @@ urlpatterns = [
     path('admin/pricing/', views.admin_pricing_list, name='admin-pricing-list'),
     path('admin/pricing/create/', views.admin_pricing_create, name='admin-pricing-create'),
     path('admin/pricing/<int:pk>/', views.admin_pricing_detail, name='admin-pricing-detail'),
+
+    # Newsletter (public)
+    path('newsletter/subscribe/', views.newsletter_subscribe, name='newsletter-subscribe'),
+    path('newsletter/confirm/', views.newsletter_confirm, name='newsletter-confirm'),
+    path('newsletter/unsubscribe/', views.newsletter_unsubscribe, name='newsletter-unsubscribe'),
+
+    # Admin newsletter + broadcast
+    path('admin/subscribers/', views.admin_subscribers_list, name='admin-subscribers-list'),
+    path('admin/subscribers/<int:pk>/', views.admin_subscriber_delete, name='admin-subscriber-delete'),
+    path('admin/events/<int:pk>/broadcast/', views.admin_event_broadcast, name='admin-event-broadcast'),
+    path('admin/promotions/<int:pk>/broadcast/', views.admin_promotion_broadcast, name='admin-promotion-broadcast'),
 ]

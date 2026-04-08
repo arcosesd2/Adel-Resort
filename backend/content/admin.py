@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings
+from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings, NewsletterSubscriber
 
 
 @admin.register(News)
@@ -25,6 +25,15 @@ class PromotionAdmin(admin.ModelAdmin):
     list_filter = ('is_active',)
     list_editable = ('is_active',)
     search_fields = ('title',)
+
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display = ('email', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    list_editable = ('is_active',)
+    search_fields = ('email',)
+    readonly_fields = ('unsubscribe_token', 'created_at')
 
 
 @admin.register(Pricing)
