@@ -157,9 +157,6 @@ export default function HeroSection({ heroConfig }) {
               Browse Accommodations
               <ArrowRight size={20} />
             </Link>
-            <Link href="/availability" className="btn-outline px-8 py-4 text-lg border-white text-white hover:bg-white hover:text-ocean-700">
-              Check Availability
-            </Link>
           </motion.div>
         </motion.div>
 

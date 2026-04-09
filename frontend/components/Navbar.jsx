@@ -52,7 +52,6 @@ export default function Navbar() {
     { href: '/news', label: 'News' },
     { href: '/events', label: 'Events' },
     { href: '/promotions', label: 'Promos' },
-    { href: '/availability', label: 'Availability' },
   ]
 
   const isHome = pathname === '/'

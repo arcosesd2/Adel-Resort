@@ -51,7 +51,6 @@ export default function Footer() {
                 {[
                   { href: '/', label: 'Home' },
                   { href: '/rooms', label: 'Accommodations' },
-                  { href: '/availability', label: 'Check Availability' },
                   { href: '/about', label: 'About Us' },
                   { href: '/terms', label: 'Terms of Service' },
                   { href: '/privacy', label: 'Privacy Policy' },
