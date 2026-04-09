@@ -83,11 +83,11 @@ def admin_dashboard(request):
         .order_by('page_path', '-view_date')
     )
 
-    # Business metrics
+    # Business metrics — net income = sum of all confirmed + completed bookings
     net_income = (
-        Payment.objects
-        .filter(status='succeeded')
-        .aggregate(total=Sum('amount'))['total']
+        Booking.objects
+        .filter(status__in=['confirmed', 'completed'])
+        .aggregate(total=Sum('total_price'))['total']
     ) or 0
 
     total_sales = Booking.objects.filter(
