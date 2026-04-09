@@ -17,16 +17,17 @@ class BookingSerializer(serializers.ModelSerializer):
     payment_deadline = serializers.SerializerMethodField()
     payment_type = serializers.SerializerMethodField()
     payment_amount = serializers.SerializerMethodField()
+    full_payment_deadline = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
         fields = (
             'id', 'reference_code', 'room', 'room_detail', 'check_in', 'check_out', 'guests',
             'slots', 'slots_summary', 'total_price', 'status',
-            'special_requests', 'created_at', 'payment_submitted', 'voucher_discount',
-            'payment_deadline', 'payment_type', 'payment_amount',
+            'special_requests', 'created_at', 'approved_at', 'payment_submitted', 'voucher_discount',
+            'payment_deadline', 'payment_type', 'payment_amount', 'full_payment_deadline',
         )
-        read_only_fields = ('id', 'reference_code', 'check_in', 'check_out', 'total_price', 'status', 'created_at')
+        read_only_fields = ('id', 'reference_code', 'check_in', 'check_out', 'total_price', 'status', 'created_at', 'approved_at')
 
     def get_payment_submitted(self, obj):
         return hasattr(obj, 'payment')
@@ -48,6 +49,15 @@ class BookingSerializer(serializers.ModelSerializer):
     def get_payment_amount(self, obj):
         if hasattr(obj, 'payment'):
             return str(obj.payment.amount)
+        return None
+
+    def get_full_payment_deadline(self, obj):
+        """24h deadline after admin approval for downpayment bookings."""
+        if (obj.approved_at
+                and hasattr(obj, 'payment')
+                and obj.payment.payment_type == 'downpayment'):
+            deadline = obj.approved_at + timedelta(hours=PAYMENT_DEADLINE_HOURS)
+            return deadline.isoformat()
         return None
 
     def _validate_slots(self, slots):

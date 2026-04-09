@@ -60,7 +60,7 @@ def public_stats(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsSuperAdmin])
+@permission_classes([IsAdminUser])
 def admin_dashboard(request):
     # Page view analytics
     page_views = (
@@ -222,28 +222,36 @@ def admin_dashboard(request):
             'upcoming_bookings': upcoming_bookings,
         })
 
-    return Response({
-        'page_views': list(page_views),
-        'daily_page_views': daily_page_views,
-        'unique_visitors': unique_visitors,
-        'total_page_views': total_page_views,
+    # Base data accessible to all staff
+    data = {
         'net_income': float(net_income),
         'total_sales': total_sales,
         'pending_sales': pending_sales,
         'pending_payments': pending_payments,
-        'unique_guests_count': len(unique_guests),
-        'unique_guests': unique_guests,
-        'guest_bookings': guest_bookings,
-        'unique_visitors_list': unique_visitors_list,
-        'visitor_page_views': visitor_page_views,
         'revenue_by_month': revenue_by_month,
         'revenue_by_day': revenue_by_day,
         'room_occupancy': room_occupancy,
-    })
+    }
+
+    # Superadmin-only data
+    if getattr(request.user, 'is_superadmin', False):
+        data.update({
+            'page_views': list(page_views),
+            'daily_page_views': daily_page_views,
+            'unique_visitors': unique_visitors,
+            'total_page_views': total_page_views,
+            'unique_guests_count': len(unique_guests),
+            'unique_guests': unique_guests,
+            'guest_bookings': guest_bookings,
+            'unique_visitors_list': unique_visitors_list,
+            'visitor_page_views': visitor_page_views,
+        })
+
+    return Response(data)
 
 
 @api_view(['GET'])
-@permission_classes([IsSuperAdmin])
+@permission_classes([IsAdminUser])
 def export_bookings_csv(request):
     import csv
     from django.http import HttpResponse
@@ -276,7 +284,7 @@ def export_bookings_csv(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsSuperAdmin])
+@permission_classes([IsAdminUser])
 def export_revenue_csv(request):
     import csv
     from django.http import HttpResponse

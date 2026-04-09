@@ -284,7 +284,7 @@ function CheckoutContent() {
 
               <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
                 <Shield size={16} className="text-ocean-500 flex-shrink-0" />
-                <span>Your payment will be verified by our team within 24 hours.</span>
+                <span>Your room will be reserved once the admin approves your booking. Payment will be verified by our team.</span>
               </div>
             </div>
           </FadeInUp>

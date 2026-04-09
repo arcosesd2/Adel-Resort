@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -29,7 +29,7 @@ const statCards = [
   { key: 'active_visitors_count', label: 'Active Visitors (90d)', icon: Activity, color: 'text-indigo-600', bg: 'bg-indigo-50', superadminOnly: true },
 ]
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   // Use selectors so this component doesn't re-render on unrelated store updates
@@ -39,6 +39,7 @@ export default function AdminDashboard() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isReady = useAuthStore((s) => s.isReady)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Voucher state
   const [vouchers, setVouchers] = useState([])
@@ -54,10 +55,11 @@ export default function AdminDashboard() {
   const [showOnsiteForm, setShowOnsiteForm] = useState(false)
   const [onsiteForm, setOnsiteForm] = useState({
     guest_name: '', guest_username: '', guest_phone: '',
-    room: '', guests: 1, slots: [], special_requests: '',
+    room: '', guests: 1, slots: [], special_requests: '', manual_discount: '',
   })
   const [creatingOnsite, setCreatingOnsite] = useState(false)
   const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
+  const [bookingRefreshKey, setBookingRefreshKey] = useState(0)
 
   // Page views collapse state
   const [pageViewsOpen, setPageViewsOpen] = useState(false)
@@ -75,6 +77,18 @@ export default function AdminDashboard() {
   const [sendingReply, setSendingReply] = useState(false)
   const chatEndRef = useRef(null)
   const pollRef = useRef(null)
+
+  // Pre-fill room from URL query param (staff redirect from Rooms page)
+  useEffect(() => {
+    const roomParam = searchParams.get('room')
+    if (roomParam && rooms.length > 0) {
+      const roomExists = rooms.find(r => r.id == roomParam)
+      if (roomExists) {
+        setOnsiteForm(f => ({ ...f, room: roomParam, slots: [] }))
+        setShowOnsiteForm(true)
+      }
+    }
+  }, [searchParams, rooms])
 
   const selectedRoom = useMemo(() => {
     if (!onsiteForm.room) return null
@@ -112,27 +126,20 @@ export default function AdminDashboard() {
       return
     }
 
-    // Staff landed here. The analytics endpoint requires IsSuperAdmin on the
-    // backend, so only superadmins fetch it. For regular staff we just mark
-    // data as ready (empty object) so the page renders its staff-accessible
-    // sections. Crucially: we NEVER redirect on analytics failure — doing so
+    // All staff can now fetch analytics (backend filters superadmin-only data).
+    // Crucially: we NEVER redirect on analytics failure — doing so
     // previously caused an infinite loop with /dashboard.
-    if (user.is_superadmin) {
-      api.get('/analytics/dashboard/')
-        .then((res) => {
-          const d = res.data
-          d.active_visitors_count = (d.unique_visitors_list || []).length
-          setData(d)
-          setLoading(false)
-        })
-        .catch(() => {
-          setData({})
-          setLoading(false)
-        })
-    } else {
-      setData({})
-      setLoading(false)
-    }
+    api.get('/analytics/dashboard/')
+      .then((res) => {
+        const d = res.data
+        d.active_visitors_count = (d.unique_visitors_list || []).length
+        setData(d)
+        setLoading(false)
+      })
+      .catch(() => {
+        setData({})
+        setLoading(false)
+      })
 
     fetchVouchers()
     fetchConversations()
@@ -203,15 +210,22 @@ export default function AdminDashboard() {
       if (onsiteVoucherCode.trim()) {
         payload.voucher_code = onsiteVoucherCode.trim()
       }
+      if (onsiteForm.manual_discount) {
+        payload.manual_discount = parseFloat(onsiteForm.manual_discount)
+      }
       const { data } = await api.post('/bookings/onsite/', payload)
       let msg = `Onsite booking created! #${data.id} - ${data.room} - ₱${data.total_price}`
+      if (data.manual_discount) {
+        msg += ` (₱${data.manual_discount} manual discount)`
+      }
       if (data.discount) {
-        msg += ` (₱${data.discount} discount with ${data.voucher_code})`
+        msg += ` (₱${data.discount} voucher discount with ${data.voucher_code})`
       }
       toast.success(msg)
-      setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '' })
+      setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '', manual_discount: '' })
       setOnsiteVoucherCode('')
       setShowOnsiteForm(false)
+      setBookingRefreshKey(k => k + 1)
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to create booking.')
     } finally {
@@ -328,87 +342,90 @@ export default function AdminDashboard() {
     <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">
       <h1 className="text-3xl font-serif font-bold text-ocean-800 mb-8">Admin Dashboard</h1>
 
-      {/* Superadmin Tabs */}
-      {user?.is_superadmin && (
-        <div className="flex gap-2 mb-8 flex-wrap">
-          <Link href="/admin-dashboard/users" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Shield size={16} /> Users
-          </Link>
-          <Link href="/admin-dashboard/login-activity" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <ScrollText size={16} /> Login Activity
-          </Link>
-          <Link href="/admin-dashboard/devices" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Fingerprint size={16} /> Devices
-          </Link>
-          <Link href="/admin-dashboard/gcash" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Smartphone size={16} /> GCash Settings
-          </Link>
-          <Link href="/admin-dashboard/hero" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Film size={16} /> Homepage Intro
-          </Link>
-          <Link href="/admin-dashboard/settings" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Settings size={16} /> Site Settings
-          </Link>
-          <Link href="/admin-dashboard/reviews" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Star size={16} /> Reviews
-          </Link>
-          <Link href="/admin-dashboard/rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <ImageIcon size={16} /> Room Photos
-          </Link>
-          <Link href="/admin-dashboard/manage-rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <BedDouble size={16} /> Manage Rooms
-          </Link>
-          <Link href="/admin-dashboard/news" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Newspaper size={16} /> News
-          </Link>
-          <Link href="/admin-dashboard/events" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Calendar size={16} /> Events
-          </Link>
-          <Link href="/admin-dashboard/promotions" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Percent size={16} /> Promotions
-          </Link>
-          <Link href="/admin-dashboard/subscribers" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <Mail size={16} /> Subscribers
-          </Link>
-          <Link href="/admin-dashboard/pricing" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <DollarSign size={16} /> Pricing
-          </Link>
-          <Link href="/admin-dashboard/activity-log" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-            <ClipboardList size={16} /> Activity Log
-          </Link>
-          <button
-            onClick={async () => {
-              try {
-                const res = await api.get('/analytics/export/bookings/', { responseType: 'blob' })
-                const url = URL.createObjectURL(res.data)
-                const a = document.createElement('a'); a.href = url; a.download = 'bookings-export.csv'; a.click()
-                URL.revokeObjectURL(url)
-              } catch { toast.error('Export failed') }
-            }}
-            className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
-          >
-            <FileDown size={16} /> Export Bookings
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                const res = await api.get('/analytics/export/revenue/', { responseType: 'blob' })
-                const url = URL.createObjectURL(res.data)
-                const a = document.createElement('a'); a.href = url; a.download = 'revenue-export.csv'; a.click()
-                URL.revokeObjectURL(url)
-              } catch { toast.error('Export failed') }
-            }}
-            className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
-          >
-            <FileDown size={16} /> Export Revenue
-          </button>
-        </div>
-      )}
+      {/* Dashboard Tabs — staff-accessible */}
+      <div className="flex gap-2 mb-8 flex-wrap">
+        {/* Superadmin-only tabs */}
+        {user?.is_superadmin && (
+          <>
+            <Link href="/admin-dashboard/users" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <Shield size={16} /> Users
+            </Link>
+            <Link href="/admin-dashboard/login-activity" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <ScrollText size={16} /> Login Activity
+            </Link>
+            <Link href="/admin-dashboard/devices" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <Fingerprint size={16} /> Devices
+            </Link>
+            <Link href="/admin-dashboard/gcash" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <Smartphone size={16} /> GCash Settings
+            </Link>
+            <Link href="/admin-dashboard/settings" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <Settings size={16} /> Site Settings
+            </Link>
+            <Link href="/admin-dashboard/reviews" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <Star size={16} /> Reviews
+            </Link>
+            <Link href="/admin-dashboard/manage-rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <BedDouble size={16} /> Manage Rooms
+            </Link>
+            <Link href="/admin-dashboard/pricing" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <DollarSign size={16} /> Pricing
+            </Link>
+            <Link href="/admin-dashboard/activity-log" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <ClipboardList size={16} /> Activity Log
+            </Link>
+          </>
+        )}
+        {/* Staff-accessible tabs */}
+        <Link href="/admin-dashboard/hero" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Film size={16} /> Homepage Intro
+        </Link>
+        <Link href="/admin-dashboard/rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <ImageIcon size={16} /> Room Photos
+        </Link>
+        <Link href="/admin-dashboard/news" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Newspaper size={16} /> News
+        </Link>
+        <Link href="/admin-dashboard/events" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Calendar size={16} /> Events
+        </Link>
+        <Link href="/admin-dashboard/promotions" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Percent size={16} /> Promotions
+        </Link>
+        <Link href="/admin-dashboard/subscribers" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Mail size={16} /> Subscribers
+        </Link>
+        <button
+          onClick={async () => {
+            try {
+              const res = await api.get('/analytics/export/bookings/', { responseType: 'blob' })
+              const url = URL.createObjectURL(res.data)
+              const a = document.createElement('a'); a.href = url; a.download = 'bookings-export.csv'; a.click()
+              URL.revokeObjectURL(url)
+            } catch { toast.error('Export failed') }
+          }}
+          className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
+        >
+          <FileDown size={16} /> Export Bookings
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              const res = await api.get('/analytics/export/revenue/', { responseType: 'blob' })
+              const url = URL.createObjectURL(res.data)
+              const a = document.createElement('a'); a.href = url; a.download = 'revenue-export.csv'; a.click()
+              URL.revokeObjectURL(url)
+            } catch { toast.error('Export failed') }
+          }}
+          className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
+        >
+          <FileDown size={16} /> Export Revenue
+        </button>
+      </div>
 
-      {/* Stat Cards — superadmin only (analytics endpoint requires IsSuperAdmin) */}
-      {user?.is_superadmin && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          {statCards.filter(c => !c.superadminOnly || user?.is_superadmin).map(({ key, label, icon: Icon, color, bg, isCurrency }) => (
+      {/* Stat Cards — visible to all staff, superadmin-only cards filtered */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+        {statCards.filter(c => !c.superadminOnly || user?.is_superadmin).map(({ key, label, icon: Icon, color, bg, isCurrency }) => (
             <div key={key} className="card p-6 flex items-center gap-4">
               <div className={`${bg} p-3 rounded-xl`}>
                 <Icon className={`${color} w-6 h-6`} />
@@ -417,17 +434,16 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500">{label}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {isCurrency
-                    ? `₱${Number(data[key]).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
-                    : Number(data[key]).toLocaleString()}
+                    ? `₱${Number(data[key] || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`
+                    : Number(data[key] || 0).toLocaleString()}
                 </p>
               </div>
             </div>
           ))}
-        </div>
-      )}
+      </div>
 
-      {/* Revenue Analytics — superadmin only */}
-      {user?.is_superadmin && <RevenueAnalyticsSection data={data} />}
+      {/* Revenue Analytics — all staff */}
+      <RevenueAnalyticsSection data={data} />
 
       {/* Onsite Booking */}
       <div className="card overflow-hidden mb-10">
@@ -498,6 +514,12 @@ export default function AdminDashboard() {
                   </p>
                 )}
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Manual Discount ₱ (optional)</label>
+                <input type="number" min="0" step="0.01" value={onsiteForm.manual_discount}
+                  onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
+                  className="input-field" placeholder="e.g. 500" />
+              </div>
             </div>
 
             {/* SlotPicker calendar */}
@@ -529,7 +551,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Booking Management */}
-      <BookingManagementSection />
+      <BookingManagementSection key={bookingRefreshKey} />
 
       {/* Voucher Management */}
       <div className="card overflow-hidden mb-10">
@@ -741,8 +763,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Room Occupancy Overview — superadmin only */}
-      {user?.is_superadmin && <RoomOccupancySection data={data} />}
+      {/* Room Occupancy Overview — all staff */}
+      <RoomOccupancySection data={data} />
 
       {/* Unique Guests — superadmin only */}
       {user?.is_superadmin && <div className="card overflow-hidden mb-10">
@@ -913,5 +935,25 @@ export default function AdminDashboard() {
         )}
       </div>}
     </div>
+  )
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-serif font-bold text-ocean-800 mb-8">Admin Dashboard</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="card p-6 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3" />
+              <div className="h-8 bg-gray-200 rounded w-1/3" />
+            </div>
+          ))}
+        </div>
+      </div>
+    }>
+      <AdminDashboardContent />
+    </Suspense>
   )
 }

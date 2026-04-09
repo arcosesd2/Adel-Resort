@@ -22,7 +22,7 @@ export default function HeroSettingsPage() {
   const posterRef = useRef(null)
 
   useEffect(() => {
-    if (user && !user.is_superadmin) { router.replace('/admin-dashboard'); return }
+    if (user && !user.is_staff) { router.replace('/admin-dashboard'); return }
     if (!user) return
     fetchConfig()
   }, [user, router])
@@ -109,7 +109,7 @@ export default function HeroSettingsPage() {
     finally { setSaving(false) }
   }
 
-  if (!user?.is_superadmin) return null
+  if (!user?.is_staff) return null
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 max-w-3xl mx-auto">

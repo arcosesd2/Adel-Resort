@@ -118,10 +118,10 @@ export default function RoomCard({ room, initialFavorited = false }) {
               </div>
             </div>
             <Link
-              href={`/rooms/${id}`}
+              href={isAuthenticated && user?.is_staff ? `/admin-dashboard?room=${id}` : `/rooms/${id}`}
               className="btn-primary py-2 px-5 text-sm"
             >
-              Book Now
+              {isAuthenticated && user?.is_staff ? 'Onsite Book' : 'Book Now'}
             </Link>
           </div>
         </div>

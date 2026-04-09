@@ -17,7 +17,7 @@ export default function AdminSubscribersPage() {
 
   useEffect(() => {
     if (!user) return
-    if (!user.is_superadmin) { router.push('/admin-dashboard'); return }
+    if (!user.is_staff) { router.push('/admin-dashboard'); return }
     fetchSubscribers()
   }, [user])
 

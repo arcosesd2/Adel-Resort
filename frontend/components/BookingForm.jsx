@@ -76,7 +76,7 @@ export default function BookingForm({ room }) {
         slots,
         special_requests: specialRequests,
       })
-      toast.success('Booking created! Proceed to payment.')
+      toast.success('Booking submitted! Your room will be reserved once the admin approves it.')
       router.push(`/checkout?booking=${data.id}`)
     } catch (err) {
       const msg = err.response?.data?.non_field_errors?.[0]

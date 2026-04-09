@@ -11,7 +11,7 @@ import api from '@/lib/api'
 import BookingReceipt from '@/components/BookingReceipt'
 
 const statusConfig = {
-  pending: { label: 'Pending Payment', color: 'text-yellow-600 bg-yellow-50', border: 'border-yellow-200' },
+  pending: { label: 'Pending Approval', color: 'text-yellow-600 bg-yellow-50', border: 'border-yellow-200' },
   confirmed: { label: 'Confirmed', color: 'text-green-600 bg-green-50', border: 'border-green-200' },
   cancelled: { label: 'Cancelled', color: 'text-red-600 bg-red-50', border: 'border-red-200' },
   completed: { label: 'Completed', color: 'text-gray-600 bg-gray-50', border: 'border-gray-200' },
@@ -73,12 +73,29 @@ export default function BookingDetailPage() {
           </div>
         )}
 
+        {booking.status === 'confirmed' && booking.payment_type === 'downpayment' && booking.full_payment_deadline && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
+            <AlertTriangle className="text-amber-500 flex-shrink-0" size={28} />
+            <div>
+              <h2 className="font-semibold text-amber-800">Remaining Balance Due</h2>
+              <p className="text-amber-600 text-sm">
+                Please pay the remaining balance of{' '}
+                <span className="font-bold">
+                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
+                </span>{' '}
+                within 24 hours of approval (by{' '}
+                {format(parseISO(booking.full_payment_deadline), 'MMM d, yyyy h:mm a')}).
+              </p>
+            </div>
+          </div>
+        )}
+
         {booking.status === 'pending' && booking.payment_submitted && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
             <Clock className="text-blue-500 flex-shrink-0" size={28} />
             <div>
-              <h2 className="font-semibold text-blue-800">Payment Proof Submitted</h2>
-              <p className="text-blue-600 text-sm">Your payment is being reviewed. We&apos;ll confirm your booking shortly.</p>
+              <h2 className="font-semibold text-blue-800">Awaiting Admin Approval</h2>
+              <p className="text-blue-600 text-sm">Your payment has been submitted and is awaiting admin approval. Your room will be reserved once approved.</p>
             </div>
           </div>
         )}

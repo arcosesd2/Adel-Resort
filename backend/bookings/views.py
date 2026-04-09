@@ -131,6 +131,20 @@ def onsite_booking(request):
     night_price = room.night_price or room.day_price
     total = sum(night_price if s['slot'] == 'night' else day_price for s in slots)
 
+    # Manual discount (peso amount)
+    manual_discount = Decimal('0')
+    raw_manual_discount = data.get('manual_discount')
+    if raw_manual_discount:
+        try:
+            manual_discount = Decimal(str(raw_manual_discount))
+            if manual_discount < 0:
+                return Response({'detail': 'Manual discount cannot be negative.'}, status=status.HTTP_400_BAD_REQUEST)
+            if manual_discount > total:
+                return Response({'detail': 'Manual discount cannot exceed the total price.'}, status=status.HTTP_400_BAD_REQUEST)
+            total = total - manual_discount
+        except Exception:
+            return Response({'detail': 'Invalid manual discount value.'}, status=status.HTTP_400_BAD_REQUEST)
+
     # Voucher support
     voucher_code = data.get('voucher_code', '').strip() if data.get('voucher_code') else ''
     discount_amount = Decimal('0')
@@ -192,6 +206,8 @@ def onsite_booking(request):
         'status': booking.status,
         'slots_summary': booking.slots_summary,
     }
+    if manual_discount > 0:
+        response_data['manual_discount'] = str(manual_discount)
     if discount_amount > 0:
         response_data['discount'] = str(discount_amount)
         response_data['voucher_code'] = voucher_code
@@ -230,6 +246,11 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
         new_status = booking.status
 
         if old_status != new_status:
+            # Set approved_at when booking is confirmed
+            if new_status == BookingStatus.CONFIRMED and not booking.approved_at:
+                booking.approved_at = timezone.now()
+                booking.save(update_fields=['approved_at'])
+
             try:
                 from accounts.models import log_activity
                 log_activity(self.request.user, 'booking',
@@ -248,6 +269,17 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                         f'/booking/{booking.id}',
                     )
                     send_booking_confirmation_email(booking.user, booking)
+
+                    # If downpayment, notify user to pay remaining balance within 24h
+                    if hasattr(booking, 'payment') and booking.payment.payment_type == 'downpayment':
+                        remaining = booking.total_price - booking.payment.amount
+                        create_notification(
+                            booking.user, 'payment_remaining',
+                            'Remaining Balance Due',
+                            f'Your booking for {booking.room.name} has been approved. Please pay the remaining balance of ₱{remaining} within 24 hours.',
+                            f'/booking/{booking.id}',
+                        )
+
                 elif new_status == BookingStatus.CANCELLED:
                     create_notification(
                         booking.user, 'booking_cancelled',
