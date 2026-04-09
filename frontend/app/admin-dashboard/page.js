@@ -1,16 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, Tag, Plus, Trash2, ToggleLeft, ToggleRight, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, CalendarPlus, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, CreditCard as PayIcon, Tag, Home } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 import SlotPicker from '@/components/SlotPicker'
 import dynamic from 'next/dynamic'
-import BookingManagementSection from '@/components/admin/BookingManagementSection'
-import PaymentManagementSection from '@/components/admin/PaymentManagementSection'
 import RoomOccupancySection from '@/components/admin/RoomOccupancySection'
 import UniqueVisitorsSection from '@/components/admin/UniqueVisitorsSection'
 
@@ -42,26 +40,6 @@ function AdminDashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Voucher state
-  const [vouchers, setVouchers] = useState([])
-  const [showVoucherForm, setShowVoucherForm] = useState(false)
-  const [voucherForm, setVoucherForm] = useState({
-    code: '', discount_type: 'percentage', discount_value: '',
-    valid_from: '', valid_until: '', max_uses: '', min_booking_amount: '',
-  })
-  const [creatingVoucher, setCreatingVoucher] = useState(false)
-
-  // Onsite booking state
-  const [rooms, setRooms] = useState([])
-  const [showOnsiteForm, setShowOnsiteForm] = useState(false)
-  const [onsiteForm, setOnsiteForm] = useState({
-    guest_name: '', guest_username: '', guest_phone: '',
-    room: '', guests: 1, slots: [], special_requests: '', manual_discount: '',
-  })
-  const [creatingOnsite, setCreatingOnsite] = useState(false)
-  const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
-  const [bookingRefreshKey, setBookingRefreshKey] = useState(0)
-
   // Page views collapse state
   const [pageViewsOpen, setPageViewsOpen] = useState(false)
   const [expandedPaths, setExpandedPaths] = useState({})
@@ -78,46 +56,6 @@ function AdminDashboardContent() {
   const [sendingReply, setSendingReply] = useState(false)
   const chatEndRef = useRef(null)
   const pollRef = useRef(null)
-  const onsiteSectionRef = useRef(null)
-  const guestNameRef = useRef(null)
-
-  // Pre-fill room from URL query param (staff redirect from Rooms page)
-  useEffect(() => {
-    const roomParam = searchParams.get('room')
-    if (roomParam && rooms.length > 0) {
-      const roomExists = rooms.find(r => r.id == roomParam)
-      if (roomExists) {
-        setOnsiteForm(f => ({ ...f, room: roomParam, slots: [] }))
-        setShowOnsiteForm(true)
-        // Scroll to onsite section and focus guest name after render
-        setTimeout(() => {
-          onsiteSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          setTimeout(() => guestNameRef.current?.focus(), 500)
-        }, 100)
-      }
-    }
-  }, [searchParams, rooms])
-
-  const selectedRoom = useMemo(() => {
-    if (!onsiteForm.room) return null
-    return rooms.find(r => r.id == onsiteForm.room) || null
-  }, [onsiteForm.room, rooms])
-
-  // Voucher preview for onsite booking
-  const onsiteVoucherPreview = useMemo(() => {
-    if (!onsiteVoucherCode.trim() || vouchers.length === 0) return null
-    const v = vouchers.find(v => v.code.toLowerCase() === onsiteVoucherCode.trim().toLowerCase())
-    if (!v) return { error: 'Voucher not found' }
-    if (!v.is_active) return { error: 'Voucher is inactive' }
-    const now = new Date()
-    if (now < new Date(v.valid_from) || now > new Date(v.valid_until)) return { error: 'Voucher expired' }
-    if (v.max_uses && v.times_used >= v.max_uses) return { error: 'Voucher fully used' }
-    return {
-      valid: true,
-      label: v.discount_type === 'percentage' ? `${v.discount_value}% off` : `₱${v.discount_value} off`,
-    }
-  }, [onsiteVoucherCode, vouchers])
-
   useEffect(() => {
     // Wait for AuthValidator to finish bootstrapping before making any
     // navigation decisions. Acting on partial auth state is what caused the
@@ -149,9 +87,7 @@ function AdminDashboardContent() {
         setLoading(false)
       })
 
-    fetchVouchers()
     fetchConversations()
-    fetchRooms()
   }, [isReady, isAuthenticated, user, router])
 
   // Poll for new messages in active conversation
@@ -180,107 +116,11 @@ function AdminDashboardContent() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [convoMessages])
 
-  const fetchVouchers = async () => {
-    try {
-      const { data } = await api.get('/vouchers/')
-      setVouchers(data)
-    } catch {}
-  }
-
   const fetchConversations = async () => {
     try {
       const { data } = await api.get('/chat/admin/conversations/')
       setConversations(data)
     } catch {}
-  }
-
-  const fetchRooms = async () => {
-    try {
-      const { data } = await api.get('/rooms/')
-      setRooms(data.results || data)
-    } catch {}
-  }
-
-  const handleCreateOnsiteBooking = async (e) => {
-    e.preventDefault()
-    if (onsiteForm.slots.length === 0) { toast.error('Add at least one slot.'); return }
-    setCreatingOnsite(true)
-    try {
-      const payload = {
-        guest_name: onsiteForm.guest_name,
-        guest_username: onsiteForm.guest_username || undefined,
-        guest_phone: onsiteForm.guest_phone || undefined,
-        room: parseInt(onsiteForm.room),
-        guests: parseInt(onsiteForm.guests),
-        slots: onsiteForm.slots,
-        special_requests: onsiteForm.special_requests,
-      }
-      if (onsiteVoucherCode.trim()) {
-        payload.voucher_code = onsiteVoucherCode.trim()
-      }
-      if (onsiteForm.manual_discount) {
-        payload.manual_discount = parseFloat(onsiteForm.manual_discount)
-      }
-      const { data } = await api.post('/bookings/onsite/', payload)
-      let msg = `Onsite booking created! #${data.id} - ${data.room} - ₱${data.total_price}`
-      if (data.manual_discount) {
-        msg += ` (₱${data.manual_discount} manual discount)`
-      }
-      if (data.discount) {
-        msg += ` (₱${data.discount} voucher discount with ${data.voucher_code})`
-      }
-      toast.success(msg)
-      setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '', manual_discount: '' })
-      setOnsiteVoucherCode('')
-      setShowOnsiteForm(false)
-      setBookingRefreshKey(k => k + 1)
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to create booking.')
-    } finally {
-      setCreatingOnsite(false)
-    }
-  }
-
-  const handleCreateVoucher = async (e) => {
-    e.preventDefault()
-    setCreatingVoucher(true)
-    try {
-      const payload = {
-        code: voucherForm.code,
-        discount_type: voucherForm.discount_type,
-        discount_value: voucherForm.discount_value,
-        valid_from: new Date(voucherForm.valid_from).toISOString(),
-        valid_until: new Date(voucherForm.valid_until).toISOString(),
-      }
-      if (voucherForm.max_uses) payload.max_uses = parseInt(voucherForm.max_uses)
-      if (voucherForm.min_booking_amount) payload.min_booking_amount = voucherForm.min_booking_amount
-      await api.post('/vouchers/', payload)
-      toast.success('Voucher created!')
-      setVoucherForm({ code: '', discount_type: 'percentage', discount_value: '', valid_from: '', valid_until: '', max_uses: '', min_booking_amount: '' })
-      setShowVoucherForm(false)
-      fetchVouchers()
-    } catch (err) {
-      const msg = err.response?.data?.code?.[0] || err.response?.data?.detail || 'Failed to create voucher.'
-      toast.error(msg)
-    } finally {
-      setCreatingVoucher(false)
-    }
-  }
-
-  const handleToggleVoucher = async (id) => {
-    try {
-      await api.patch(`/vouchers/${id}/toggle/`)
-      fetchVouchers()
-    } catch { toast.error('Failed to toggle voucher.') }
-  }
-
-  const handleDeleteVoucher = async (id) => {
-    if (!confirm('Delete this voucher?')) return
-    try {
-      await api.delete(`/vouchers/${id}/`)
-      fetchVouchers()
-      toast.success('Voucher deleted.')
-    } catch { toast.error('Failed to delete voucher.') }
   }
 
   const openConversation = async (convo) => {
@@ -384,7 +224,20 @@ function AdminDashboardContent() {
             </Link>
           </>
         )}
-        {/* Staff-accessible tabs */}
+        {/* Staff-accessible management tabs */}
+        <Link href="/admin-dashboard/bookings" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <CalendarCheck size={16} /> Bookings
+        </Link>
+        <Link href="/admin-dashboard/payments" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <CreditCard size={16} /> Payments
+        </Link>
+        <Link href="/admin-dashboard/vouchers" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Tag size={16} /> Vouchers
+        </Link>
+        <Link href="/admin-dashboard/occupancy" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+          <Home size={16} /> Occupancy
+        </Link>
+        {/* Staff-accessible content tabs */}
         <Link href="/admin-dashboard/hero" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
           <Film size={16} /> Homepage Intro
         </Link>
@@ -450,233 +303,8 @@ function AdminDashboardContent() {
           ))}
       </div>
 
-      {/* Revenue Analytics — all staff */}
-      <RevenueAnalyticsSection data={data} />
-
-      {/* Onsite Booking */}
-      <div ref={onsiteSectionRef} className="card overflow-hidden mb-10">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
-            <CalendarPlus size={20} /> Onsite Booking
-          </h2>
-          <button
-            onClick={() => setShowOnsiteForm(!showOnsiteForm)}
-            className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1"
-          >
-            <Plus size={14} /> Walk-in Booking
-          </button>
-        </div>
-
-        {showOnsiteForm && (
-          <form onSubmit={handleCreateOnsiteBooking} className="p-6 bg-gray-50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name *</label>
-                <input ref={guestNameRef} type="text" required value={onsiteForm.guest_name}
-                  onChange={e => setOnsiteForm(f => ({ ...f, guest_name: e.target.value }))}
-                  className="input-field" placeholder="e.g. Juan Dela Cruz" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username (optional)</label>
-                <input type="text" value={onsiteForm.guest_username}
-                  onChange={e => setOnsiteForm(f => ({ ...f, guest_username: e.target.value }))}
-                  className="input-field" placeholder="guest username" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
-                <input type="text" value={onsiteForm.guest_phone}
-                  onChange={e => setOnsiteForm(f => ({ ...f, guest_phone: e.target.value }))}
-                  className="input-field" placeholder="09XX XXX XXXX" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Room *</label>
-                <select required value={onsiteForm.room}
-                  onChange={e => setOnsiteForm(f => ({ ...f, room: e.target.value, slots: [] }))}
-                  className="input-field">
-                  <option value="">Select a room</option>
-                  {rooms.map(r => (
-                    <option key={r.id} value={r.id}>{r.name} (max {r.capacity} pax)</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-                <input type="number" min="1" required value={onsiteForm.guests}
-                  onChange={e => setOnsiteForm(f => ({ ...f, guests: e.target.value }))}
-                  className="input-field" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Special Requests</label>
-                <input type="text" value={onsiteForm.special_requests}
-                  onChange={e => setOnsiteForm(f => ({ ...f, special_requests: e.target.value }))}
-                  className="input-field" placeholder="Optional notes" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Voucher Code (optional)</label>
-                <input type="text" value={onsiteVoucherCode}
-                  onChange={e => setOnsiteVoucherCode(e.target.value)}
-                  className="input-field" placeholder="e.g. SUMMER20" />
-                {onsiteVoucherPreview && (
-                  <p className={`text-xs mt-1 ${onsiteVoucherPreview.valid ? 'text-green-600' : 'text-red-500'}`}>
-                    {onsiteVoucherPreview.valid ? onsiteVoucherPreview.label : onsiteVoucherPreview.error}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Manual Discount ₱ (optional)</label>
-                <input type="number" min="0" step="0.01" value={onsiteForm.manual_discount}
-                  onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
-                  className="input-field" placeholder="e.g. 500" />
-              </div>
-            </div>
-
-            {/* SlotPicker calendar */}
-            {selectedRoom && (
-              <div className="mt-4">
-                <SlotPicker
-                  key={selectedRoom.id}
-                  roomId={selectedRoom.id}
-                  isDayOnly={selectedRoom.is_day_only}
-                  bookingMode={selectedRoom.booking_mode}
-                  onSlotsChange={(slots) => setOnsiteForm(f => ({ ...f, slots }))}
-                />
-              </div>
-            )}
-
-            {!selectedRoom && (
-              <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-500 text-center">
-                Select a room to see the availability calendar
-              </div>
-            )}
-
-            <div className="mt-4 flex gap-2">
-              <button type="submit" disabled={creatingOnsite} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
-                {creatingOnsite ? 'Creating...' : 'Create Booking'}
-              </button>
-              <button type="button" onClick={() => setShowOnsiteForm(false)} className="btn-outline text-sm px-4 py-2">Cancel</button>
-            </div>
-          </form>
-        )}
-      </div>
-
-      {/* Booking Management */}
-      <BookingManagementSection key={bookingRefreshKey} />
-
-      {/* Payment Transactions */}
-      <PaymentManagementSection />
-
-      {/* Voucher Management */}
-      <div className="card overflow-hidden mb-10">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
-            <Tag size={20} /> Voucher Management
-          </h2>
-          <button
-            onClick={() => setShowVoucherForm(!showVoucherForm)}
-            className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1"
-          >
-            <Plus size={14} /> New Voucher
-          </button>
-        </div>
-
-        {showVoucherForm && (
-          <form onSubmit={handleCreateVoucher} className="p-6 border-b border-gray-100 bg-gray-50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                <input type="text" required value={voucherForm.code} onChange={e => setVoucherForm(f => ({ ...f, code: e.target.value }))}
-                  className="input-field" placeholder="e.g. SUMMER20" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
-                <select value={voucherForm.discount_type} onChange={e => setVoucherForm(f => ({ ...f, discount_type: e.target.value }))}
-                  className="input-field">
-                  <option value="percentage">Percentage (%)</option>
-                  <option value="fixed">Fixed Amount (₱)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
-                <input type="number" required step="0.01" min="0" value={voucherForm.discount_value}
-                  onChange={e => setVoucherForm(f => ({ ...f, discount_value: e.target.value }))} className="input-field" placeholder="e.g. 20" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valid From</label>
-                <input type="datetime-local" required value={voucherForm.valid_from}
-                  onChange={e => setVoucherForm(f => ({ ...f, valid_from: e.target.value }))} className="input-field" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
-                <input type="datetime-local" required value={voucherForm.valid_until}
-                  onChange={e => setVoucherForm(f => ({ ...f, valid_until: e.target.value }))} className="input-field" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Uses (blank = unlimited)</label>
-                <input type="number" min="1" value={voucherForm.max_uses}
-                  onChange={e => setVoucherForm(f => ({ ...f, max_uses: e.target.value }))} className="input-field" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Min Booking Amount (optional)</label>
-                <input type="number" step="0.01" min="0" value={voucherForm.min_booking_amount}
-                  onChange={e => setVoucherForm(f => ({ ...f, min_booking_amount: e.target.value }))} className="input-field" />
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button type="submit" disabled={creatingVoucher} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
-                {creatingVoucher ? 'Creating...' : 'Create Voucher'}
-              </button>
-              <button type="button" onClick={() => setShowVoucherForm(false)} className="btn-outline text-sm px-4 py-2">Cancel</button>
-            </div>
-          </form>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Code</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Discount</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Valid Period</th>
-                <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Uses</th>
-                <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {vouchers.map(v => (
-                <tr key={v.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-3 text-sm font-mono font-semibold text-gray-800">{v.code}</td>
-                  <td className="px-6 py-3 text-sm text-gray-600">
-                    {v.discount_type === 'percentage' ? `${v.discount_value}%` : `₱${v.discount_value}`}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-600">
-                    {new Date(v.valid_from).toLocaleDateString()} – {new Date(v.valid_until).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-3 text-sm text-gray-600 text-center">
-                    {v.times_used}{v.max_uses ? `/${v.max_uses}` : ''}
-                  </td>
-                  <td className="px-6 py-3 text-center">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${v.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {v.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    <button onClick={() => handleToggleVoucher(v.id)} className="text-gray-500 hover:text-ocean-600 mr-3" title="Toggle active">
-                      {v.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-                    </button>
-                    <button onClick={() => handleDeleteVoucher(v.id)} className="text-gray-500 hover:text-red-600" title="Delete">
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {vouchers.length === 0 && (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">No vouchers yet</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Revenue Analytics — superadmin only */}
+      {user?.is_superadmin && <RevenueAnalyticsSection data={data} />}
 
       {/* Chat Conversations */}
       <div className="card overflow-hidden mb-10">
@@ -774,9 +402,6 @@ function AdminDashboardContent() {
           </div>
         </div>
       </div>
-
-      {/* Room Occupancy Overview — all staff */}
-      <RoomOccupancySection data={data} />
 
       {/* Unique Guests — superadmin only */}
       {user?.is_superadmin && <div className="card overflow-hidden mb-10">
