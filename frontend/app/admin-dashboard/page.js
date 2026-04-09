@@ -77,6 +77,8 @@ function AdminDashboardContent() {
   const [sendingReply, setSendingReply] = useState(false)
   const chatEndRef = useRef(null)
   const pollRef = useRef(null)
+  const onsiteSectionRef = useRef(null)
+  const guestNameRef = useRef(null)
 
   // Pre-fill room from URL query param (staff redirect from Rooms page)
   useEffect(() => {
@@ -86,6 +88,11 @@ function AdminDashboardContent() {
       if (roomExists) {
         setOnsiteForm(f => ({ ...f, room: roomParam, slots: [] }))
         setShowOnsiteForm(true)
+        // Scroll to onsite section and focus guest name after render
+        setTimeout(() => {
+          onsiteSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          setTimeout(() => guestNameRef.current?.focus(), 500)
+        }, 100)
       }
     }
   }, [searchParams, rooms])
@@ -446,7 +453,7 @@ function AdminDashboardContent() {
       <RevenueAnalyticsSection data={data} />
 
       {/* Onsite Booking */}
-      <div className="card overflow-hidden mb-10">
+      <div ref={onsiteSectionRef} className="card overflow-hidden mb-10">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
             <CalendarPlus size={20} /> Onsite Booking
@@ -464,7 +471,7 @@ function AdminDashboardContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Guest Name *</label>
-                <input type="text" required value={onsiteForm.guest_name}
+                <input ref={guestNameRef} type="text" required value={onsiteForm.guest_name}
                   onChange={e => setOnsiteForm(f => ({ ...f, guest_name: e.target.value }))}
                   className="input-field" placeholder="e.g. Juan Dela Cruz" />
               </div>

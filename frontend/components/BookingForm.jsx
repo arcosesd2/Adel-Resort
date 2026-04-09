@@ -24,8 +24,33 @@ function clearDraft(roomId) {
 }
 
 export default function BookingForm({ room }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
+
+  // Staff: show onsite booking redirect instead of regular booking form
+  if (isAuthenticated && user?.is_staff) {
+    return (
+      <div className="card p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-serif font-semibold">Onsite Booking</h3>
+          <div className="text-right">
+            <span className="text-2xl font-bold text-ocean-700">₱{room.day_price}</span>
+            {!room.is_day_only && room.night_price && (
+              <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
+            )}
+            <div className="text-gray-400 text-xs">{room.is_day_only ? 'day tour' : 'per slot'}</div>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500">Create a walk-in booking for this room via the admin dashboard.</p>
+        <button
+          onClick={() => router.push(`/admin-dashboard?room=${room.id}`)}
+          className="btn-primary w-full"
+        >
+          Onsite Book
+        </button>
+      </div>
+    )
+  }
 
   const draft = getDraft(room.id)
   const [slots, setSlots] = useState([])
