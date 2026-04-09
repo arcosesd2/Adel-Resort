@@ -10,6 +10,7 @@ import api from '@/lib/api'
 import SlotPicker from '@/components/SlotPicker'
 import dynamic from 'next/dynamic'
 import BookingManagementSection from '@/components/admin/BookingManagementSection'
+import PaymentManagementSection from '@/components/admin/PaymentManagementSection'
 import RoomOccupancySection from '@/components/admin/RoomOccupancySection'
 import UniqueVisitorsSection from '@/components/admin/UniqueVisitorsSection'
 
@@ -560,6 +561,9 @@ function AdminDashboardContent() {
 
       {/* Booking Management */}
       <BookingManagementSection key={bookingRefreshKey} />
+
+      {/* Payment Transactions */}
+      <PaymentManagementSection />
 
       {/* Voucher Management */}
       <div className="card overflow-hidden mb-10">

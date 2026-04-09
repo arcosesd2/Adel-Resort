@@ -2,7 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.db.models import F
@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from bookings.models import Booking, BookingStatus
 from .models import Payment, PaymentStatus, PaymentType, GCashConfig
-from .serializers import SubmitProofSerializer, GCashConfigSerializer
+from .serializers import SubmitProofSerializer, GCashConfigSerializer, AdminPaymentSerializer
 from accounts.permissions import IsSuperAdmin
 
 PAYMENT_DEADLINE_HOURS = 24
@@ -137,3 +137,100 @@ def gcash_config_update(request):
             pass
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_payment_list(request):
+    """List all payments for staff/superadmin. Filter by ?status=pending|succeeded|failed|refunded"""
+    qs = Payment.objects.select_related(
+        'booking', 'booking__user', 'booking__room'
+    ).order_by('-created_at')
+
+    status_filter = request.query_params.get('status', '')
+    if status_filter and status_filter in [s[0] for s in PaymentStatus.choices]:
+        qs = qs.filter(status=status_filter)
+
+    serializer = AdminPaymentSerializer(qs, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def admin_payment_update(request, pk):
+    """Update payment status (succeeded/failed/refunded) and sync booking status."""
+    try:
+        payment = Payment.objects.select_related('booking').get(pk=pk)
+    except Payment.DoesNotExist:
+        return Response({'detail': 'Payment not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    new_status = request.data.get('status')
+    valid_statuses = [s[0] for s in PaymentStatus.choices]
+    if new_status not in valid_statuses:
+        return Response(
+            {'detail': f'Invalid status. Choose from: {", ".join(valid_statuses)}'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    old_status = payment.status
+    payment.status = new_status
+    payment.save(update_fields=['status', 'updated_at'])
+
+    # Sync booking status based on payment outcome
+    booking = payment.booking
+    if new_status == PaymentStatus.SUCCEEDED and booking.status != BookingStatus.CONFIRMED:
+        booking.status = BookingStatus.CONFIRMED
+        booking.approved_at = timezone.now()
+        booking.save(update_fields=['status', 'approved_at'])
+        # Notify guest
+        try:
+            from accounts.models import create_notification
+            from accounts.emails import send_booking_confirmation_email
+            create_notification(
+                booking.user, 'booking_confirmed',
+                'Booking Confirmed!',
+                f'Your payment for {booking.room.name} has been verified and your booking is confirmed.',
+                f'/booking/{booking.id}',
+            )
+            send_booking_confirmation_email(booking.user, booking)
+        except Exception:
+            pass
+    elif new_status == PaymentStatus.FAILED and booking.status == BookingStatus.CONFIRMED:
+        booking.status = BookingStatus.PENDING
+        booking.approved_at = None
+        booking.save(update_fields=['status', 'approved_at'])
+        try:
+            from accounts.models import create_notification
+            create_notification(
+                booking.user, 'payment_failed',
+                'Payment Verification Failed',
+                f'Your payment for {booking.room.name} could not be verified. Please resubmit your proof of payment.',
+                f'/booking/{booking.id}',
+            )
+        except Exception:
+            pass
+    elif new_status == PaymentStatus.REFUNDED:
+        booking.status = BookingStatus.CANCELLED
+        booking.save(update_fields=['status'])
+        try:
+            from accounts.models import create_notification
+            create_notification(
+                booking.user, 'payment_refunded',
+                'Payment Refunded',
+                f'Your payment for {booking.room.name} has been refunded and your booking has been cancelled.',
+                f'/booking/{booking.id}',
+            )
+        except Exception:
+            pass
+
+    try:
+        from accounts.models import log_activity
+        log_activity(
+            request.user, 'payment',
+            f'Payment #{payment.id} status changed from {old_status} to {new_status} (Booking #{booking.id})',
+        )
+    except Exception:
+        pass
+
+    serializer = AdminPaymentSerializer(payment, context={'request': request})
+    return Response(serializer.data)

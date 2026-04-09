@@ -9,6 +9,42 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AdminPaymentSerializer(serializers.ModelSerializer):
+    booking_reference = serializers.CharField(source='booking.reference_code', read_only=True)
+    booking_id = serializers.IntegerField(source='booking.id', read_only=True)
+    guest_name = serializers.SerializerMethodField()
+    guest_email = serializers.CharField(source='booking.user.email', read_only=True)
+    room_name = serializers.CharField(source='booking.room.name', read_only=True)
+    booking_status = serializers.CharField(source='booking.status', read_only=True)
+    proof_of_payment_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Payment
+        fields = (
+            'id', 'booking_id', 'booking_reference', 'guest_name', 'guest_email',
+            'room_name', 'booking_status', 'gcash_reference', 'proof_of_payment_url',
+            'payment_type', 'amount', 'currency', 'status', 'created_at', 'updated_at',
+        )
+        read_only_fields = (
+            'id', 'booking_id', 'booking_reference', 'guest_name', 'guest_email',
+            'room_name', 'booking_status', 'gcash_reference', 'proof_of_payment_url',
+            'payment_type', 'amount', 'currency', 'created_at', 'updated_at',
+        )
+
+    def get_guest_name(self, obj):
+        u = obj.booking.user
+        full = f'{u.first_name} {u.last_name}'.strip()
+        return full or u.username
+
+    def get_proof_of_payment_url(self, obj):
+        if obj.proof_of_payment:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.proof_of_payment.url)
+            return obj.proof_of_payment.url
+        return None
+
+
 class SubmitProofSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
     gcash_reference = serializers.CharField(max_length=200)
