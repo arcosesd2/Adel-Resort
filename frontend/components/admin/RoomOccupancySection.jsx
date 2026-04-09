@@ -83,6 +83,7 @@ export default function RoomOccupancySection({ data }) {
                             key={room.room_id}
                             roomId={room.room_id}
                             isDayOnly={room.is_day_only}
+                            bookingMode={room.booking_mode}
                           />
                         </td>
                       </tr>

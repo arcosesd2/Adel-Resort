@@ -184,7 +184,7 @@ def admin_dashboard(request):
     today = date.today()
     period_start = today - timedelta(days=30)
     for room in active_rooms:
-        slots_per_day = 1 if room.is_day_only else 2
+        slots_per_day = 1 if (room.is_day_only or room.booking_mode == 'overnight') else 2
         max_slots = 30 * slots_per_day
 
         bookings_in_period = Booking.objects.filter(
@@ -216,6 +216,7 @@ def admin_dashboard(request):
             'room_name': room.name,
             'room_type': room.get_room_type_display(),
             'is_day_only': room.is_day_only,
+            'booking_mode': room.booking_mode,
             'total_booked_slots': total_booked_slots,
             'max_slots': max_slots,
             'occupancy_pct': occupancy_pct,

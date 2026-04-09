@@ -27,6 +27,8 @@ export default function BookingForm({ room }) {
   const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
 
+  const isOvernight = room.booking_mode === 'overnight'
+
   // Staff: show onsite booking redirect instead of regular booking form
   if (isAuthenticated && user?.is_staff) {
     return (
@@ -35,10 +37,12 @@ export default function BookingForm({ room }) {
           <h3 className="text-xl font-serif font-semibold">Onsite Booking</h3>
           <div className="text-right">
             <span className="text-2xl font-bold text-ocean-700">₱{room.day_price}</span>
-            {!room.is_day_only && room.night_price && (
+            {!isOvernight && !room.is_day_only && room.night_price && (
               <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
             )}
-            <div className="text-gray-400 text-xs">{room.is_day_only ? 'day tour' : 'per slot'}</div>
+            <div className="text-gray-400 text-xs">
+              {isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'}
+            </div>
           </div>
         </div>
         <p className="text-sm text-gray-500">Create a walk-in booking for this room via the admin dashboard.</p>
@@ -71,9 +75,12 @@ export default function BookingForm({ room }) {
   const dayPrice = parseFloat(room.day_price)
   const nightPrice = parseFloat(room.night_price || room.day_price)
 
+  const overnightCount = slots.filter(s => s.slot === 'overnight').length
   const dayCount = slots.filter(s => s.slot === 'day').length
   const nightCount = slots.filter(s => s.slot === 'night').length
-  const totalPrice = dayCount * dayPrice + nightCount * nightPrice
+  const totalPrice = isOvernight
+    ? overnightCount * dayPrice
+    : dayCount * dayPrice + nightCount * nightPrice
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -120,17 +127,26 @@ export default function BookingForm({ room }) {
         <h3 className="text-xl font-serif font-semibold">Reserve Your Stay</h3>
         <div className="text-right">
           <span className="text-2xl font-bold text-ocean-700">₱{room.day_price}</span>
-          {!room.is_day_only && room.night_price && (
+          {!isOvernight && !room.is_day_only && room.night_price && (
             <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
           )}
-          <div className="text-gray-400 text-xs">{room.is_day_only ? 'day tour' : 'per slot'}</div>
+          <div className="text-gray-400 text-xs">
+            {isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'}
+          </div>
         </div>
       </div>
+
+      {isOvernight && (
+        <div className="bg-ocean-50 rounded-lg px-3 py-2 text-xs text-ocean-700">
+          Check-in: <strong>2:00 PM</strong> &middot; Check-out: <strong>12:00 NN</strong>
+        </div>
+      )}
 
       {/* Slot Picker */}
       <SlotPicker
         roomId={room.id}
         isDayOnly={room.is_day_only}
+        bookingMode={room.booking_mode}
         onSlotsChange={setSlots}
         onRangeChange={handleRangeChange}
         defaultCheckIn={savedCheckIn}
@@ -172,7 +188,15 @@ export default function BookingForm({ room }) {
       {/* Price summary */}
       {slots.length > 0 && (
         <div className="bg-ocean-50 rounded-xl p-4 space-y-2 text-sm">
-          {dayCount > 0 && (
+          {isOvernight && overnightCount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {overnightCount} night{overnightCount !== 1 ? 's' : ''} x ₱{dayPrice.toFixed(2)}
+              </span>
+              <span className="font-medium">₱{(overnightCount * dayPrice).toFixed(2)}</span>
+            </div>
+          )}
+          {!isOvernight && dayCount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">
                 {dayCount} day slot{dayCount !== 1 ? 's' : ''} x ₱{dayPrice.toFixed(2)}
@@ -180,7 +204,7 @@ export default function BookingForm({ room }) {
               <span className="font-medium">₱{(dayCount * dayPrice).toFixed(2)}</span>
             </div>
           )}
-          {nightCount > 0 && (
+          {!isOvernight && nightCount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">
                 {nightCount} night slot{nightCount !== 1 ? 's' : ''} x ₱{nightPrice.toFixed(2)}

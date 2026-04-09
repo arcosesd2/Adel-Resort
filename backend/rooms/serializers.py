@@ -27,7 +27,7 @@ class RoomSerializer(serializers.ModelSerializer):
         model = Room
         fields = (
             'id', 'name', 'room_type', 'room_type_display', 'description',
-            'day_price', 'night_price', 'is_day_only', 'capacity', 'max_rooms',
+            'day_price', 'night_price', 'is_day_only', 'booking_mode', 'capacity', 'max_rooms',
             'size_sqm', 'amenities', 'is_active', 'images', 'primary_image', 'created_at',
         )
 
@@ -50,7 +50,7 @@ class RoomListSerializer(serializers.ModelSerializer):
         model = Room
         fields = (
             'id', 'name', 'room_type', 'room_type_display',
-            'day_price', 'night_price', 'is_day_only', 'capacity', 'max_rooms',
+            'day_price', 'night_price', 'is_day_only', 'booking_mode', 'capacity', 'max_rooms',
             'primary_image', 'amenities', 'images',
         )
 
@@ -73,7 +73,7 @@ class AdminRoomSerializer(serializers.ModelSerializer):
         model = Room
         fields = (
             'id', 'name', 'room_type', 'room_type_display', 'description',
-            'day_price', 'night_price', 'is_day_only', 'capacity', 'max_rooms',
+            'day_price', 'night_price', 'is_day_only', 'booking_mode', 'capacity', 'max_rooms',
             'size_sqm', 'amenities', 'is_active', 'images', 'primary_image',
             'created_at', 'updated_at',
         )

@@ -101,8 +101,14 @@ def onsite_booking(request):
         return Response({'detail': f'This room fits max {room.capacity} persons.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Validate slots and check conflicts
-    if room.is_day_only and any(s.get('slot') == 'night' for s in slots):
-        return Response({'detail': 'This accommodation is available for day tours only.'}, status=status.HTTP_400_BAD_REQUEST)
+    if room.booking_mode == 'overnight':
+        if any(s.get('slot') != 'overnight' for s in slots):
+            return Response({'detail': 'This room uses overnight booking.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        if any(s.get('slot') == 'overnight' for s in slots):
+            return Response({'detail': 'This room uses day/night slot booking.'}, status=status.HTTP_400_BAD_REQUEST)
+        if room.is_day_only and any(s.get('slot') == 'night' for s in slots):
+            return Response({'detail': 'This accommodation is available for day tours only.'}, status=status.HTTP_400_BAD_REQUEST)
 
     slot_dates = [s['date'] for s in slots]
     min_date = min(slot_dates)
@@ -176,9 +182,17 @@ def onsite_booking(request):
 
             total = total - discount_amount
 
+    # For overnight rooms, check_out is the day after the last slot
+    if room.booking_mode == 'overnight':
+        from datetime import date as date_cls, timedelta as td
+        last = date_cls.fromisoformat(max_date)
+        checkout_date = (last + td(days=1)).isoformat()
+    else:
+        checkout_date = max_date
+
     booking = Booking.objects.create(
         user=user, room=room,
-        check_in=min_date, check_out=max_date,
+        check_in=min_date, check_out=checkout_date,
         guests=guests, slots=slots,
         total_price=total, status=BookingStatus.CONFIRMED,
         special_requests=special_requests,

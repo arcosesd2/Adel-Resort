@@ -65,7 +65,7 @@ class BookingSerializer(serializers.ModelSerializer):
         if not isinstance(slots, list) or len(slots) == 0:
             raise serializers.ValidationError({'slots': 'At least one slot is required.'})
 
-        valid_slot_types = {'day', 'night'}
+        valid_slot_types = {'day', 'night', 'overnight'}
         seen = set()
         for entry in slots:
             if not isinstance(entry, dict):
@@ -75,7 +75,7 @@ class BookingSerializer(serializers.ModelSerializer):
             if not d or not s:
                 raise serializers.ValidationError({'slots': 'Each slot must have date and slot fields.'})
             if s not in valid_slot_types:
-                raise serializers.ValidationError({'slots': f'Invalid slot type: {s}. Must be day or night.'})
+                raise serializers.ValidationError({'slots': f'Invalid slot type: {s}. Must be day, night, or overnight.'})
             try:
                 date.fromisoformat(d)
             except (ValueError, TypeError):
@@ -95,11 +95,23 @@ class BookingSerializer(serializers.ModelSerializer):
         if slots is not None:
             self._validate_slots(slots)
 
-            # Check day-only rooms
-            if room and room.is_day_only:
-                night_slots = [s for s in slots if s['slot'] == 'night']
-                if night_slots:
-                    raise serializers.ValidationError('This accommodation is available for day tours only.')
+            if room:
+                # Overnight rooms must use 'overnight' slots
+                if room.booking_mode == 'overnight':
+                    non_overnight = [s for s in slots if s['slot'] != 'overnight']
+                    if non_overnight:
+                        raise serializers.ValidationError('This room uses overnight booking (check-in 2PM / check-out 12NN).')
+                else:
+                    # Slot-based rooms cannot use 'overnight'
+                    overnight_slots = [s for s in slots if s['slot'] == 'overnight']
+                    if overnight_slots:
+                        raise serializers.ValidationError('This room uses day/night slot booking.')
+
+                    # Check day-only rooms
+                    if room.is_day_only:
+                        night_slots = [s for s in slots if s['slot'] == 'night']
+                        if night_slots:
+                            raise serializers.ValidationError('This accommodation is available for day tours only.')
 
         if room and guests and guests > room.capacity:
             raise serializers.ValidationError(
@@ -148,14 +160,21 @@ class BookingSerializer(serializers.ModelSerializer):
         # Auto-derive check_in / check_out from slots
         slot_dates = sorted(s['date'] for s in slots)
         validated_data['check_in'] = slot_dates[0]
-        validated_data['check_out'] = slot_dates[-1]
+        if room.booking_mode == 'overnight':
+            # For overnight rooms, check_out is the day after the last slot
+            last_date = date.fromisoformat(slot_dates[-1])
+            validated_data['check_out'] = (last_date + timedelta(days=1)).isoformat()
+        else:
+            validated_data['check_out'] = slot_dates[-1]
 
-        # Price calc: sum per slot
+        # Price calc
         day_price = room.day_price or Decimal('0')
         night_price = room.night_price or room.day_price
         total = Decimal('0')
         for s in slots:
-            if s['slot'] == 'night':
+            if s['slot'] == 'overnight':
+                total += day_price  # day_price = nightly rate for overnight rooms
+            elif s['slot'] == 'night':
                 total += night_price
             else:
                 total += day_price

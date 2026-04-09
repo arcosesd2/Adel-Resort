@@ -40,6 +40,9 @@ class Booking(models.Model):
 
     @property
     def slots_summary(self):
+        overnight_count = sum(1 for s in self.slots if s.get('slot') == 'overnight')
+        if overnight_count:
+            return f'{overnight_count} night{"s" if overnight_count != 1 else ""}'
         day_count = sum(1 for s in self.slots if s.get('slot') == 'day')
         night_count = sum(1 for s in self.slots if s.get('slot') == 'night')
         parts = []

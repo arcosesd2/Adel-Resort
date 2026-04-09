@@ -11,9 +11,15 @@ class RoomType(models.TextChoices):
     TRAPAL_TABLE = 'trapal_table', 'Trapal Table'
 
 
+class BookingMode(models.TextChoices):
+    SLOT = 'slot', 'Day/Night Slot'
+    OVERNIGHT = 'overnight', 'Overnight (Check-in 2PM / Check-out 12NN)'
+
+
 class Room(models.Model):
     name = models.CharField(max_length=200)
     room_type = models.CharField(max_length=25, choices=RoomType.choices, default=RoomType.COTTAGE)
+    booking_mode = models.CharField(max_length=15, choices=BookingMode.choices, default=BookingMode.SLOT)
     description = models.TextField()
     day_price = models.DecimalField(max_digits=10, decimal_places=2)
     night_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)

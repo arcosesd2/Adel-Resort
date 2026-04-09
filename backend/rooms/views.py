@@ -47,7 +47,10 @@ class RoomListView(generics.ListAPIView):
             for room in qs:
                 counts = room_slot_counts.get(room.id, Counter())
                 max_rooms = room.max_rooms or 1
-                if room.is_day_only:
+                if room.booking_mode == 'overnight':
+                    if counts.get('overnight', 0) >= max_rooms:
+                        exclude_ids.append(room.id)
+                elif room.is_day_only:
                     if counts.get('day', 0) >= max_rooms:
                         exclude_ids.append(room.id)
                 else:
@@ -216,6 +219,7 @@ def all_rooms_availability(request):
             'room_id': room.id,
             'room_name': room.name,
             'room_type': room.room_type,
+            'booking_mode': room.booking_mode,
             'day_price': str(room.day_price),
             'night_price': str(room.night_price) if room.night_price else None,
             'is_day_only': room.is_day_only,

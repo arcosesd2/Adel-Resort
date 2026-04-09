@@ -536,6 +536,7 @@ function AdminDashboardContent() {
                   key={selectedRoom.id}
                   roomId={selectedRoom.id}
                   isDayOnly={selectedRoom.is_day_only}
+                  bookingMode={selectedRoom.booking_mode}
                   onSlotsChange={(slots) => setOnsiteForm(f => ({ ...f, slots }))}
                 />
               </div>

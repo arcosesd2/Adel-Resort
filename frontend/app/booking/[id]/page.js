@@ -139,6 +139,9 @@ export default function BookingDetailPage() {
                   <div className="text-gray-400">Check-in</div>
                   <div className="font-medium text-gray-800">
                     {format(parseISO(booking.check_in), 'EEEE, MMM d, yyyy')}
+                    {booking.room_detail?.booking_mode === 'overnight' && (
+                      <span className="text-gray-500 text-xs ml-1">at 2:00 PM</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -148,6 +151,9 @@ export default function BookingDetailPage() {
                   <div className="text-gray-400">Check-out</div>
                   <div className="font-medium text-gray-800">
                     {format(parseISO(booking.check_out), 'EEEE, MMM d, yyyy')}
+                    {booking.room_detail?.booking_mode === 'overnight' && (
+                      <span className="text-gray-500 text-xs ml-1">at 12:00 NN</span>
+                    )}
                   </div>
                 </div>
               </div>

@@ -25,7 +25,8 @@ export default function RoomCard({ room, initialFavorited = false }) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [favorited, setFavorited] = useState(initialFavorited)
   const { isAuthenticated, user } = useAuthStore()
-  const { id, name, room_type, room_type_display, day_price, night_price, is_day_only, capacity, size_sqm, primary_image, images, amenities } = room
+  const { id, name, room_type, room_type_display, day_price, night_price, is_day_only, booking_mode, capacity, size_sqm, primary_image, images, amenities } = room
+  const isOvernight = booking_mode === 'overnight'
 
   const toggleFavorite = async (e) => {
     e.preventDefault()
@@ -59,7 +60,7 @@ export default function RoomCard({ room, initialFavorited = false }) {
             </span>
           </div>
           <div className="absolute top-3 right-3 flex items-center gap-2">
-            {is_day_only && (
+            {is_day_only && !isOvernight && (
               <span className="text-xs font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700">
                 Day Only
               </span>
@@ -110,11 +111,11 @@ export default function RoomCard({ room, initialFavorited = false }) {
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">
             <div>
               <span className="inline-block bg-ocean-50 rounded-full px-3 py-1 text-2xl font-bold text-ocean-700">₱{day_price}</span>
-              {!is_day_only && night_price && (
+              {!isOvernight && !is_day_only && night_price && (
                 <span className="text-gray-400 text-sm"> / ₱{night_price}</span>
               )}
               <div className="text-gray-400 text-xs mt-1">
-                {is_day_only ? 'day tour' : 'day / night'}
+                {isOvernight ? 'per night' : is_day_only ? 'day tour' : 'day / night'}
               </div>
             </div>
             <Link

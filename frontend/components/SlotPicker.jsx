@@ -41,18 +41,56 @@ function buildRange(from, to, isDayOnly) {
   return slots
 }
 
+/** Build overnight slots: one per date from checkIn to the day before checkOut. */
+function buildOvernightRange(checkInDate, checkOutDate) {
+  if (!checkInDate) return []
+  const end = checkOutDate || checkInDate
+  const slots = []
+  let d = checkInDate
+  for (let i = 0; i < 500; i++) {
+    if (d >= end) break
+    slots.push({ date: d, slot: 'overnight' })
+    d = nextDate(d)
+  }
+  // If only check-in selected (no check-out yet), show 1 night
+  if (slots.length === 0 && checkInDate && !checkOutDate) {
+    slots.push({ date: checkInDate, slot: 'overnight' })
+  }
+  return slots
+}
+
 function labelSlot(s) {
   if (!s) return ''
   const d = new Date(s.date + 'T00:00:00')
+  if (s.slot === 'overnight') {
+    return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`
+  }
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()} (${s.slot === 'day' ? 'Day' : 'Night'})`
 }
 
-export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut }) {
+function formatCheckOutDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + 1)
+  return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`
+}
+
+export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut }) {
+  const isOvernight = bookingMode === 'overnight'
   const [bookedSlots, setBookedSlots] = useState([])
   const [maxRooms, setMaxRooms] = useState(1)
+  const [loading, setLoading] = useState(true)
+
+  // Slot-mode state
   const [checkIn, setCheckIn] = useState(defaultCheckIn || null)   // { date, slot }
   const [checkOut, setCheckOut] = useState(defaultCheckOut || null)  // { date, slot }
-  const [loading, setLoading] = useState(true)
+
+  // Overnight-mode state
+  const [overnightCheckIn, setOvernightCheckIn] = useState(
+    defaultCheckIn?.date || (typeof defaultCheckIn === 'string' ? defaultCheckIn : null)
+  )
+  const [overnightCheckOut, setOvernightCheckOut] = useState(
+    defaultCheckOut?.date || (typeof defaultCheckOut === 'string' ? defaultCheckOut : null)
+  )
 
   const now = new Date()
   const curHour = now.getHours()
@@ -90,18 +128,86 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeCh
   }, [])
 
   const isSlotPast = useCallback((dateStr, slot) => {
+    if (slot === 'overnight') {
+      // Overnight check-in is at 2PM — past if date is before today, or today after 2PM is still OK
+      if (dateStr < todayStr) return true
+      // Allow same-day check-in until 2PM (14:00)
+      if (dateStr === todayStr && curHour >= 14) return true
+      return false
+    }
     if (slot === 'day') {
-      // Day tour (8AM–5PM): past if date is before today, or today after 5PM
       if (dateStr < todayStr) return true
       if (dateStr === todayStr && curHour >= 17) return true
     } else {
-      // Night tour (5PM–8AM next day): past if date is before yesterday,
-      // or yesterday's night is past when today's hour >= 8 (8AM = night over)
       if (dateStr < yesterdayStr) return true
       if (dateStr === yesterdayStr && curHour >= 8) return true
     }
     return false
   }, [todayStr, yesterdayStr, curHour])
+
+  // ═══════ OVERNIGHT MODE ═══════
+  const overnightSlots = useMemo(() => {
+    if (!isOvernight) return []
+    return buildOvernightRange(overnightCheckIn, overnightCheckOut)
+  }, [isOvernight, overnightCheckIn, overnightCheckOut])
+
+  const overnightSelectedDates = useMemo(() => {
+    return new Set(overnightSlots.map(s => s.date))
+  }, [overnightSlots])
+
+  const overnightOverlaps = useMemo(() => {
+    if (!isOvernight) return []
+    return overnightSlots.filter(s => isBooked(s.date, 'overnight'))
+  }, [isOvernight, overnightSlots, bookedCounts, maxRooms])
+
+  const overnightHasOverlap = overnightOverlaps.length > 0
+
+  const overnightFinalSlots = useMemo(() => {
+    if (overnightHasOverlap) return []
+    return overnightSlots
+  }, [overnightSlots, overnightHasOverlap])
+
+  const overnightNights = overnightFinalSlots.length
+
+  const handleOvernightDateClick = useCallback((dateStr) => {
+    if (isBooked(dateStr, 'overnight') || isSlotPast(dateStr, 'overnight')) return
+
+    if (!overnightCheckIn || overnightCheckOut) {
+      // First click or reset
+      setOvernightCheckIn(dateStr)
+      setOvernightCheckOut(null)
+    } else {
+      if (dateStr > overnightCheckIn) {
+        setOvernightCheckOut(dateStr)
+      } else if (dateStr === overnightCheckIn) {
+        // Same date: reset
+        setOvernightCheckIn(null)
+        setOvernightCheckOut(null)
+      } else {
+        // Earlier date: new check-in
+        setOvernightCheckIn(dateStr)
+        setOvernightCheckOut(null)
+      }
+    }
+  }, [overnightCheckIn, overnightCheckOut, isBooked, isSlotPast])
+
+  // Emit overnight slots
+  useEffect(() => {
+    if (isOvernight) {
+      onSlotsChange?.(overnightFinalSlots)
+    }
+  }, [isOvernight, overnightFinalSlots])
+
+  useEffect(() => {
+    if (isOvernight) {
+      onRangeChange?.(
+        overnightCheckIn ? { date: overnightCheckIn, slot: 'overnight' } : null,
+        overnightCheckOut ? { date: overnightCheckOut, slot: 'overnight' } : null
+      )
+    }
+  }, [isOvernight, overnightCheckIn, overnightCheckOut])
+
+  // ═══════ SLOT MODE (existing logic) ═══════
 
   /** For a date click: earliest available slot (check-in direction). */
   const earliestSlot = useCallback((dateStr) => {
@@ -119,7 +225,10 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeCh
     return null
   }, [isDayOnly, isSlotPast, isBooked])
 
-  const rangeSlots = useMemo(() => buildRange(checkIn, checkOut, isDayOnly), [checkIn, checkOut, isDayOnly])
+  const rangeSlots = useMemo(() => {
+    if (isOvernight) return []
+    return buildRange(checkIn, checkOut, isDayOnly)
+  }, [isOvernight, checkIn, checkOut, isDayOnly])
   const rangeSet   = useMemo(() => new Set(rangeSlots.map(s => slotKey(s.date, s.slot))), [rangeSlots])
 
   const overlaps = useMemo(() => rangeSlots.filter(s => isBooked(s.date, s.slot)), [rangeSlots, bookedCounts, maxRooms])
@@ -132,54 +241,45 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeCh
 
   const selectedSet = useMemo(() => new Set(selectedSlots.map(s => slotKey(s.date, s.slot))), [selectedSlots])
 
-  useEffect(() => { onSlotsChange?.(selectedSlots) }, [selectedSlots])
-  useEffect(() => { onRangeChange?.(checkIn, checkOut) }, [checkIn, checkOut])
+  useEffect(() => { if (!isOvernight) onSlotsChange?.(selectedSlots) }, [isOvernight, selectedSlots])
+  useEffect(() => { if (!isOvernight) onRangeChange?.(checkIn, checkOut) }, [isOvernight, checkIn, checkOut])
 
   /* ---- helpers to set check-in / check-out ---- */
   const applySelection = useCallback((clicked) => {
     if (!checkIn || checkOut) {
-      // First click or reset: set new check-in
       setCheckIn(clicked)
       setCheckOut(null)
     } else {
-      // Second click
       if (cmpSlot(clicked, checkIn) > 0) {
         setCheckOut(clicked)
       } else {
-        // Same or earlier → new check-in
         setCheckIn(clicked)
         setCheckOut(null)
       }
     }
   }, [checkIn, checkOut])
 
-  /* Click on a specific D or N cell */
   const handleSlotClick = useCallback((dateStr, slot) => {
     if (isBooked(dateStr, slot) || isSlotPast(dateStr, slot)) return
     applySelection({ date: dateStr, slot })
   }, [isBooked, isSlotPast, applySelection])
 
-  /* Click on the date number → auto-select both D+N */
   const handleDateClick = useCallback((dateStr) => {
     if (!checkIn || checkOut) {
-      // Setting check-in: use earliest available slot
       const slot = earliestSlot(dateStr)
       if (!slot) return
       setCheckIn({ date: dateStr, slot })
       setCheckOut(null)
     } else {
-      // Setting check-out: use latest available slot
       const clicked = { date: dateStr, slot: latestSlot(dateStr) || 'day' }
       if (cmpSlot(clicked, checkIn) > 0) {
         setCheckOut(clicked)
       } else if (dateStr === checkIn.date) {
-        // Same date → reset
         const slot = earliestSlot(dateStr)
         if (!slot) return
         setCheckIn({ date: dateStr, slot })
         setCheckOut(null)
       } else {
-        // Earlier date → new check-in
         const slot = earliestSlot(dateStr)
         if (!slot) return
         setCheckIn({ date: dateStr, slot })
@@ -215,6 +315,148 @@ export default function SlotPicker({ roomId, isDayOnly, onSlotsChange, onRangeCh
     )
   }
 
+  // ═══════ OVERNIGHT RENDER ═══════
+  if (isOvernight) {
+    return (
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700">Select Dates</label>
+        <p className="text-xs text-gray-500">
+          {!overnightCheckIn
+            ? 'Click a date to set check-in (2:00 PM)'
+            : !overnightCheckOut
+              ? 'Click a later date to set check-out (12:00 NN)'
+              : 'Click any date to start a new selection'}
+        </p>
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded bg-ocean-500 inline-block" /> Check-in
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Check-out
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded bg-ocean-100 border border-ocean-300 inline-block" /> Nights
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded bg-red-400 inline-block" /> Booked
+          </span>
+        </div>
+
+        {/* Month navigation */}
+        <div className="flex items-center justify-between">
+          <button type="button" onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <ChevronLeft size={18} />
+          </button>
+          <span className="text-sm font-semibold text-gray-800">
+            {MONTHS[viewMonth]} {viewYear}
+          </span>
+          <button type="button" onClick={nextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        {/* Calendar grid */}
+        <div className="border rounded-xl overflow-hidden">
+          <div className="grid grid-cols-7 bg-gray-50 border-b">
+            {DAY_ABBR.map(d => (
+              <div key={d} className="text-center text-[10px] font-semibold text-gray-500 py-1.5">{d}</div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7">
+            {calendarDays.map((cell, idx) => {
+              if (!cell) return <div key={`e-${idx}`} className="border-b border-r border-gray-100 h-12" />
+
+              const { day, dateStr, fullyPast } = cell
+              const isPast = fullyPast || isSlotPast(dateStr, 'overnight')
+              const isBk = isBooked(dateStr, 'overnight')
+              const disabled = isPast || isBk
+
+              const isCI = dateStr === overnightCheckIn
+              const isCO = dateStr === overnightCheckOut
+              const inRange = overnightSelectedDates.has(dateStr)
+              // Check-out date highlight (day after last slot)
+              const isCheckOutDay = overnightCheckOut && dateStr === overnightCheckOut
+
+              let cellBg = ''
+              let textClass = 'text-gray-700 hover:bg-ocean-50 cursor-pointer'
+
+              if (isPast) {
+                cellBg = 'bg-gray-50'
+                textClass = 'text-gray-300 cursor-not-allowed'
+              } else if (isBk) {
+                cellBg = 'bg-red-50'
+                textClass = 'text-red-400 cursor-not-allowed'
+              } else if (isCI) {
+                cellBg = 'bg-ocean-500'
+                textClass = 'text-white font-bold'
+              } else if (isCheckOutDay) {
+                cellBg = 'bg-emerald-500'
+                textClass = 'text-white font-bold'
+              } else if (inRange) {
+                cellBg = overnightHasOverlap ? 'bg-red-100' : 'bg-ocean-100'
+                textClass = overnightHasOverlap ? 'text-red-700 font-semibold' : 'text-ocean-700 font-semibold'
+              }
+
+              return (
+                <button
+                  key={dateStr}
+                  type="button"
+                  onClick={() => !disabled && handleOvernightDateClick(dateStr)}
+                  disabled={disabled}
+                  className={`border-b border-r border-gray-100 h-12 flex items-center justify-center text-sm transition-all ${cellBg} ${textClass}`}
+                >
+                  {day}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Overlap warning */}
+        {overnightHasOverlap && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">This range overlaps with an existing booking.</p>
+              <p className="text-xs mt-1">
+                Conflicting: {overnightOverlaps.map(s => s.date).join(', ')}
+              </p>
+              <p className="text-xs mt-1">Please choose a different range.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Selection summary */}
+        {overnightCheckIn && !overnightHasOverlap && (
+          <div className="text-xs text-gray-500 space-y-1">
+            <div>
+              <span className="font-medium text-gray-700">Check-in:</span>{' '}
+              {labelSlot({ date: overnightCheckIn, slot: 'overnight' })} at 2:00 PM
+              {overnightCheckOut && (
+                <>
+                  {' '}<span className="font-medium text-gray-700">Check-out:</span>{' '}
+                  {formatCheckOutDate(overnightCheckOut ? overnightSlots[overnightSlots.length - 1]?.date : overnightCheckIn)} at 12:00 NN
+                </>
+              )}
+              {' '}— {overnightNights || 1} night{(overnightNights || 1) !== 1 ? 's' : ''}
+            </div>
+            <button
+              type="button"
+              onClick={() => { setOvernightCheckIn(null); setOvernightCheckOut(null) }}
+              className="text-red-500 hover:text-red-700 underline"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ═══════ SLOT MODE RENDER (existing) ═══════
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium text-gray-700">Select Dates</label>
