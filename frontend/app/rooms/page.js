@@ -21,6 +21,7 @@ function RoomsContent() {
     try {
       const params = new URLSearchParams()
       if (f.room_type) params.set('room_type', f.room_type)
+      if (f.date) params.set('date', f.date)
       if (f.min_capacity) params.set('min_capacity', f.min_capacity)
       if (f.min_price) params.set('min_price', f.min_price)
       if (f.max_price) params.set('max_price', f.max_price)

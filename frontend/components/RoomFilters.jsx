@@ -17,6 +17,7 @@ const ROOM_TYPES = [
 export default function RoomFilters({ onFilter, initialFilters = {} }) {
   const [filters, setFilters] = useState({
     room_type: initialFilters.room_type || '',
+    date: '',
     min_capacity: '',
     min_price: '',
     max_price: '',
@@ -29,7 +30,7 @@ export default function RoomFilters({ onFilter, initialFilters = {} }) {
   }
 
   const handleReset = () => {
-    const reset = { room_type: '', min_capacity: '', min_price: '', max_price: '' }
+    const reset = { room_type: '', date: '', min_capacity: '', min_price: '', max_price: '' }
     setFilters(reset)
     onFilter(reset)
   }
@@ -40,7 +41,7 @@ export default function RoomFilters({ onFilter, initialFilters = {} }) {
         <SlidersHorizontal size={18} />
         Filter Accommodations
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div>
           <label className="block text-xs text-gray-500 mb-1 font-medium">Type</label>
           <select
@@ -53,6 +54,18 @@ export default function RoomFilters({ onFilter, initialFilters = {} }) {
               <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-gray-500 mb-1 font-medium">Available Date</label>
+          <input
+            type="date"
+            name="date"
+            value={filters.date}
+            onChange={handleChange}
+            min={new Date().toISOString().split('T')[0]}
+            className="input-field py-2 text-sm"
+          />
         </div>
 
         <div>

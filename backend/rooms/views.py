@@ -20,7 +20,46 @@ class RoomListView(generics.ListAPIView):
     filterset_class = RoomFilter
 
     def get_queryset(self):
-        return Room.objects.filter(is_active=True).prefetch_related('images')
+        qs = Room.objects.filter(is_active=True).prefetch_related('images')
+
+        # Filter by date availability
+        avail_date = self.request.query_params.get('date')
+        if avail_date:
+            from collections import Counter
+            bookings = Booking.objects.filter(
+                status__in=['confirmed', 'pending'],
+                check_in__lte=avail_date,
+                check_out__gte=avail_date,
+            ).values('room_id', 'slots')
+
+            # Count booked slots per room for the given date
+            room_slot_counts = {}
+            for b in bookings:
+                rid = b['room_id']
+                if rid not in room_slot_counts:
+                    room_slot_counts[rid] = Counter()
+                for s in (b['slots'] or []):
+                    if s.get('date') == avail_date:
+                        room_slot_counts[rid][s['slot']] += 1
+
+            # Exclude rooms where ALL possible slots are fully booked
+            exclude_ids = []
+            for room in qs:
+                counts = room_slot_counts.get(room.id, Counter())
+                max_rooms = room.max_rooms or 1
+                if room.is_day_only:
+                    if counts.get('day', 0) >= max_rooms:
+                        exclude_ids.append(room.id)
+                else:
+                    day_full = counts.get('day', 0) >= max_rooms
+                    night_full = counts.get('night', 0) >= max_rooms
+                    if day_full and night_full:
+                        exclude_ids.append(room.id)
+
+            if exclude_ids:
+                qs = qs.exclude(id__in=exclude_ids)
+
+        return qs
 
 
 class RoomDetailView(generics.RetrieveAPIView):
