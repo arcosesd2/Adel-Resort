@@ -74,9 +74,10 @@ class Command(BaseCommand):
         # Clean up outstanding tokens that have been blacklisted and are old
         try:
             outstanding_cutoff = now - timedelta(days=30)
+            blacklisted_token_ids = BlacklistedToken.objects.values_list('token_id', flat=True)
             old_outstanding = OutstandingToken.objects.filter(
                 created_at__lt=outstanding_cutoff,
-                blacklisted__isnull=False,
+                id__in=blacklisted_token_ids,
             )
             deleted_outstanding, _ = old_outstanding.delete()
             self.stdout.write(self.style.SUCCESS(f'Deleted {deleted_outstanding} old outstanding token(s) (>30d, blacklisted).'))
