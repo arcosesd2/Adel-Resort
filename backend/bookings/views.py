@@ -23,6 +23,19 @@ class BookingListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return Booking.objects.filter(user=self.request.user).select_related('room')
 
+    def perform_create(self, serializer):
+        booking = serializer.save()
+        try:
+            from accounts.models import notify_staff
+            notify_staff(
+                'new_booking',
+                'New Booking',
+                f'New booking #{booking.id} for {booking.room.name} by {booking.user.get_full_name() or booking.user.username}.',
+                '/admin-dashboard/bookings',
+            )
+        except Exception:
+            pass
+
 
 class BookingDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = BookingSerializer
@@ -40,6 +53,17 @@ class BookingDetailView(generics.RetrieveDestroyAPIView):
             )
         booking.status = BookingStatus.CANCELLED
         booking.save()
+        try:
+            from accounts.models import notify_staff
+            notify_staff(
+                'booking_cancelled',
+                'Booking Cancelled',
+                f'Guest {booking.user.get_full_name() or booking.user.username} cancelled booking #{booking.id} for {booking.room.name}.',
+                '/admin-dashboard/bookings',
+                exclude_user=request.user,
+            )
+        except Exception:
+            pass
         return Response({'detail': 'Booking cancelled.'}, status=status.HTTP_200_OK)
 
 

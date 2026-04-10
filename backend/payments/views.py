@@ -101,10 +101,8 @@ def submit_proof_of_payment(request):
 
     # Send notification + email to the guest
     try:
-        from accounts.models import create_notification
+        from accounts.models import create_notification, notify_staff
         from accounts.emails import send_payment_received_email
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
         create_notification(
             request.user, 'payment_received',
             'Payment Submitted',
@@ -112,15 +110,13 @@ def submit_proof_of_payment(request):
             f'/booking/{booking.id}',
         )
         send_payment_received_email(request.user, booking)
-        # Notify all staff and superadmin users
-        staff_users = User.objects.filter(is_staff=True).exclude(pk=request.user.pk)
-        for staff in staff_users:
-            create_notification(
-                staff, 'payment_received',
-                'New Payment Awaiting Approval',
-                f'Guest {request.user.get_full_name() or request.user.username} submitted payment for {booking.room.name} ({booking.reference_code}). Please verify.',
-                '/admin-dashboard/payments',
-            )
+        notify_staff(
+            'pending_payment_review',
+            'New Payment Awaiting Approval',
+            f'Guest {request.user.get_full_name() or request.user.username} submitted payment for {booking.room.name} ({booking.reference_code}). Please verify.',
+            '/admin-dashboard/payments',
+            exclude_user=request.user,
+        )
     except Exception:
         pass
 

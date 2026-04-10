@@ -44,6 +44,16 @@ def create_review(request):
         rating=ser.validated_data['rating'],
         comment=ser.validated_data['comment'],
     )
+    try:
+        from accounts.models import notify_staff
+        notify_staff(
+            'new_review_pending',
+            'New Review Pending Approval',
+            f'{request.user.get_full_name() or request.user.username} submitted a {ser.validated_data["rating"]}-star review for {booking.room.name}.',
+            '/admin-dashboard/reviews',
+        )
+    except Exception:
+        pass
     return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
 
 

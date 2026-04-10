@@ -20,9 +20,10 @@ export default function Navbar() {
 
   // Poll notification unread count
   useEffect(() => {
-    if (!isAuthenticated || user?.is_staff) return
+    if (!isAuthenticated) return
+    const endpoint = user?.is_staff ? '/auth/staff/notifications/unread-count/' : '/auth/notifications/unread-count/'
     const fetchCount = () => {
-      api.get('/auth/notifications/unread-count/')
+      api.get(endpoint)
         .then(res => setUnreadCount(res.data.count))
         .catch(() => {})
     }
@@ -97,17 +98,40 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {!isReady ? null : isAuthenticated ? (
               <>
-                {user?.is_staff && (
-                  <Link
-                    href="/admin-dashboard"
-                    className={`font-medium transition-colors ${
-                      transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
-                    }`}
-                  >
-                    Admin
-                  </Link>
-                )}
-                {!user?.is_staff && (
+                {user?.is_staff ? (
+                  <>
+                    <Link
+                      href="/admin-dashboard"
+                      className={`font-medium transition-colors ${
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                      }`}
+                    >
+                      Admin
+                    </Link>
+                    <Link
+                      href="/admin-account/notifications"
+                      className={`relative font-medium transition-colors ${
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                      }`}
+                    >
+                      <Bell size={20} />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link
+                      href="/admin-account"
+                      className={`font-medium transition-colors flex items-center gap-1.5 ${
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                      }`}
+                    >
+                      <UserCircle size={20} />
+                      Account
+                    </Link>
+                  </>
+                ) : (
                   <>
                     <Link
                       href="/dashboard"
@@ -199,16 +223,38 @@ export default function Navbar() {
               <div className="border-t pt-3 space-y-2">
                 {!isReady ? null : isAuthenticated ? (
                   <>
-                    {user?.is_staff && (
-                      <Link
-                        href="/admin-dashboard"
-                        onClick={() => setMobileOpen(false)}
-                        className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
-                      >
-                        Admin
-                      </Link>
-                    )}
-                    {!user?.is_staff && (
+                    {user?.is_staff ? (
+                      <>
+                        <Link
+                          href="/admin-dashboard"
+                          onClick={() => setMobileOpen(false)}
+                          className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
+                        >
+                          Admin Dashboard
+                        </Link>
+                        <Link
+                          href="/admin-account"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
+                        >
+                          <UserCircle size={18} />
+                          Staff Account
+                        </Link>
+                        <Link
+                          href="/admin-account/notifications"
+                          onClick={() => setMobileOpen(false)}
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
+                        >
+                          <Bell size={18} />
+                          Notifications
+                          {unreadCount > 0 && (
+                            <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 ml-1">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </>
+                    ) : (
                       <>
                         <Link
                           href="/account"

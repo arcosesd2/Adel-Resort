@@ -32,6 +32,12 @@ urlpatterns = [
     path('notifications/read-all/', views.notification_read_all, name='notification-read-all'),
     path('notification-preferences/', views.notification_preferences, name='notification-preferences'),
 
+    # Staff Notifications
+    path('staff/notifications/', views.staff_notification_list, name='staff-notification-list'),
+    path('staff/notifications/unread-count/', views.staff_notification_unread_count, name='staff-notification-unread-count'),
+    path('staff/notifications/<int:pk>/read/', views.staff_notification_read, name='staff-notification-read'),
+    path('staff/notifications/read-all/', views.staff_notification_read_all, name='staff-notification-read-all'),
+
     # Superadmin: User management
     path('users/', views.user_list, name='user-list'),
     path('users/<int:pk>/', views.user_detail, name='user-detail'),

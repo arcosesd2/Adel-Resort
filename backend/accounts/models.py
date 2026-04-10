@@ -110,6 +110,9 @@ class Notification(models.Model):
         BOOKING_COMPLETED = 'booking_completed', 'Booking Completed'
         REVIEW_APPROVED = 'review_approved', 'Review Approved'
         SYSTEM = 'system', 'System Message'
+        PENDING_PAYMENT_REVIEW = 'pending_payment_review', 'Pending Payment Review'
+        NEW_BOOKING = 'new_booking', 'New Booking'
+        NEW_REVIEW_PENDING = 'new_review_pending', 'New Review Pending'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     notification_type = models.CharField(max_length=30, choices=NotificationType.choices)
@@ -134,6 +137,23 @@ def create_notification(user, notification_type, title, message, link=''):
         message=message,
         link=link,
     )
+
+
+def notify_staff(notification_type, title, message, link='', exclude_user=None):
+    staff_users = User.objects.filter(is_staff=True)
+    if exclude_user:
+        staff_users = staff_users.exclude(pk=exclude_user.pk)
+    notifications = []
+    for staff in staff_users:
+        notifications.append(Notification(
+            user=staff,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            link=link,
+        ))
+    Notification.objects.bulk_create(notifications)
+    return len(notifications)
 
 
 class ActivityLog(models.Model):

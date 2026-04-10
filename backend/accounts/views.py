@@ -16,7 +16,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 from .models import (
     User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog,
-    NotificationPreference, create_notification, log_activity, get_or_create_preferences,
+    NotificationPreference, create_notification, notify_staff, log_activity, get_or_create_preferences,
 )
 from .permissions import IsSuperAdmin
 from .serializers import (
@@ -605,6 +605,53 @@ def activity_log(request):
 
     page_size = min(int(request.query_params.get('limit', 100)), 500)
     return Response(ActivityLogSerializer(qs[:page_size], many=True).data)
+
+
+# ─── Staff Notifications ──────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def staff_notification_list(request):
+    if not request.user.is_staff:
+        return Response({'detail': 'Staff only.'}, status=status.HTTP_403_FORBIDDEN)
+    qs = Notification.objects.filter(user=request.user)
+    unread_only = request.query_params.get('unread_only')
+    if unread_only == 'true':
+        qs = qs.filter(is_read=False)
+    page_size = min(int(request.query_params.get('limit', 50)), 100)
+    return Response(NotificationSerializer(qs[:page_size], many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def staff_notification_unread_count(request):
+    if not request.user.is_staff:
+        return Response({'detail': 'Staff only.'}, status=status.HTTP_403_FORBIDDEN)
+    count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return Response({'count': count})
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def staff_notification_read(request, pk):
+    if not request.user.is_staff:
+        return Response({'detail': 'Staff only.'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        notification = Notification.objects.get(pk=pk, user=request.user)
+    except Notification.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    notification.is_read = True
+    notification.save(update_fields=['is_read'])
+    return Response(NotificationSerializer(notification).data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def staff_notification_read_all(request):
+    if not request.user.is_staff:
+        return Response({'detail': 'Staff only.'}, status=status.HTTP_403_FORBIDDEN)
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return Response({'detail': 'All notifications marked as read.'})
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────
