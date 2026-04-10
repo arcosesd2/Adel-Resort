@@ -146,7 +146,9 @@ export default function UsersPage() {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
                   {tab === 'customers' && <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>}
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
-                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
+                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Logins</th>
+                  <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Last Login</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
                   {tab === 'staff' && <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Device</th>}
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
@@ -161,6 +163,10 @@ export default function UsersPage() {
                     {tab === 'customers' && <td className="px-6 py-3 text-sm text-gray-500">{u.email || '—'}</td>}
                     <td className="px-6 py-3 text-sm text-gray-500">{u.phone || '—'}</td>
                     <td className="px-6 py-3 text-center">{roleBadge(u)}</td>
+                    <td className="px-6 py-3 text-center text-sm text-gray-600">{u.login_count ?? 0}</td>
+                    <td className="px-6 py-3 text-center text-sm text-gray-500">
+                      {u.last_login ? new Date(u.last_login).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : <span className="text-gray-300">Never</span>}
+                    </td>
                     <td className="px-6 py-3 text-center">
                       {u.is_superadmin ? (
                         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Always Active</span>
