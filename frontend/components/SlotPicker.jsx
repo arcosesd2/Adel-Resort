@@ -42,19 +42,19 @@ function buildRange(from, to, isDayOnly) {
 }
 
 /** Build overnight slots: one per date from checkIn to the day before checkOut. */
-function buildOvernightRange(checkInDate, checkOutDate) {
+function buildOvernightRange(checkInDate, checkOutDate, slotType = 'overnight') {
   if (!checkInDate) return []
   const end = checkOutDate || checkInDate
   const slots = []
   let d = checkInDate
   for (let i = 0; i < 500; i++) {
     if (d >= end) break
-    slots.push({ date: d, slot: 'overnight' })
+    slots.push({ date: d, slot: slotType })
     d = nextDate(d)
   }
   // If only check-in selected (no check-out yet), show 1 night
   if (slots.length === 0 && checkInDate && !checkOutDate) {
-    slots.push({ date: checkInDate, slot: 'overnight' })
+    slots.push({ date: checkInDate, slot: slotType })
   }
   return slots
 }
@@ -64,6 +64,9 @@ function labelSlot(s) {
   const d = new Date(s.date + 'T00:00:00')
   if (s.slot === 'overnight') {
     return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`
+  }
+  if (s.slot === '24hr') {
+    return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()} (24hr)`
   }
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()} (${s.slot === 'day' ? 'Day' : 'Night'})`
 }
@@ -75,7 +78,7 @@ function formatCheckOutDate(dateStr) {
 }
 
 export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut }) {
-  const isOvernight = bookingMode === 'overnight'
+  const isOvernight = bookingMode === 'overnight' || bookingMode === '24hr'
   const [bookedSlots, setBookedSlots] = useState([])
   const [maxRooms, setMaxRooms] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -145,11 +148,12 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
     return false
   }, [todayStr, yesterdayStr, curHour])
 
-  // ═══════ OVERNIGHT MODE ═══════
+  // ═══════ OVERNIGHT / 24HR MODE ═══════
+  const overnightSlotType = bookingMode === '24hr' ? '24hr' : 'overnight'
   const overnightSlots = useMemo(() => {
     if (!isOvernight) return []
-    return buildOvernightRange(overnightCheckIn, overnightCheckOut)
-  }, [isOvernight, overnightCheckIn, overnightCheckOut])
+    return buildOvernightRange(overnightCheckIn, overnightCheckOut, overnightSlotType)
+  }, [isOvernight, overnightCheckIn, overnightCheckOut, overnightSlotType])
 
   const overnightSelectedDates = useMemo(() => {
     return new Set(overnightSlots.map(s => s.date))
@@ -315,16 +319,20 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
     )
   }
 
-  // ═══════ OVERNIGHT RENDER ═══════
+  // ═══════ OVERNIGHT / 24HR RENDER ═══════
   if (isOvernight) {
+    const is24hr = bookingMode === '24hr'
+    const slotLabel = is24hr ? '24-Hour' : 'Per Night'
+    const checkInTime = is24hr ? '' : ' at 2:00 PM'
+    const checkOutTime = is24hr ? '' : ' at 12:00 NN'
     return (
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">Select Dates</label>
         <p className="text-xs text-gray-500">
           {!overnightCheckIn
-            ? 'Click a date to set check-in (2:00 PM)'
+            ? 'Click a date to set check-in'
             : !overnightCheckOut
-              ? 'Click a later date to set check-out (12:00 NN)'
+              ? 'Click a later date to set check-out'
               : 'Click any date to start a new selection'}
         </p>
 
@@ -337,7 +345,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
             <span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Check-out
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-ocean-100 border border-ocean-300 inline-block" /> Nights
+            <span className="w-3 h-3 rounded bg-ocean-100 border border-ocean-300 inline-block" /> {is24hr ? 'Days (24hr)' : 'Nights'}
           </span>
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded bg-red-400 inline-block" /> Booked
@@ -434,14 +442,14 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
           <div className="text-xs text-gray-500 space-y-1">
             <div>
               <span className="font-medium text-gray-700">Check-in:</span>{' '}
-              {labelSlot({ date: overnightCheckIn, slot: 'overnight' })} at 2:00 PM
+              {labelSlot({ date: overnightCheckIn, slot: overnightSlotType })}{checkInTime}
               {overnightCheckOut && (
                 <>
                   {' '}<span className="font-medium text-gray-700">Check-out:</span>{' '}
-                  {formatCheckOutDate(overnightCheckOut ? overnightSlots[overnightSlots.length - 1]?.date : overnightCheckIn)} at 12:00 NN
+                  {formatCheckOutDate(overnightCheckOut ? overnightSlots[overnightSlots.length - 1]?.date : overnightCheckIn)}{checkOutTime}
                 </>
               )}
-              {' '}— {overnightNights || 1} night{(overnightNights || 1) !== 1 ? 's' : ''}
+              {' '}— {overnightNights || 1} {is24hr ? (overnightNights || 1) !== 1 ? 'days' : 'day' : (overnightNights || 1) !== 1 ? 'nights' : 'night'}
             </div>
             <button
               type="button"

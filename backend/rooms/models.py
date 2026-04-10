@@ -14,6 +14,7 @@ class RoomType(models.TextChoices):
 class BookingMode(models.TextChoices):
     SLOT = 'slot', 'Day/Night Slot'
     OVERNIGHT = 'overnight', 'Overnight (Check-in 2PM / Check-out 12NN)'
+    TWENTY_FOUR_HOUR = '24hr', '24-Hour (Check-in & Check-out same time next day)'
 
 
 class Room(models.Model):

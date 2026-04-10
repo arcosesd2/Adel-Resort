@@ -27,55 +27,13 @@ export default function BookingForm({ room }) {
   const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
 
-  const isOvernight = room.booking_mode === 'overnight'
-
-  // Staff: show onsite booking redirect instead of regular booking form
-  if (isAuthenticated && user?.is_staff) {
-    return (
-      <div className="card p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-serif font-semibold">Onsite Booking</h3>
-          <div className="text-right">
-            <span className="text-2xl font-bold text-ocean-700">₱{room.day_price}</span>
-            {!isOvernight && !room.is_day_only && room.night_price && (
-              <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
-            )}
-            <div className="text-gray-400 text-xs">
-              {isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'}
-            </div>
-          </div>
-        </div>
-        <p className="text-sm text-gray-500">Create a walk-in booking for this room via the admin dashboard.</p>
-        <button
-          onClick={() => router.push(`/admin-dashboard?room=${room.id}`)}
-          className="btn-primary w-full"
-        >
-          Onsite Book
-        </button>
-      </div>
-    )
-  }
-
-  const draft = getDraft(room.id)
-  const [slots, setSlots] = useState([])
-  const [guests, setGuests] = useState(draft?.guests || 1)
-  const [specialRequests, setSpecialRequests] = useState(draft?.specialRequests || '')
-  const [savedCheckIn, setSavedCheckIn] = useState(draft?.checkIn || null)
-  const [savedCheckOut, setSavedCheckOut] = useState(draft?.checkOut || null)
-  const [rangeRef, setRangeRef] = useState({ checkIn: draft?.checkIn || null, checkOut: draft?.checkOut || null })
-  const [loading, setLoading] = useState(false)
-
-  // Clear draft once restored
-  useEffect(() => { if (draft) clearDraft(room.id) }, [])
-
-  const handleRangeChange = useCallback((checkIn, checkOut) => {
-    setRangeRef({ checkIn, checkOut })
-  }, [])
+const isOvernight = room.booking_mode === 'overnight' || room.booking_mode === '24hr'
+  const is24hr = room.booking_mode === '24hr'
 
   const dayPrice = parseFloat(room.day_price)
   const nightPrice = parseFloat(room.night_price || room.day_price)
 
-  const overnightCount = slots.filter(s => s.slot === 'overnight').length
+  const overnightCount = slots.filter(s => s.slot === 'overnight' || s.slot === '24hr').length
   const dayCount = slots.filter(s => s.slot === 'day').length
   const nightCount = slots.filter(s => s.slot === 'night').length
   const totalPrice = isOvernight
@@ -191,7 +149,9 @@ export default function BookingForm({ room }) {
           {isOvernight && overnightCount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">
-                {overnightCount} night{overnightCount !== 1 ? 's' : ''} x ₱{dayPrice.toFixed(2)}
+                {is24hr
+                  ? `${overnightCount} day${overnightCount !== 1 ? 's' : ''} (24hr) x ₱${dayPrice.toFixed(2)}`
+                  : `${overnightCount} night${overnightCount !== 1 ? 's' : ''} x ₱${dayPrice.toFixed(2)}`}
               </span>
               <span className="font-medium">₱{(overnightCount * dayPrice).toFixed(2)}</span>
             </div>

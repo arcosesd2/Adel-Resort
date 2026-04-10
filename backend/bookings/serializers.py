@@ -101,9 +101,13 @@ class BookingSerializer(serializers.ModelSerializer):
                     non_overnight = [s for s in slots if s['slot'] != 'overnight']
                     if non_overnight:
                         raise serializers.ValidationError('This room uses overnight booking (check-in 2PM / check-out 12NN).')
+                elif room.booking_mode == '24hr':
+                    non_24hr = [s for s in slots if s['slot'] != '24hr']
+                    if non_24hr:
+                        raise serializers.ValidationError('This room uses 24-hour booking (check-in and check-out at the same time next day).')
                 else:
-                    # Slot-based rooms cannot use 'overnight'
-                    overnight_slots = [s for s in slots if s['slot'] == 'overnight']
+                    # Slot-based rooms cannot use 'overnight' or '24hr'
+                    overnight_slots = [s for s in slots if s['slot'] in ('overnight', '24hr')]
                     if overnight_slots:
                         raise serializers.ValidationError('This room uses day/night slot booking.')
 
@@ -160,8 +164,8 @@ class BookingSerializer(serializers.ModelSerializer):
         # Auto-derive check_in / check_out from slots
         slot_dates = sorted(s['date'] for s in slots)
         validated_data['check_in'] = slot_dates[0]
-        if room.booking_mode == 'overnight':
-            # For overnight rooms, check_out is the day after the last slot
+        if room.booking_mode in ('overnight', '24hr'):
+            # For overnight/24hr rooms, check_out is the day after the last slot
             last_date = date.fromisoformat(slot_dates[-1])
             validated_data['check_out'] = (last_date + timedelta(days=1)).isoformat()
         else:
@@ -172,8 +176,8 @@ class BookingSerializer(serializers.ModelSerializer):
         night_price = room.night_price or room.day_price
         total = Decimal('0')
         for s in slots:
-            if s['slot'] == 'overnight':
-                total += day_price  # day_price = nightly rate for overnight rooms
+            if s['slot'] in ('overnight', '24hr'):
+                total += day_price
             elif s['slot'] == 'night':
                 total += night_price
             else:

@@ -19,8 +19,14 @@ const ROOM_TYPES = [
   { value: 'trapal_table', label: 'Trapal Table' },
 ]
 
+const BOOKING_MODES = [
+  { value: 'slot', label: 'Day/Night Slot' },
+  { value: 'overnight', label: 'Overnight (Check-in 2PM / Check-out 12NN)' },
+  { value: '24hr', label: '24-Hour (Check-in & Check-out same time next day)' },
+]
+
 const emptyForm = {
-  name: '', room_type: 'cottage', description: '', day_price: '', night_price: '',
+  name: '', room_type: 'cottage', booking_mode: 'slot', description: '', day_price: '', night_price: '',
   is_day_only: false, capacity: 2, max_rooms: 1, size_sqm: '', amenities: '', is_active: true,
 }
 
@@ -57,7 +63,7 @@ export default function AdminManageRoomsPage() {
   const openEdit = (room) => {
     setEditing(room)
     setForm({
-      name: room.name, room_type: room.room_type, description: room.description,
+      name: room.name, room_type: room.room_type, booking_mode: room.booking_mode, description: room.description,
       day_price: room.day_price, night_price: room.night_price || '',
       is_day_only: room.is_day_only, capacity: room.capacity, max_rooms: room.max_rooms,
       size_sqm: room.size_sqm || '', amenities: (room.amenities || []).join(', '), is_active: room.is_active,
@@ -148,6 +154,15 @@ export default function AdminManageRoomsPage() {
                     {ROOM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="label">Booking Mode</label>
+                  <select className="input" value={form.booking_mode} onChange={e => {
+                    const mode = e.target.value
+                    setForm(f => ({ ...f, booking_mode: mode, is_day_only: mode !== 'slot' ? false : f.is_day_only, night_price: mode !== 'slot' ? '' : f.night_price }))
+                  }}>
+                    {BOOKING_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="label">Description</label>
@@ -155,13 +170,15 @@ export default function AdminManageRoomsPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="label">Day Price</label>
+                  <label className="label">{form.booking_mode === 'overnight' ? 'Nightly Rate' : form.booking_mode === '24hr' ? 'Daily Rate (24hr)' : 'Day Price'}</label>
                   <input type="number" step="0.01" className="input" required value={form.day_price} onChange={e => setForm(f => ({ ...f, day_price: e.target.value }))} />
                 </div>
-                <div>
-                  <label className="label">Night Price</label>
-                  <input type="number" step="0.01" className="input" placeholder="Optional" value={form.night_price} onChange={e => setForm(f => ({ ...f, night_price: e.target.value }))} />
-                </div>
+                {form.booking_mode === 'slot' && (
+                  <div>
+                    <label className="label">Night Price</label>
+                    <input type="number" step="0.01" className="input" placeholder="Optional" value={form.night_price} onChange={e => setForm(f => ({ ...f, night_price: e.target.value }))} />
+                  </div>
+                )}
                 <div>
                   <label className="label">Capacity</label>
                   <input type="number" className="input" required value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))} />
@@ -182,10 +199,12 @@ export default function AdminManageRoomsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={form.is_day_only} onChange={e => setForm(f => ({ ...f, is_day_only: e.target.checked }))} />
-                  Day tour only
-                </label>
+                {form.booking_mode === 'slot' && (
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" checked={form.is_day_only} onChange={e => setForm(f => ({ ...f, is_day_only: e.target.checked }))} />
+                    Day tour only
+                  </label>
+                )}
                 <label className="flex items-center gap-2 text-sm text-gray-700">
                   <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
                   Active (visible to public)
@@ -211,10 +230,9 @@ export default function AdminManageRoomsPage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 truncate">{room.name}</h3>
-                  <p className="text-sm text-gray-500">{room.room_type_display} &middot; {room.capacity} pax &middot; {room.max_rooms} unit(s)</p>
+                  <p className="text-sm text-gray-500">{room.room_type_display} &middot; {room.capacity} pax &middot; {room.max_rooms} unit(s) &middot; {room.booking_mode === 'slot' ? 'Day/Night' : room.booking_mode === 'overnight' ? 'Overnight' : '24-Hour'}</p>
                   <p className="text-sm text-ocean-600 font-medium">
-                    Day: ₱{Number(room.day_price).toLocaleString()}
-                    {room.night_price && <> &middot; Night: ₱{Number(room.night_price).toLocaleString()}</>}
+                    {room.booking_mode === 'overnight' ? '₱' + Number(room.day_price).toLocaleString() + '/night' : room.booking_mode === '24hr' ? '₱' + Number(room.day_price).toLocaleString() + '/day (24hr)' : <>Day: ₱{Number(room.day_price).toLocaleString()}{room.night_price && <> &middot; Night: ₱{Number(room.night_price).toLocaleString()}</>}</>}
                   </p>
                 </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${room.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>

@@ -129,8 +129,11 @@ def onsite_booking(request):
     if room.booking_mode == 'overnight':
         if any(s.get('slot') != 'overnight' for s in slots):
             return Response({'detail': 'This room uses overnight booking.'}, status=status.HTTP_400_BAD_REQUEST)
+    elif room.booking_mode == '24hr':
+        if any(s.get('slot') != '24hr' for s in slots):
+            return Response({'detail': 'This room uses 24-hour booking.'}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        if any(s.get('slot') == 'overnight' for s in slots):
+        if any(s.get('slot') in ('overnight', '24hr') for s in slots):
             return Response({'detail': 'This room uses day/night slot booking.'}, status=status.HTTP_400_BAD_REQUEST)
         if room.is_day_only and any(s.get('slot') == 'night' for s in slots):
             return Response({'detail': 'This accommodation is available for day tours only.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -207,8 +210,8 @@ def onsite_booking(request):
 
             total = total - discount_amount
 
-    # For overnight rooms, check_out is the day after the last slot
-    if room.booking_mode == 'overnight':
+    # For overnight/24hr rooms, check_out is the day after the last slot
+    if room.booking_mode in ('overnight', '24hr'):
         from datetime import date as date_cls, timedelta as td
         last = date_cls.fromisoformat(max_date)
         checkout_date = (last + td(days=1)).isoformat()

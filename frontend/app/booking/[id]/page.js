@@ -142,6 +142,9 @@ export default function BookingDetailPage() {
                     {booking.room_detail?.booking_mode === 'overnight' && (
                       <span className="text-gray-500 text-xs ml-1">at 2:00 PM</span>
                     )}
+                    {booking.room_detail?.booking_mode === '24hr' && (
+                      <span className="text-gray-500 text-xs ml-1">(24-hour)</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -153,6 +156,9 @@ export default function BookingDetailPage() {
                     {format(parseISO(booking.check_out), 'EEEE, MMM d, yyyy')}
                     {booking.room_detail?.booking_mode === 'overnight' && (
                       <span className="text-gray-500 text-xs ml-1">at 12:00 NN</span>
+                    )}
+                    {booking.room_detail?.booking_mode === '24hr' && (
+                      <span className="text-gray-500 text-xs ml-1">(24-hour)</span>
                     )}
                   </div>
                 </div>

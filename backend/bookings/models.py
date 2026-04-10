@@ -43,6 +43,9 @@ class Booking(models.Model):
         overnight_count = sum(1 for s in self.slots if s.get('slot') == 'overnight')
         if overnight_count:
             return f'{overnight_count} night{"s" if overnight_count != 1 else ""}'
+        twenty_four_hr_count = sum(1 for s in self.slots if s.get('slot') == '24hr')
+        if twenty_four_hr_count:
+            return f'{twenty_four_hr_count} day{"s" if twenty_four_hr_count != 1 else ""} (24hr)'
         day_count = sum(1 for s in self.slots if s.get('slot') == 'day')
         night_count = sum(1 for s in self.slots if s.get('slot') == 'night')
         parts = []
