@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Plus, Trash2, ToggleLeft, ToggleRight, X, ArrowLeft, Smartphone } from 'lucide-react'
+import { Shield, Users, Plus, Trash2, ToggleLeft, ToggleRight, X, ArrowLeft, Smartphone } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
@@ -15,7 +15,8 @@ export default function UsersPage() {
   const router = useRouter()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(null) // 'create' | 'edit'
+  const [tab, setTab] = useState('staff')
+  const [modal, setModal] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -33,6 +34,10 @@ export default function UsersPage() {
     } catch { toast.error('Failed to load users.') }
     finally { setLoading(false) }
   }
+
+  const staffUsers = useMemo(() => users.filter(u => u.is_staff || u.is_superadmin), [users])
+  const customerUsers = useMemo(() => users.filter(u => !u.is_staff && !u.is_superadmin), [users])
+  const displayedUsers = tab === 'staff' ? staffUsers : customerUsers
 
   const openCreate = () => {
     setForm(emptyForm)
@@ -99,7 +104,7 @@ export default function UsersPage() {
   const roleBadge = (u) => {
     if (u.is_superadmin) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Superadmin</span>
     if (u.is_staff) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Staff</span>
-    return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">User</span>
+    return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Customer</span>
   }
 
   if (!user?.is_superadmin) return null
@@ -111,12 +116,23 @@ export default function UsersPage() {
         <h1 className="text-3xl font-serif font-bold text-ocean-800">User Management</h1>
       </div>
 
-      <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2"><Shield size={20} /> All Users</h2>
-          <button onClick={openCreate} className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1"><Plus size={14} /> New User</button>
+      {/* Tabs */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <button onClick={() => setTab('staff')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${tab === 'staff' ? 'bg-white shadow text-ocean-700' : 'text-gray-500 hover:text-gray-700'}`}>
+            <Shield size={16} /> Staff & Admin <span className="text-xs bg-ocean-100 text-ocean-700 px-1.5 py-0.5 rounded-full ml-1">{staffUsers.length}</span>
+          </button>
+          <button onClick={() => setTab('customers')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${tab === 'customers' ? 'bg-white shadow text-ocean-700' : 'text-gray-500 hover:text-gray-700'}`}>
+            <Users size={16} /> Customers <span className="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full ml-1">{customerUsers.length}</span>
+          </button>
         </div>
+        <div className="flex-1" />
+        <button onClick={openCreate} className="btn-primary text-sm px-3 py-1.5 flex items-center gap-1"><Plus size={14} /> New User</button>
+      </div>
 
+      <div className="card overflow-hidden">
         {loading ? (
           <div className="p-6 animate-pulse space-y-3">
             {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-4 bg-gray-200 rounded w-full" />)}
@@ -128,19 +144,21 @@ export default function UsersPage() {
                 <tr>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Username</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
+                  {tab === 'customers' && <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>}
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-<th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
-                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Device</th>
-                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  {tab === 'staff' && <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Device</th>}
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
+                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users.map(u => (
+                {displayedUsers.map(u => (
                   <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-sm text-gray-800">{u.username}</td>
+                    <td className="px-6 py-3 text-sm text-gray-800 font-medium">{u.username}</td>
                     <td className="px-6 py-3 text-sm text-gray-600">{u.first_name} {u.last_name}</td>
+                    {tab === 'customers' && <td className="px-6 py-3 text-sm text-gray-500">{u.email || '—'}</td>}
                     <td className="px-6 py-3 text-sm text-gray-500">{u.phone || '—'}</td>
                     <td className="px-6 py-3 text-center">{roleBadge(u)}</td>
                     <td className="px-6 py-3 text-center">
@@ -152,17 +170,19 @@ export default function UsersPage() {
                         </span>
                       )}
                     </td>
+                    {tab === 'staff' && (
+                      <td className="px-6 py-3 text-sm">
+                        {u.is_staff && !u.is_superadmin ? (
+                          <span className="flex items-center gap-1 text-xs">
+                            <Smartphone size={12} className={u.device_count > 0 ? 'text-green-600' : 'text-gray-400'} />
+                            {u.device_count || 0} device{u.device_count !== 1 ? 's' : ''}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-3 text-sm text-gray-500">{new Date(u.date_joined).toLocaleDateString()}</td>
-                    <td className="px-6 py-3 text-sm">
-                      {u.is_staff && !u.is_superadmin ? (
-                        <span className="flex items-center gap-1 text-xs">
-                          <Smartphone size={12} className={u.device_count > 0 ? 'text-green-600' : 'text-gray-400'} />
-                          {u.device_count || 0} device{u.device_count !== 1 ? 's' : ''}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </td>
                     <td className="px-6 py-3 text-right space-x-2">
                       <button onClick={() => openEdit(u)} className="text-gray-500 hover:text-ocean-600 text-xs underline">Edit</button>
                       {!u.is_superadmin && (
@@ -170,7 +190,7 @@ export default function UsersPage() {
                           <button onClick={() => handleToggleActive(u)} className="text-gray-500 hover:text-ocean-600" title="Toggle active">
                             {u.is_active ? <ToggleRight size={18} className="inline" /> : <ToggleLeft size={18} className="inline" />}
                           </button>
-                          {u.is_staff && u.device_count > 0 && (
+                          {tab === 'staff' && u.is_staff && u.device_count > 0 && (
                             <button onClick={() => handleResetDevices(u)} className="text-gray-500 hover:text-amber-600" title="Reset device authorization">
                               <Smartphone size={16} className="inline" />
                             </button>
@@ -183,8 +203,8 @@ export default function UsersPage() {
                     </td>
                   </tr>
                 ))}
-                {users.length === 0 && (
-                  <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">No users found</td></tr>
+                {displayedUsers.length === 0 && (
+                  <tr><td colSpan={tab === 'staff' ? 8 : 8} className="px-6 py-8 text-center text-gray-400">{tab === 'staff' ? 'No staff accounts' : 'No customers'}</td></tr>
                 )}
               </tbody>
             </table>
