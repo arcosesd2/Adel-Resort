@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from bookings.models import Booking
 from .models import Voucher
 from .serializers import VoucherSerializer, VoucherValidateSerializer
-from .utils import get_voucher_validity_status
+from .utils import get_booking_voucher_validity_status
 
 
 @api_view(['POST'])
@@ -31,7 +31,8 @@ def validate_voucher(request):
 
     if not voucher.is_active:
         return Response({'detail': 'This voucher is no longer active.'}, status=status.HTTP_400_BAD_REQUEST)
-    validity_status = get_voucher_validity_status(voucher)
+    booking_dates = [slot['date'] for slot in booking.slots] if booking.slots else [booking.check_in]
+    validity_status = get_booking_voucher_validity_status(voucher, booking_dates)
     if validity_status == 'not_yet_valid':
         return Response({'detail': 'This voucher is not yet valid.'}, status=status.HTTP_400_BAD_REQUEST)
     if validity_status == 'expired':

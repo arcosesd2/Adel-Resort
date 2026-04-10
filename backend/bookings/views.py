@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import F
 from django.utils import timezone
 from rooms.models import Room
-from vouchers.utils import get_voucher_validity_status
+from vouchers.utils import get_booking_voucher_validity_status
 from .models import Booking, BookingStatus
 from .serializers import BookingSerializer, AdminBookingSerializer
 
@@ -167,7 +167,8 @@ def onsite_booking(request):
             except Voucher.DoesNotExist:
                 return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if not voucher.is_active or get_voucher_validity_status(voucher) != 'valid':
+            booking_dates = [s['date'] for s in slots]
+            if not voucher.is_active or get_booking_voucher_validity_status(voucher, booking_dates) != 'valid':
                 return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
             if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
                 return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)

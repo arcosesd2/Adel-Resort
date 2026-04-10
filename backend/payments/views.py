@@ -12,7 +12,7 @@ from bookings.models import Booking, BookingStatus
 from .models import Payment, PaymentStatus, PaymentType, GCashConfig
 from .serializers import SubmitProofSerializer, GCashConfigSerializer, AdminPaymentSerializer
 from accounts.permissions import IsSuperAdmin
-from vouchers.utils import get_voucher_validity_status
+from vouchers.utils import get_booking_voucher_validity_status
 
 PAYMENT_DEADLINE_HOURS = 24
 
@@ -64,7 +64,8 @@ def submit_proof_of_payment(request):
             except Voucher.DoesNotExist:
                 return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if not voucher.is_active or get_voucher_validity_status(voucher) != 'valid':
+            booking_dates = [slot['date'] for slot in booking.slots] if booking.slots else [booking.check_in]
+            if not voucher.is_active or get_booking_voucher_validity_status(voucher, booking_dates) != 'valid':
                 return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
             if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
                 return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
