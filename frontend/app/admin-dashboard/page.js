@@ -288,101 +288,137 @@ function AdminDashboardContent() {
     <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">
       <h1 className="text-3xl font-serif font-bold text-ocean-800 mb-8">Admin Dashboard</h1>
 
-      {/* Dashboard Tabs — staff-accessible */}
-      <div className="flex gap-2 mb-8 flex-wrap">
-        {/* Superadmin-only tabs */}
-        {user?.is_superadmin && (
-          <>
-            <Link href="/admin-dashboard/users" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <Shield size={16} /> Users
-            </Link>
-            <Link href="/admin-dashboard/login-activity" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <ScrollText size={16} /> Login Activity
-            </Link>
-            <Link href="/admin-dashboard/devices" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <Fingerprint size={16} /> Devices
-            </Link>
-            <Link href="/admin-dashboard/gcash" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <Smartphone size={16} /> GCash Settings
-            </Link>
-            <Link href="/admin-dashboard/settings" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <Settings size={16} /> Site Settings
-            </Link>
-            <Link href="/admin-dashboard/reviews" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <Star size={16} /> Reviews
-            </Link>
-            <Link href="/admin-dashboard/manage-rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <BedDouble size={16} /> Manage Rooms
-            </Link>
-            <Link href="/admin-dashboard/pricing" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <DollarSign size={16} /> Pricing
-            </Link>
-            <Link href="/admin-dashboard/activity-log" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <ClipboardList size={16} /> Activity Log
-            </Link>
-            <Link href="/admin-dashboard/debug" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-              <ShieldAlert size={16} /> Debug & Reset
-            </Link>
-          </>
-        )}
-        {/* Staff-accessible management tabs */}
-        <Link href="/admin-dashboard/bookings" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <CalendarCheck size={16} /> Bookings
-        </Link>
-        <Link href="/admin-dashboard/payments" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <CreditCard size={16} /> Payments
-        </Link>
-        <Link href="/admin-dashboard/vouchers" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Tag size={16} /> Vouchers
-        </Link>
-        <Link href="/admin-dashboard/occupancy" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Home size={16} /> Occupancy
-        </Link>
-        {/* Staff-accessible content tabs */}
-        <Link href="/admin-dashboard/hero" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Film size={16} /> Homepage Intro
-        </Link>
-        <Link href="/admin-dashboard/rooms" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <ImageIcon size={16} /> Room Photos
-        </Link>
-        <Link href="/admin-dashboard/news" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Newspaper size={16} /> News
-        </Link>
-        <Link href="/admin-dashboard/events" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Calendar size={16} /> Events
-        </Link>
-        <Link href="/admin-dashboard/promotions" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Percent size={16} /> Promotions
-        </Link>
-        <Link href="/admin-dashboard/subscribers" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
-          <Mail size={16} /> Subscribers
-        </Link>
-        <button
-          onClick={async () => {
-            try {
-              const res = await api.get('/analytics/export/bookings/', { responseType: 'blob' })
-              const url = URL.createObjectURL(res.data)
-              const a = document.createElement('a'); a.href = url; a.download = 'bookings-export.csv'; a.click()
-              URL.revokeObjectURL(url)
-            } catch { toast.error('Export failed') }
-          }}
-          className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
-        >
-          <FileDown size={16} /> Export Bookings
-        </button>
-        <button
-          onClick={async () => {
-            try {
-              const res = await api.get('/analytics/export/revenue/', { responseType: 'blob' })
-              const url = URL.createObjectURL(res.data)
-              const a = document.createElement('a'); a.href = url; a.download = 'revenue-export.csv'; a.click()
-              URL.revokeObjectURL(url)
-            } catch { toast.error('Export failed') }
-          }}
-          className="btn-outline text-sm px-4 py-2 flex items-center gap-2"
-        >
-          <FileDown size={16} /> Export Revenue
-        </button>
+      {/* Management Section */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Management</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+          <Link href="/admin-dashboard/bookings" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <CalendarCheck size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Bookings</span>
+          </Link>
+          <Link href="/admin-dashboard/payments" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <CreditCard size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Payments</span>
+          </Link>
+          <Link href="/admin-dashboard/vouchers" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Tag size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Vouchers</span>
+          </Link>
+          <Link href="/admin-dashboard/occupancy" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Home size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Occupancy</span>
+          </Link>
+          <Link href="/admin-dashboard/reviews" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Star size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Reviews</span>
+          </Link>
+          {user?.is_superadmin && (
+            <>
+              <Link href="/admin-dashboard/users" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Shield size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Users</span>
+              </Link>
+              <Link href="/admin-dashboard/login-activity" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <ScrollText size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Login Activity</span>
+              </Link>
+              <Link href="/admin-dashboard/devices" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Fingerprint size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Devices</span>
+              </Link>
+              <Link href="/admin-dashboard/gcash" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Smartphone size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">GCash Settings</span>
+              </Link>
+              <Link href="/admin-dashboard/settings" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Settings size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Site Settings</span>
+              </Link>
+              <Link href="/admin-dashboard/manage-rooms" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <BedDouble size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Manage Rooms</span>
+              </Link>
+              <Link href="/admin-dashboard/pricing" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <DollarSign size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Pricing</span>
+              </Link>
+              <Link href="/admin-dashboard/activity-log" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <ClipboardList size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Activity Log</span>
+              </Link>
+              <Link href="/admin-dashboard/debug" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-red-200 bg-white hover:bg-red-50 hover:border-red-300 transition-all text-center group">
+                <ShieldAlert size={20} className="text-red-400 group-hover:text-red-600" />
+                <span className="text-sm font-medium text-red-600 group-hover:text-red-700">Debug &amp; Reset</span>
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Content</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+          <Link href="/admin-dashboard/hero" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Film size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Homepage Intro</span>
+          </Link>
+          <Link href="/admin-dashboard/rooms" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <ImageIcon size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Room Photos</span>
+          </Link>
+          <Link href="/admin-dashboard/news" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Newspaper size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">News</span>
+          </Link>
+          <Link href="/admin-dashboard/events" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Calendar size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Events</span>
+          </Link>
+          <Link href="/admin-dashboard/promotions" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Percent size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Promotions</span>
+          </Link>
+          <Link href="/admin-dashboard/subscribers" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+            <Mail size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Subscribers</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Exports Section */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Exports</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/bookings/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'bookings-export.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group"
+          >
+            <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Bookings</span>
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/revenue/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'revenue-export.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group"
+          >
+            <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Revenue</span>
+          </button>
+        </div>
       </div>
 
       {/* Stat Cards — visible to all staff, superadmin-only cards filtered */}
