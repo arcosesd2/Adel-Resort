@@ -35,8 +35,8 @@ export default function BookingForm({ room }) {
   const [savedCheckIn, setSavedCheckIn] = useState(null)
   const [savedCheckOut, setSavedCheckOut] = useState(null)
 
-  const handleRangeChange = useCallback((range) => {
-    rangeRef.current = range
+  const handleRangeChange = useCallback((checkIn, checkOut) => {
+    rangeRef.current = { checkIn, checkOut }
   }, [])
 
   useEffect(() => {
