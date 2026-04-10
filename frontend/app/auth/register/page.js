@@ -119,13 +119,14 @@ function RegisterForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email (required)</label>
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
                 placeholder="your@email.com"
+                required
                 className="input-field"
               />
             </div>
