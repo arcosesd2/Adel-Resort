@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import api from '@/lib/api'
 import useAuthStore from '@/store/authStore'
 import Link from 'next/link'
+import toast from 'react-hot-toast'
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
@@ -36,36 +37,55 @@ function VerifyEmailContent() {
       })
   }, [searchParams, fetchMe])
 
+  const handleResend = async () => {
+    try {
+      const { data } = await api.post('/auth/send-verification-email/')
+      toast.success(data.detail || 'Verification email sent!')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to send verification email.')
+    }
+  }
+
   return (
-    <div className="glass-card p-8 max-w-md mx-auto text-center">
-      {status === 'loading' && (
-        <div className="py-8">
-          <Loader2 className="animate-spin text-ocean-500 mx-auto mb-3" size={40} />
-          <p className="text-gray-600">Verifying your email...</p>
-        </div>
-      )}
+    <div className="min-h-screen bg-gradient-to-b from-ocean-50 to-white flex items-center justify-center px-4 pt-20 pb-12">
+      <div className="glass-card p-8 max-w-md mx-auto text-center">
+        {status === 'loading' && (
+          <div className="py-8">
+            <Loader2 className="animate-spin text-ocean-500 mx-auto mb-3" size={40} />
+            <p className="text-gray-600">Verifying your email...</p>
+          </div>
+        )}
 
-      {status === 'success' && (
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-8">
-          <CheckCircle className="text-emerald-500 mx-auto mb-3" size={48} />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Email Verified!</h2>
-          <p className="text-gray-600 mb-4">{message}</p>
-          <Link href="/account" className="btn-primary py-2.5 px-6 text-sm inline-block">
-            Back to Profile
-          </Link>
-        </motion.div>
-      )}
+        {status === 'success' && (
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-8">
+            <CheckCircle className="text-emerald-500 mx-auto mb-3" size={48} />
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Email Verified!</h2>
+            <p className="text-gray-600 mb-4">{message}</p>
+            <Link href="/account" className="btn-primary py-2.5 px-6 text-sm inline-block">
+              Back to Profile
+            </Link>
+          </motion.div>
+        )}
 
-      {status === 'error' && (
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-8">
-          <XCircle className="text-red-500 mx-auto mb-3" size={48} />
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Verification Failed</h2>
-          <p className="text-gray-600 mb-4">{message}</p>
-          <Link href="/account" className="btn-primary py-2.5 px-6 text-sm inline-block">
-            Back to Profile
-          </Link>
-        </motion.div>
-      )}
+        {status === 'error' && (
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="py-8">
+            <XCircle className="text-red-500 mx-auto mb-3" size={48} />
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">Verification Failed</h2>
+            <p className="text-gray-600 mb-4">{message}</p>
+            <div className="space-y-3">
+              <button onClick={handleResend} className="btn-primary py-2.5 px-6 text-sm w-full">
+                Resend Verification Email
+              </button>
+              <Link href="/auth/forgot-password" className="block text-ocean-600 hover:text-ocean-700 text-sm font-medium">
+                Forgot your password?
+              </Link>
+              <Link href="/account" className="block text-gray-500 hover:text-gray-600 text-sm">
+                Back to Profile
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </div>
     </div>
   )
 }
@@ -73,9 +93,11 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="glass-card p-8 max-w-md mx-auto text-center">
-        <Loader2 className="animate-spin text-ocean-500 mx-auto mb-3" size={40} />
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-gradient-to-b from-ocean-50 to-white flex items-center justify-center px-4 pt-20 pb-12">
+        <div className="glass-card p-8 max-w-md mx-auto text-center">
+          <Loader2 className="animate-spin text-ocean-500 mx-auto mb-3" size={40} />
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     }>
       <VerifyEmailContent />

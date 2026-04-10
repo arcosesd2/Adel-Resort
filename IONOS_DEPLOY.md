@@ -122,7 +122,18 @@ CLOUDINARY_API_KEY=<your-value>
 CLOUDINARY_API_SECRET=<your-value>
 STRIPE_SECRET_KEY=<your-value>
 STRIPE_WEBHOOK_SECRET=<your-value>
+
+# Email (uses Gmail SMTP — set these on the VPS!)
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=adel-backup@adel-resort.ph
+EMAIL_HOST_PASSWORD=<your-gmail-app-password>
+DEFAULT_FROM_EMAIL=Adel Beach Resort <noreply@adel-resort.ph>
 ```
+
+**Important:** You must set the email environment variables on the VPS for email verification and password reset to work. The `EMAIL_HOST_USER` must be a Gmail account with an App Password (see Step 14).
 
 ### Frontend .env.local
 

@@ -60,10 +60,15 @@ def register(request):
         # Send welcome + verification emails (non-blocking)
         try:
             send_welcome_email(user)
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('Failed to send welcome email')
+        try:
             if user.email:
                 send_verification_email(user)
         except Exception:
-            pass
+            import logging
+            logging.getLogger(__name__).exception('Failed to send verification email')
         return Response({
             'user': UserSerializer(user, context={'request': request}).data,
             'access': str(refresh.access_token),
@@ -244,8 +249,13 @@ def send_verification_email_view(request):
         return Response({'detail': 'No email address set.'}, status=status.HTTP_400_BAD_REQUEST)
     if user.email_verified:
         return Response({'detail': 'Email already verified.'})
-    send_verification_email(user)
-    return Response({'detail': 'Verification email sent.'})
+    try:
+        send_verification_email(user)
+        return Response({'detail': 'Verification email sent.'})
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('Failed to send verification email')
+        return Response({'detail': 'Failed to send verification email. Please try again later.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -279,7 +289,7 @@ def forgot_password(request):
     # Always return success to not reveal if email exists
     if email:
         try:
-            user = User.objects.get(email=email, email_verified=True)
+            user = User.objects.get(email__iexact=email)
             send_password_reset_email(user)
         except User.DoesNotExist:
             pass
