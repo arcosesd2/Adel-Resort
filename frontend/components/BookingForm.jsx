@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, MessageSquare, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -27,7 +27,29 @@ export default function BookingForm({ room }) {
   const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
 
-const isOvernight = room.booking_mode === 'overnight' || room.booking_mode === '24hr'
+  const [slots, setSlots] = useState([])
+  const [guests, setGuests] = useState(1)
+  const [specialRequests, setSpecialRequests] = useState('')
+  const [loading, setLoading] = useState(false)
+  const rangeRef = useRef({ checkIn: null, checkOut: null })
+  const [savedCheckIn, setSavedCheckIn] = useState(null)
+  const [savedCheckOut, setSavedCheckOut] = useState(null)
+
+  const handleRangeChange = useCallback((range) => {
+    rangeRef.current = range
+  }, [])
+
+  useEffect(() => {
+    const draft = getDraft(room.id)
+    if (draft) {
+      if (draft.guests) setGuests(draft.guests)
+      if (draft.specialRequests) setSpecialRequests(draft.specialRequests || '')
+      if (draft.checkIn) setSavedCheckIn(draft.checkIn)
+      if (draft.checkOut) setSavedCheckOut(draft.checkOut)
+    }
+  }, [room.id])
+
+  const isOvernight = room.booking_mode === 'overnight' || room.booking_mode === '24hr'
   const is24hr = room.booking_mode === '24hr'
 
   const dayPrice = parseFloat(room.day_price)
@@ -46,8 +68,8 @@ const isOvernight = room.booking_mode === 'overnight' || room.booking_mode === '
       saveDraft(room.id, {
         guests,
         specialRequests,
-        checkIn: rangeRef.checkIn,
-        checkOut: rangeRef.checkOut,
+        checkIn: rangeRef.current.checkIn,
+        checkOut: rangeRef.current.checkOut,
       })
       toast.error('Please login to book')
       router.push(`/auth/login?redirect=/rooms/${room.id}`)

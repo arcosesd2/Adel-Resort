@@ -425,17 +425,24 @@ def backup_list(request):
         return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
     import os
     backups = []
-    if os.path.isdir(BACKUP_DIR):
-        for f in sorted(os.listdir(BACKUP_DIR), reverse=True):
-            if f.endswith('.sql.gz'):
-                filepath = os.path.join(BACKUP_DIR, f)
-                stat = os.stat(filepath)
-                backups.append({
-                    'filename': f,
-                    'size': stat.st_size,
-                    'size_display': f'{stat.st_size / (1024 * 1024):.2f} MB' if stat.st_size > 1024 * 1024 else f'{stat.st_size / 1024:.1f} KB',
-                    'created_at': datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
-                })
+    try:
+        if os.path.isdir(BACKUP_DIR):
+            for f in sorted(os.listdir(BACKUP_DIR), reverse=True):
+                if f.endswith('.sql.gz'):
+                    try:
+                        filepath = os.path.join(BACKUP_DIR, f)
+                        stat = os.stat(filepath)
+                        backups.append({
+                            'filename': f,
+                            'size': stat.st_size,
+                            'size_display': f'{stat.st_size / (1024 * 1024):.2f} MB' if stat.st_size > 1024 * 1024 else f'{stat.st_size / 1024:.1f} KB',
+                            'created_at': datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                        })
+                    except OSError:
+                        continue
+    except OSError as e:
+        import logging
+        logging.getLogger(__name__).error(f'Backup directory error: {e}')
     return Response(backups)
 
 
