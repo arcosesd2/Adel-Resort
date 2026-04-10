@@ -30,7 +30,7 @@ jobs:
 
             # Frontend
             cd ../frontend
-            npm install --legacy-peer-deps
+            npm ci
             npm run build
 
             # Restart services

@@ -39,7 +39,7 @@ deactivate
 
 echo "=== 3. Frontend setup ==="
 cd "$FRONTEND_DIR"
-npm install
+npm ci
 npm run build
 
 echo "=== 4. Restart services ==="
