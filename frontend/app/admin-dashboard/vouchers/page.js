@@ -8,6 +8,15 @@ import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
+function toLocalDateRangeISOString(dateString, boundary) {
+  const [year, month, day] = dateString.split('-').map(Number)
+  const date = boundary === 'start'
+    ? new Date(year, month - 1, day, 0, 0, 0, 0)
+    : new Date(year, month - 1, day, 23, 59, 59, 999)
+
+  return date.toISOString()
+}
+
 export default function VouchersPage() {
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -40,12 +49,17 @@ export default function VouchersPage() {
     e.preventDefault()
     setCreatingVoucher(true)
     try {
+      if (voucherForm.valid_until < voucherForm.valid_from) {
+        toast.error('Valid until date must be on or after valid from date.')
+        return
+      }
+
       const payload = {
         code: voucherForm.code,
         discount_type: voucherForm.discount_type,
         discount_value: voucherForm.discount_value,
-        valid_from: new Date(voucherForm.valid_from).toISOString(),
-        valid_until: new Date(voucherForm.valid_until).toISOString(),
+        valid_from: toLocalDateRangeISOString(voucherForm.valid_from, 'start'),
+        valid_until: toLocalDateRangeISOString(voucherForm.valid_until, 'end'),
       }
       if (voucherForm.max_uses) payload.max_uses = parseInt(voucherForm.max_uses)
       if (voucherForm.min_booking_amount) payload.min_booking_amount = voucherForm.min_booking_amount
@@ -128,13 +142,13 @@ export default function VouchersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Valid From</label>
-                <input type="datetime-local" required value={voucherForm.valid_from}
+                <input type="date" required value={voucherForm.valid_from}
                   onChange={e => setVoucherForm(f => ({ ...f, valid_from: e.target.value }))}
                   className="input-field" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
-                <input type="datetime-local" required value={voucherForm.valid_until}
+                <input type="date" required value={voucherForm.valid_until}
                   onChange={e => setVoucherForm(f => ({ ...f, valid_until: e.target.value }))}
                   className="input-field" />
               </div>

@@ -3,11 +3,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from django.utils import timezone
-
 from bookings.models import Booking
 from .models import Voucher
 from .serializers import VoucherSerializer, VoucherValidateSerializer
+from .utils import get_voucher_validity_status
 
 
 @api_view(['POST'])
@@ -30,12 +29,12 @@ def validate_voucher(request):
     except Voucher.DoesNotExist:
         return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    now = timezone.now()
     if not voucher.is_active:
         return Response({'detail': 'This voucher is no longer active.'}, status=status.HTTP_400_BAD_REQUEST)
-    if now < voucher.valid_from:
+    validity_status = get_voucher_validity_status(voucher)
+    if validity_status == 'not_yet_valid':
         return Response({'detail': 'This voucher is not yet valid.'}, status=status.HTTP_400_BAD_REQUEST)
-    if now > voucher.valid_until:
+    if validity_status == 'expired':
         return Response({'detail': 'This voucher has expired.'}, status=status.HTTP_400_BAD_REQUEST)
     if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
         return Response({'detail': 'This voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
