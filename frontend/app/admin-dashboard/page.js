@@ -550,7 +550,7 @@ function AdminDashboardContent() {
             {selectedRoom && (
               <div className="mt-4">
                 <SlotPicker
-                  key={selectedRoom.id}
+                  key={`${selectedRoom.id}-${defaultCheckIn ? 'init' : 'empty'}`}
                   roomId={selectedRoom.id}
                   isDayOnly={selectedRoom.is_day_only}
                   bookingMode={selectedRoom.booking_mode}
