@@ -51,6 +51,8 @@ function AdminDashboardContent() {
   const [creatingOnsite, setCreatingOnsite] = useState(false)
   const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
   const [bookingRefreshKey, setBookingRefreshKey] = useState(0)
+  const [defaultCheckIn, setDefaultCheckIn] = useState(null)
+  const [defaultCheckOut, setDefaultCheckOut] = useState(null)
   const onsiteSectionRef = useRef(null)
   const guestNameRef = useRef(null)
 
@@ -129,10 +131,31 @@ function AdminDashboardContent() {
   // Pre-fill room from URL query param (staff redirect from Rooms page)
   useEffect(() => {
     const roomParam = searchParams.get('room')
+    const slotsParam = searchParams.get('slots')
+    const guestsParam = searchParams.get('guests')
+    const specialRequestsParam = searchParams.get('special_requests')
+    const checkInParam = searchParams.get('checkIn')
+    const checkOutParam = searchParams.get('checkOut')
     if (roomParam && rooms.length > 0) {
       const roomExists = rooms.find(r => r.id == roomParam)
       if (roomExists) {
-        setOnsiteForm(f => ({ ...f, room: roomParam, slots: [] }))
+        let parsedSlots = []
+        if (slotsParam) {
+          try { parsedSlots = JSON.parse(slotsParam) } catch {}
+        }
+        let parsedCheckIn = null
+        let parsedCheckOut = null
+        if (checkInParam) { try { parsedCheckIn = JSON.parse(checkInParam) } catch {} }
+        if (checkOutParam) { try { parsedCheckOut = JSON.parse(checkOutParam) } catch {} }
+        setOnsiteForm(f => ({
+          ...f,
+          room: roomParam,
+          slots: parsedSlots,
+          guests: guestsParam ? parseInt(guestsParam) : f.guests,
+          special_requests: specialRequestsParam || f.special_requests,
+        }))
+        if (parsedCheckIn) setDefaultCheckIn(parsedCheckIn)
+        if (parsedCheckOut) setDefaultCheckOut(parsedCheckOut)
         setShowOnsiteForm(true)
         setTimeout(() => {
           onsiteSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -532,6 +555,8 @@ function AdminDashboardContent() {
                   isDayOnly={selectedRoom.is_day_only}
                   bookingMode={selectedRoom.booking_mode}
                   onSlotsChange={(slots) => setOnsiteForm(f => ({ ...f, slots }))}
+                  defaultCheckIn={defaultCheckIn}
+                  defaultCheckOut={defaultCheckOut}
                 />
               </div>
             )}

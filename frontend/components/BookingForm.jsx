@@ -64,6 +64,11 @@ export default function BookingForm({ room }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (slots.length === 0) {
+      toast.error('Please select at least one slot')
+      return
+    }
+
     if (!isAuthenticated) {
       saveDraft(room.id, {
         guests,
@@ -75,8 +80,16 @@ export default function BookingForm({ room }) {
       router.push(`/auth/login?redirect=/rooms/${room.id}`)
       return
     }
-    if (slots.length === 0) {
-      toast.error('Please select at least one slot')
+
+    if (user?.is_staff) {
+      const params = new URLSearchParams({ room: room.id })
+      if (slots.length > 0) params.set('slots', JSON.stringify(slots))
+      if (guests > 1) params.set('guests', guests)
+      if (specialRequests) params.set('special_requests', specialRequests)
+      const range = rangeRef.current
+      if (range?.checkIn) params.set('checkIn', JSON.stringify(range.checkIn))
+      if (range?.checkOut) params.set('checkOut', JSON.stringify(range.checkOut))
+      router.push(`/admin-dashboard?${params.toString()}`)
       return
     }
 
@@ -211,7 +224,7 @@ export default function BookingForm({ room }) {
         <a href="/refund-policy" target="_blank" className="text-ocean-600 underline">Refund & Cancellation Policy</a>.
       </p>
 
-      {isAuthenticated && slots.length > 0 && (
+      {isAuthenticated && !user?.is_staff && slots.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 flex items-start gap-2">
           <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
           <span>You&apos;ll have <strong>1 hour</strong> to complete payment after booking. Unpaid reservations are automatically cancelled.</span>
@@ -223,7 +236,7 @@ export default function BookingForm({ room }) {
         disabled={loading || slots.length === 0}
         className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Creating Booking...' : isAuthenticated ? 'Book Now' : 'Login to Book'}
+        {loading ? 'Creating Booking...' : !isAuthenticated ? 'Login to Book' : user?.is_staff ? 'Create Onsite Booking' : 'Book Now'}
       </button>
     </form>
   )
