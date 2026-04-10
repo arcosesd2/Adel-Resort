@@ -2,6 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'adel-frontend',
+      exec_mode: 'fork',
       cwd: '/home/adel/adel-beach-resort/frontend',
       script: 'node_modules/.bin/next',
       args: 'start',
