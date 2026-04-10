@@ -547,13 +547,13 @@ function AdminDashboardContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Discount (optional)</label>
-                <div className="flex gap-2">
+                <div className="flex gap-0">
                   <input type="number" min="0" step={onsiteForm.manual_discount_type === 'percentage' ? '1' : '0.01'}
                     value={onsiteForm.manual_discount}
                     onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
-                    className="input-field w-32" placeholder="0" />
+                    className="input-field flex-1 rounded-r-none border-r-0" placeholder="0" />
                   <select value={onsiteForm.manual_discount_type} onChange={e => setOnsiteForm(f => ({ ...f, manual_discount_type: e.target.value }))}
-                    className="input-field w-auto">
+                    className="input-field w-28 rounded-l-none border-l-0">
                     <option value="fixed">₱ Fixed</option>
                     <option value="percentage">% Percent</option>
                   </select>
