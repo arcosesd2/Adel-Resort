@@ -161,8 +161,8 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
 
   const overnightOverlaps = useMemo(() => {
     if (!isOvernight) return []
-    return overnightSlots.filter(s => isBooked(s.date, 'overnight'))
-  }, [isOvernight, overnightSlots, bookedCounts, maxRooms])
+    return overnightSlots.filter(s => isBooked(s.date, overnightSlotType))
+  }, [isOvernight, overnightSlots, overnightSlotType, bookedCounts, maxRooms])
 
   const overnightHasOverlap = overnightOverlaps.length > 0
 
@@ -174,7 +174,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
   const overnightNights = overnightFinalSlots.length
 
   const handleOvernightDateClick = useCallback((dateStr) => {
-    if (isBooked(dateStr, 'overnight') || isSlotPast(dateStr, 'overnight')) return
+    if (isBooked(dateStr, overnightSlotType) || isSlotPast(dateStr, overnightSlotType)) return
 
     if (!overnightCheckIn || overnightCheckOut) {
       // First click or reset
@@ -193,7 +193,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
         setOvernightCheckOut(null)
       }
     }
-  }, [overnightCheckIn, overnightCheckOut, isBooked, isSlotPast])
+  }, [overnightCheckIn, overnightCheckOut, overnightSlotType, isBooked, isSlotPast])
 
   // Emit overnight slots
   useEffect(() => {
@@ -205,8 +205,8 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
   useEffect(() => {
     if (isOvernight) {
       onRangeChange?.(
-        overnightCheckIn ? { date: overnightCheckIn, slot: 'overnight' } : null,
-        overnightCheckOut ? { date: overnightCheckOut, slot: 'overnight' } : null
+        overnightCheckIn ? { date: overnightCheckIn, slot: overnightSlotType } : null,
+        overnightCheckOut ? { date: overnightCheckOut, slot: overnightSlotType } : null
       )
     }
   }, [isOvernight, overnightCheckIn, overnightCheckOut])
@@ -378,8 +378,8 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
               if (!cell) return <div key={`e-${idx}`} className="border-b border-r border-gray-100 h-12" />
 
               const { day, dateStr, fullyPast } = cell
-              const isPast = fullyPast || isSlotPast(dateStr, 'overnight')
-              const isBk = isBooked(dateStr, 'overnight')
+const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
+               const isBk = isBooked(dateStr, overnightSlotType)
               const disabled = isPast || isBk
 
               const isCI = dateStr === overnightCheckIn
