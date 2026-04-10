@@ -64,8 +64,9 @@ function AdminDashboardContent() {
     const v = vouchers.find(v => v.code.toLowerCase() === onsiteVoucherCode.trim().toLowerCase())
     if (!v) return { error: 'Voucher not found' }
     if (!v.is_active) return { error: 'Voucher is inactive' }
-    const now = new Date()
-    if (now < new Date(v.valid_from) || now > new Date(v.valid_until)) return { error: 'Voucher expired' }
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+    if (now < new Date(v.valid_from)) return { error: 'Voucher not yet valid' }
+    if (now > new Date(v.valid_until)) return { error: 'Voucher expired' }
     if (v.max_uses && v.times_used >= v.max_uses) return { error: 'Voucher fully used' }
     return {
       valid: true,

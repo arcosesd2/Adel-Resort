@@ -1,3 +1,4 @@
+from datetime import date as date_type
 from zoneinfo import ZoneInfo
 
 from django.utils import timezone
@@ -24,13 +25,22 @@ def get_voucher_validity_status(voucher, reference_time=None):
     return 'valid'
 
 
+def _parse_booking_date(d):
+    if isinstance(d, date_type):
+        return d
+    if isinstance(d, str):
+        return date_type.fromisoformat(d)
+    return date_type.today()
+
+
 def get_booking_voucher_validity_status(voucher, booking_dates):
     if not booking_dates:
         return 'valid'
 
     valid_from_date, valid_until_date = _get_voucher_date_range(voucher)
-    earliest_booking_date = min(booking_dates)
-    latest_booking_date = max(booking_dates)
+    parsed_dates = [_parse_booking_date(d) for d in booking_dates]
+    earliest_booking_date = min(parsed_dates)
+    latest_booking_date = max(parsed_dates)
 
     if earliest_booking_date < valid_from_date:
         return 'not_yet_valid'

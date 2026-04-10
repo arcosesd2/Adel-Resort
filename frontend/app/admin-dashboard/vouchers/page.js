@@ -9,12 +9,10 @@ import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
 function toLocalDateRangeISOString(dateString, boundary) {
-  const [year, month, day] = dateString.split('-').map(Number)
-  const date = boundary === 'start'
-    ? new Date(year, month - 1, day, 0, 0, 0, 0)
-    : new Date(year, month - 1, day, 23, 59, 59, 999)
-
-  return date.toISOString()
+  if (boundary === 'start') {
+    return `${dateString}T00:00:00+08:00`
+  }
+  return `${dateString}T23:59:59.999+08:00`
 }
 
 export default function VouchersPage() {
