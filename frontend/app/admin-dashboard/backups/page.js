@@ -35,7 +35,9 @@ export default function BackupsPage() {
       const { data } = await api.get('/analytics/backups/', { params: { pin } })
       setBackups(data)
     } catch (err) {
-      toast.error('Failed to load backups')
+      const msg = err.response?.data?.detail || err.response?.statusText || 'Failed to load backups'
+      toast.error(msg)
+      console.error('Backup list error:', err.response?.data, err.response?.status)
     } finally {
       setLoading(false)
     }
