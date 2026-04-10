@@ -116,9 +116,14 @@ export default function BookingForm({ room }) {
         </div>
       </div>
 
-      {isOvernight && (
+      {isOvernight && !is24hr && (
         <div className="bg-ocean-50 rounded-lg px-3 py-2 text-xs text-ocean-700">
           Check-in: <strong>2:00 PM</strong> &middot; Check-out: <strong>12:00 NN</strong>
+        </div>
+      )}
+      {is24hr && (
+        <div className="bg-ocean-50 rounded-lg px-3 py-2 text-xs text-ocean-700">
+          Check-in &amp; check-out at <strong>same time</strong> the next day (24-hour stay)
         </div>
       )}
 
