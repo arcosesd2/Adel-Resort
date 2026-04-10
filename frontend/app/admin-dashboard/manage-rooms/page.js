@@ -222,33 +222,45 @@ export default function AdminManageRoomsPage() {
         ) : (
           <div className="grid gap-4">
             {rooms.map(room => (
-              <div key={room.id} className={`card p-4 flex items-center gap-4 ${!room.is_active ? 'opacity-60' : ''}`}>
-                {room.primary_image ? (
-                  <img src={cloudinaryUrl(room.primary_image, { width: 100 })} alt={room.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-                ) : (
-                  <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><ImageIcon size={20} className="text-gray-300" /></div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">{room.name}</h3>
-                  <p className="text-sm text-gray-500">{room.room_type_display} &middot; {room.capacity} pax &middot; {room.max_rooms} unit(s) &middot; {room.booking_mode === 'slot' ? 'Day/Night' : room.booking_mode === 'overnight' ? 'Overnight' : '24-Hour'}</p>
-                  <p className="text-sm text-ocean-600 font-medium">
-                    {room.booking_mode === 'overnight' ? '₱' + Number(room.day_price).toLocaleString() + '/night' : room.booking_mode === '24hr' ? '₱' + Number(room.day_price).toLocaleString() + '/day (24hr)' : <>Day: ₱{Number(room.day_price).toLocaleString()}{room.night_price && <> &middot; Night: ₱{Number(room.night_price).toLocaleString()}</>}</>}
-                  </p>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${room.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {room.is_active ? 'Active' : 'Inactive'}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => toggleActive(room)} className="p-2 text-gray-400 hover:text-ocean-600" title={room.is_active ? 'Deactivate' : 'Activate'}>
-                    {room.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-                  </button>
-                  <Link href={`/admin-dashboard/rooms?room=${room.id}`} className="p-2 text-gray-400 hover:text-ocean-600" title="Manage Photos">
-                    <ImageIcon size={16} />
-                  </Link>
-                  <button onClick={() => openEdit(room)} className="p-2 text-gray-400 hover:text-ocean-600"><Pencil size={16} /></button>
-                  {room.is_active && (
-                    <button onClick={() => handleDeactivate(room)} className="p-2 text-gray-400 hover:text-red-600" title="Deactivate"><Trash2 size={16} /></button>
+              <div key={room.id} className={`card overflow-hidden ${!room.is_active ? 'opacity-60' : ''}`}>
+                <div className="flex items-start gap-4 p-5">
+                  {room.primary_image ? (
+                    <img src={cloudinaryUrl(room.primary_image, { width: 200 })} alt={room.name} className="w-24 h-24 rounded-xl object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0"><ImageIcon size={28} className="text-gray-300" /></div>
                   )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-900 text-lg truncate">{room.name}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${room.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {room.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-2">
+                      {room.room_type_display} &middot; {room.capacity} pax &middot; {room.max_rooms} unit(s)
+                    </p>
+                    <p className="text-xs font-medium text-ocean-600 bg-ocean-50 inline-block px-2 py-1 rounded-md mb-3">
+                      {room.booking_mode === 'slot' ? 'Day/Night' : room.booking_mode === 'overnight' ? 'Overnight' : '24-Hour'}
+                      {' — '}
+                      {room.booking_mode === 'overnight' ? '₱' + Number(room.day_price).toLocaleString() + '/night' : room.booking_mode === '24hr' ? '₱' + Number(room.day_price).toLocaleString() + '/day' : <>Day: ₱{Number(room.day_price).toLocaleString()}{room.night_price && <> · Night: ₱{Number(room.night_price).toLocaleString()}</>}</>}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => openEdit(room)} className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-ocean-600 hover:bg-ocean-700 px-3 py-1.5 rounded-lg transition-colors">
+                        <Pencil size={14} /> Edit Room
+                      </button>
+                      <Link href={`/admin-dashboard/rooms?room=${room.id}`} className="inline-flex items-center gap-1.5 text-sm font-medium text-ocean-600 bg-ocean-50 hover:bg-ocean-100 px-3 py-1.5 rounded-lg transition-colors">
+                        <ImageIcon size={14} /> Photos
+                      </Link>
+                      <button onClick={() => toggleActive(room)} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors">
+                        {room.is_active ? <><ToggleRight size={14} /> Active</> : <><ToggleLeft size={14} /> Inactive</>}
+                      </button>
+                      {room.is_active && (
+                        <button onClick={() => handleDeactivate(room)} className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors">
+                          <Trash2 size={14} /> Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
