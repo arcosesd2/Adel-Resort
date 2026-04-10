@@ -45,9 +45,8 @@ function RegisterForm() {
     } catch (err) {
       const data = err.response?.data
       if (data && typeof data === 'object') {
-        Object.entries(data).forEach(([key, msgs]) => {
-          toast.error(`${key}: ${Array.isArray(msgs) ? msgs[0] : msgs}`)
-        })
+        const messages = Object.values(data).flat()
+        messages.forEach(msg => toast.error(Array.isArray(msg) ? msg[0] : msg))
       } else {
         toast.error(err.message || 'Registration failed')
       }

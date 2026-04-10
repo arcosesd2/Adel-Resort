@@ -7,15 +7,16 @@ from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notifica
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True)
+    email = serializers.EmailField(allow_blank=False, required=False)
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'phone', 'email', 'password', 'password2')
 
-    def validate_email(self, value):
-        if not value:
-            raise serializers.ValidationError('Email is required.')
-        return value
+    def validate(self, data):
+        if not data.get('email'):
+            raise serializers.ValidationError({'email': ['Email is required']})
+        return data
 
     def validate(self, data):
         if data['password'] != data['password2']:
