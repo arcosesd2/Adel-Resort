@@ -388,11 +388,8 @@ def debug_reset(request):
         results['registered_devices'] = deleted_devices
 
     if 'analytics' in categories:
-        from analytics.models import UniqueVisitor
         deleted_pageviews, _ = PageView.objects.all().delete()
-        deleted_visitors, _ = UniqueVisitor.objects.all().delete()
         results['page_views'] = deleted_pageviews
-        results['unique_visitors'] = deleted_visitors
 
     if 'favorites' in categories:
         from accounts.models import FavoriteRoom
