@@ -548,23 +548,15 @@ function AdminDashboardContent() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Discount (optional)</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setOnsiteForm(f => ({ ...f, manual_discount_type: 'fixed' }))}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${onsiteForm.manual_discount_type === 'fixed' ? 'bg-ocean-600 text-white border-ocean-600' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}>
-                    ₱ Fixed
-                  </button>
-                  <button type="button" onClick={() => setOnsiteForm(f => ({ ...f, manual_discount_type: 'percentage' }))}
-                    className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${onsiteForm.manual_discount_type === 'percentage' ? 'bg-ocean-600 text-white border-ocean-600' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}>
-                    % Percent
-                  </button>
-                </div>
-                <div className="mt-2 relative">
-                  {onsiteForm.manual_discount_type === 'fixed' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₱</span>}
                   <input type="number" min="0" step={onsiteForm.manual_discount_type === 'percentage' ? '1' : '0.01'}
                     value={onsiteForm.manual_discount}
                     onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
-                    className={`input-field ${onsiteForm.manual_discount_type === 'fixed' ? 'pl-7' : ''}`}
-                    placeholder={onsiteForm.manual_discount_type === 'percentage' ? 'e.g. 10' : 'e.g. 500'} />
-                  {onsiteForm.manual_discount_type === 'percentage' && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>}
+                    className="input-field w-32" placeholder="0" />
+                  <select value={onsiteForm.manual_discount_type} onChange={e => setOnsiteForm(f => ({ ...f, manual_discount_type: e.target.value }))}
+                    className="input-field w-auto">
+                    <option value="fixed">₱ Fixed</option>
+                    <option value="percentage">% Percent</option>
+                  </select>
                 </div>
               </div>
             </div>
