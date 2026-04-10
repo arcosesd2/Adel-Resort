@@ -246,8 +246,41 @@ Add these lines:
 # Database backup daily at 2 AM
 0 2 * * * /home/adel/adel-beach-resort/deploy/backup-db.sh >> /var/log/backup.log 2>&1
 
-# Cancel expired bookings every hour (if you have a management command for this)
-# 0 * * * * cd /home/adel/adel-beach-resort/backend && /home/adel/adel-beach-resort/backend/venv/bin/python manage.py cancel_expired_bookings >> /var/log/cron-bookings.log 2>&1
+# Cancel expired bookings (unpaid > 24h) — every hour
+0 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py cancel_expired_bookings >> /var/log/cron-bookings.log 2>&1
+
+# Expire stale pending payments (> 48h unverified) — every 2 hours
+0 */2 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py expire_stale_payments >> /var/log/cron-payments.log 2>&1
+
+# Auto-complete past bookings (check-out date passed) — daily at 1 AM
+0 1 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py auto_complete_bookings >> /var/log/cron-bookings.log 2>&1
+
+# Deactivate expired vouchers — daily at 3 AM
+0 3 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py deactivate_expired_vouchers >> /var/log/cron-vouchers.log 2>&1
+
+# Warn staff about bookings approaching payment deadline — every hour at :30
+30 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py warn_payment_deadline >> /var/log/cron-bookings.log 2>&1
+
+# Send abandoned booking emails (1h after no payment) — every 30 min
+*/30 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py send_abandoned_booking_emails >> /var/log/cron-emails.log 2>&1
+
+# Send check-in reminders (for bookings checking in tomorrow) — daily at 8 AM
+0 8 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py send_checkin_reminders >> /var/log/cron-emails.log 2>&1
+
+# Send review requests (2 days after checkout) — daily at 9 AM
+0 9 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py send_review_requests >> /var/log/cron-emails.log 2>&1
+
+# Send promo expiry reminders — daily at 10 AM
+0 10 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py send_promo_expiry_reminders >> /var/log/cron-emails.log 2>&1
+
+# Resolve stale chat conversations (> 7 days inactive) — daily at 4 AM
+0 4 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py resolve_stale_conversations >> /var/log/cron-chat.log 2>&1
+
+# Cleanup old data (login attempts, activity logs, notifications, tokens) — weekly on Sunday at 5 AM
+0 5 * * 0 cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py cleanup_old_data >> /var/log/cron-cleanup.log 2>&1
+
+# OR run all cron tasks at once (alternative to individual entries above):
+# 0 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py run_all_crons >> /var/log/cron-all.log 2>&1
 ```
 
 ---
