@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, ImageIcon } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, ImageIcon, Tag, DollarSign, FileText, Users, Settings } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -39,6 +39,7 @@ export default function AdminManageRoomsPage() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [submitting, setSubmitting] = useState(false)
+  const formRef = useRef(null)
 
   useEffect(() => {
     if (!user) return
@@ -58,6 +59,7 @@ export default function AdminManageRoomsPage() {
     setEditing(null)
     setForm(emptyForm)
     setShowForm(true)
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
 
   const openEdit = (room) => {
@@ -69,6 +71,7 @@ export default function AdminManageRoomsPage() {
       size_sqm: room.size_sqm || '', amenities: (room.amenities || []).join(', '), is_active: room.is_active,
     })
     setShowForm(true)
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
   }
 
   const handleSubmit = async (e) => {
@@ -137,82 +140,131 @@ export default function AdminManageRoomsPage() {
         </div>
 
         {showForm && (
-          <div className="card p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-lg">{editing ? 'Edit Room' : 'Create Room'}</h2>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+          <div ref={formRef} className="card mb-8 border-2 border-ocean-200">
+            <div className="flex items-center justify-between px-6 py-4 bg-ocean-50 border-b border-ocean-200 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <Pencil size={18} className="text-ocean-600" />
+                <h2 className="font-semibold text-lg text-ocean-800">{editing ? `Edit Room: ${editing.name}` : 'Create New Room'}</h2>
+              </div>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Name</label>
-                  <input type="text" className="input" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Basic Info */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText size={16} className="text-ocean-500" />
+                  <h3 className="font-medium text-gray-700">Basic Info</h3>
                 </div>
-                <div>
-                  <label className="label">Room Type</label>
-                  <select className="input" value={form.room_type} onChange={e => setForm(f => ({ ...f, room_type: e.target.value }))}>
-                    {ROOM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Booking Mode</label>
-                  <select className="input" value={form.booking_mode} onChange={e => {
-                    const mode = e.target.value
-                    setForm(f => ({ ...f, booking_mode: mode, is_day_only: mode !== 'slot' ? false : f.is_day_only, night_price: mode !== 'slot' ? '' : f.night_price }))
-                  }}>
-                    {BOOKING_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-1">
+                    <label className="label">Name</label>
+                    <input type="text" className="input" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Room name" />
+                  </div>
+                  <div>
+                    <label className="label">Room Type</label>
+                    <select className="input" value={form.room_type} onChange={e => setForm(f => ({ ...f, room_type: e.target.value }))}>
+                      {ROOM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Booking Mode</label>
+                    <select className="input" value={form.booking_mode} onChange={e => {
+                      const mode = e.target.value
+                      setForm(f => ({ ...f, booking_mode: mode, is_day_only: mode !== 'slot' ? false : f.is_day_only, night_price: mode !== 'slot' ? '' : f.night_price }))
+                    }}>
+                      {BOOKING_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
+
+              {/* Description */}
               <div>
                 <label className="label">Description</label>
-                <textarea className="input min-h-[100px]" required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+                <textarea className="input min-h-[80px]" required value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe the room..." />
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div>
-                  <label className="label">{form.booking_mode === 'overnight' ? 'Nightly Rate' : form.booking_mode === '24hr' ? 'Daily Rate (24hr)' : 'Day Price'}</label>
-                  <input type="number" step="0.01" className="input" required value={form.day_price} onChange={e => setForm(f => ({ ...f, day_price: e.target.value }))} />
+
+              {/* Pricing */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <DollarSign size={16} className="text-ocean-500" />
+                  <h3 className="font-medium text-gray-700">Pricing</h3>
                 </div>
-                {form.booking_mode === 'slot' && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <div>
-                    <label className="label">Night Price</label>
-                    <input type="number" step="0.01" className="input" placeholder="Optional" value={form.night_price} onChange={e => setForm(f => ({ ...f, night_price: e.target.value }))} />
+                    <label className="label">{form.booking_mode === 'overnight' ? 'Nightly Rate' : form.booking_mode === '24hr' ? 'Daily Rate (24hr)' : 'Day Price'}</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₱</span>
+                      <input type="number" step="0.01" className="input pl-7" required value={form.day_price} onChange={e => setForm(f => ({ ...f, day_price: e.target.value }))} />
+                    </div>
                   </div>
-                )}
-                <div>
-                  <label className="label">Capacity</label>
-                  <input type="number" className="input" required value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="label">Max Units</label>
-                  <input type="number" className="input" required value={form.max_rooms} onChange={e => setForm(f => ({ ...f, max_rooms: e.target.value }))} />
+                  {form.booking_mode === 'slot' && (
+                    <div>
+                      <label className="label">Night Price</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₱</span>
+                        <input type="number" step="0.01" className="input pl-7" placeholder="Optional" value={form.night_price} onChange={e => setForm(f => ({ ...f, night_price: e.target.value }))} />
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <label className="label">Capacity (pax)</label>
+                    <input type="number" className="input" required value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label">Max Units</label>
+                    <input type="number" className="input" required value={form.max_rooms} onChange={e => setForm(f => ({ ...f, max_rooms: e.target.value }))} />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Size (sqm)</label>
-                  <input type="number" className="input" placeholder="Optional" value={form.size_sqm} onChange={e => setForm(f => ({ ...f, size_sqm: e.target.value }))} />
+
+              {/* Details */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag size={16} className="text-ocean-500" />
+                  <h3 className="font-medium text-gray-700">Details</h3>
                 </div>
-                <div>
-                  <label className="label">Amenities (comma-separated)</label>
-                  <input type="text" className="input" placeholder="e.g. WiFi, AC, TV" value={form.amenities} onChange={e => setForm(f => ({ ...f, amenities: e.target.value }))} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Size (sqm)</label>
+                    <input type="number" className="input" placeholder="Optional" value={form.size_sqm} onChange={e => setForm(f => ({ ...f, size_sqm: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="label">Amenities (comma-separated)</label>
+                    <input type="text" className="input" placeholder="e.g. WiFi, AC, TV" value={form.amenities} onChange={e => setForm(f => ({ ...f, amenities: e.target.value }))} />
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                {form.booking_mode === 'slot' && (
-                  <label className="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" checked={form.is_day_only} onChange={e => setForm(f => ({ ...f, is_day_only: e.target.checked }))} />
-                    Day tour only
+
+              {/* Settings */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Settings size={16} className="text-ocean-500" />
+                  <h3 className="font-medium text-gray-700">Settings</h3>
+                </div>
+                <div className="flex items-center gap-6">
+                  {form.booking_mode === 'slot' && (
+                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500" checked={form.is_day_only} onChange={e => setForm(f => ({ ...f, is_day_only: e.target.checked }))} />
+                      Day tour only
+                    </label>
+                  )}
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
+                    Active (visible to public)
                   </label>
-                )}
-                <label className="flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
-                  Active (visible to public)
-                </label>
+                </div>
               </div>
-              <button type="submit" disabled={submitting} className="btn-primary">
-                {submitting ? 'Saving...' : editing ? 'Update Room' : 'Create Room'}
-              </button>
+
+              {/* Submit */}
+              <div className="flex items-center gap-3 pt-2">
+                <button type="submit" disabled={submitting} className="btn-primary px-8">
+                  {submitting ? 'Saving...' : editing ? 'Update Room' : 'Create Room'}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="btn-outline px-6">
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         )}
