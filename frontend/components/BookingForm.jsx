@@ -111,7 +111,7 @@ export default function BookingForm({ room }) {
             <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
           )}
           <div className="text-gray-400 text-xs">
-            {isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'}
+            {is24hr ? 'per 24 hours' : isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'}
           </div>
         </div>
       </div>

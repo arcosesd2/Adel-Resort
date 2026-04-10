@@ -26,7 +26,8 @@ export default function RoomCard({ room, initialFavorited = false }) {
   const [favorited, setFavorited] = useState(initialFavorited)
   const { isAuthenticated, user } = useAuthStore()
   const { id, name, room_type, room_type_display, day_price, night_price, is_day_only, booking_mode, capacity, size_sqm, primary_image, images, amenities } = room
-  const isOvernight = booking_mode === 'overnight'
+  const isOvernight = booking_mode === 'overnight' || booking_mode === '24hr'
+  const is24hr = booking_mode === '24hr'
 
   const toggleFavorite = async (e) => {
     e.preventDefault()
@@ -115,7 +116,7 @@ export default function RoomCard({ room, initialFavorited = false }) {
                 <span className="text-gray-400 text-sm"> / ₱{night_price}</span>
               )}
               <div className="text-gray-400 text-xs mt-1">
-                {isOvernight ? 'per night' : is_day_only ? 'day tour' : 'day / night'}
+                {is24hr ? 'per 24 hours' : isOvernight ? 'per night' : is_day_only ? 'day tour' : 'day / night'}
               </div>
             </div>
             <Link
