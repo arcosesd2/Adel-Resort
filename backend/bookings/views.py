@@ -165,16 +165,24 @@ def onsite_booking(request):
     night_price = room.night_price or room.day_price
     total = sum(night_price if s['slot'] == 'night' else day_price for s in slots)
 
-    # Manual discount (peso amount)
+    # Manual discount (fixed amount or percentage)
     manual_discount = Decimal('0')
     raw_manual_discount = data.get('manual_discount')
+    manual_discount_type = data.get('manual_discount_type', 'fixed')
     if raw_manual_discount:
         try:
-            manual_discount = Decimal(str(raw_manual_discount))
-            if manual_discount < 0:
+            discount_value = Decimal(str(raw_manual_discount))
+            if discount_value < 0:
                 return Response({'detail': 'Manual discount cannot be negative.'}, status=status.HTTP_400_BAD_REQUEST)
-            if manual_discount > total:
-                return Response({'detail': 'Manual discount cannot exceed the total price.'}, status=status.HTTP_400_BAD_REQUEST)
+            if manual_discount_type == 'percentage':
+                if discount_value > 100:
+                    return Response({'detail': 'Percentage discount cannot exceed 100%.'}, status=status.HTTP_400_BAD_REQUEST)
+                manual_discount = (total * discount_value / Decimal('100')).quantize(Decimal('0.01'))
+                manual_discount = min(manual_discount, total)
+            else:
+                if discount_value > total:
+                    return Response({'detail': 'Manual discount cannot exceed the total price.'}, status=status.HTTP_400_BAD_REQUEST)
+                manual_discount = discount_value
             total = total - manual_discount
         except Exception:
             return Response({'detail': 'Invalid manual discount value.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -250,6 +258,7 @@ def onsite_booking(request):
     }
     if manual_discount > 0:
         response_data['manual_discount'] = str(manual_discount)
+        response_data['manual_discount_type'] = manual_discount_type
     if discount_amount > 0:
         response_data['discount'] = str(discount_amount)
         response_data['voucher_code'] = voucher_code

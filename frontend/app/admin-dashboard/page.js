@@ -46,7 +46,7 @@ function AdminDashboardContent() {
   const [showOnsiteForm, setShowOnsiteForm] = useState(false)
   const [onsiteForm, setOnsiteForm] = useState({
     guest_name: '', guest_username: '', guest_phone: '',
-    room: '', guests: 1, slots: [], special_requests: '', manual_discount: '',
+    room: '', guests: 1, slots: [], special_requests: '', manual_discount: '', manual_discount_type: 'fixed',
   })
   const [creatingOnsite, setCreatingOnsite] = useState(false)
   const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
@@ -227,13 +227,19 @@ function AdminDashboardContent() {
         special_requests: onsiteForm.special_requests,
       }
       if (onsiteVoucherCode.trim()) payload.voucher_code = onsiteVoucherCode.trim()
-      if (onsiteForm.manual_discount) payload.manual_discount = parseFloat(onsiteForm.manual_discount)
+      if (onsiteForm.manual_discount) {
+        payload.manual_discount = parseFloat(onsiteForm.manual_discount)
+        payload.manual_discount_type = onsiteForm.manual_discount_type || 'fixed'
+      }
       const { data } = await api.post('/bookings/onsite/', payload)
       let msg = `Onsite booking created! #${data.id} - ${data.room} - ₱${data.total_price}`
-      if (data.manual_discount) msg += ` (₱${data.manual_discount} manual discount)`
+      if (data.manual_discount) {
+        const discountLabel = data.manual_discount_type === 'percentage' ? `${onsiteForm.manual_discount}% (₱${data.manual_discount})` : `₱${data.manual_discount}`
+        msg += ` (${discountLabel} discount)`
+      }
       if (data.discount) msg += ` (₱${data.discount} voucher discount with ${data.voucher_code})`
       toast.success(msg)
-      setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '', manual_discount: '' })
+      setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '', manual_discount: '', manual_discount_type: 'fixed' })
       setOnsiteVoucherCode('')
       setShowOnsiteForm(false)
       setBookingRefreshKey(k => k + 1)
@@ -540,10 +546,26 @@ function AdminDashboardContent() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Manual Discount ₱ (optional)</label>
-                <input type="number" min="0" step="0.01" value={onsiteForm.manual_discount}
-                  onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
-                  className="input-field" placeholder="e.g. 500" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Discount (optional)</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setOnsiteForm(f => ({ ...f, manual_discount_type: 'fixed' }))}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${onsiteForm.manual_discount_type === 'fixed' ? 'bg-ocean-600 text-white border-ocean-600' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}>
+                    ₱ Fixed
+                  </button>
+                  <button type="button" onClick={() => setOnsiteForm(f => ({ ...f, manual_discount_type: 'percentage' }))}
+                    className={`px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${onsiteForm.manual_discount_type === 'percentage' ? 'bg-ocean-600 text-white border-ocean-600' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'}`}>
+                    % Percent
+                  </button>
+                </div>
+                <div className="mt-2 relative">
+                  {onsiteForm.manual_discount_type === 'fixed' && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₱</span>}
+                  <input type="number" min="0" step={onsiteForm.manual_discount_type === 'percentage' ? '1' : '0.01'}
+                    value={onsiteForm.manual_discount}
+                    onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
+                    className={`input-field ${onsiteForm.manual_discount_type === 'fixed' ? 'pl-7' : ''}`}
+                    placeholder={onsiteForm.manual_discount_type === 'percentage' ? 'e.g. 10' : 'e.g. 500'} />
+                  {onsiteForm.manual_discount_type === 'percentage' && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>}
+                </div>
               </div>
             </div>
 
