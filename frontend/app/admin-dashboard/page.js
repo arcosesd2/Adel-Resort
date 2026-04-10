@@ -551,9 +551,9 @@ function AdminDashboardContent() {
                   <input type="number" min="0" step={onsiteForm.manual_discount_type === 'percentage' ? '1' : '0.01'}
                     value={onsiteForm.manual_discount}
                     onChange={e => setOnsiteForm(f => ({ ...f, manual_discount: e.target.value }))}
-                    className="input-field w-32 rounded-r-none border-r-0" placeholder="0" />
+                    className="input-field w-1/2 rounded-r-none border-r-0" placeholder="0" />
                   <select value={onsiteForm.manual_discount_type} onChange={e => setOnsiteForm(f => ({ ...f, manual_discount_type: e.target.value }))}
-                    className="input-field flex-1 rounded-l-none border-l-0">
+                    className="input-field w-1/2 rounded-l-none border-l-0">
                     <option value="fixed">₱ Fixed</option>
                     <option value="percentage">% Percent</option>
                   </select>
