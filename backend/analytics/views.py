@@ -1,12 +1,13 @@
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.parsers import MultiPartParser, FormParser
 from accounts.permissions import IsSuperAdmin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
 from django.db.models import Count, Sum, Max, Avg, F, Value, Q
 from django.db.models.functions import Concat, TruncDate, TruncMonth
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 from django.utils import timezone
 
 from .models import PageView
@@ -403,3 +404,151 @@ def debug_reset(request):
         pass
 
     return Response({'detail': 'Debug reset completed.', 'results': results})
+
+
+BACKUP_DIR = '/home/adel/backups'
+DEBUG_PIN = '6282208'
+
+
+def _validate_pin(request):
+    pin = request.data.get('pin', '') if hasattr(request, 'data') else request.query_params.get('pin', '')
+    return pin == DEBUG_PIN
+
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def backup_list(request):
+    if not _validate_pin(request):
+        return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
+    import os
+    backups = []
+    if os.path.isdir(BACKUP_DIR):
+        for f in sorted(os.listdir(BACKUP_DIR), reverse=True):
+            if f.endswith('.sql.gz'):
+                filepath = os.path.join(BACKUP_DIR, f)
+                stat = os.stat(filepath)
+                backups.append({
+                    'filename': f,
+                    'size': stat.st_size,
+                    'size_display': f'{stat.st_size / (1024 * 1024):.2f} MB' if stat.st_size > 1024 * 1024 else f'{stat.st_size / 1024:.1f} KB',
+                    'created_at': datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                })
+    return Response(backups)
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def backup_create(request):
+    if not _validate_pin(request):
+        return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
+    import os, subprocess
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'adel_resort_{timestamp}.sql.gz'
+    filepath = os.path.join(BACKUP_DIR, filename)
+    try:
+        result = subprocess.run(
+            ['pg_dump', 'adel_resort'],
+            capture_output=True, text=True, timeout=300,
+        )
+        if result.returncode != 0:
+            return Response({'detail': f'Backup failed: {result.stderr}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        import gzip
+        with gzip.open(filepath, 'wb') as f:
+            f.write(result.stdout.encode('utf-8') if isinstance(result.stdout, str) else result.stdout)
+        stat = os.stat(filepath)
+        try:
+            from accounts.models import log_activity
+            log_activity(request.user, 'backup_create', f'Manual backup created: {filename}')
+        except Exception:
+            pass
+        return Response({
+            'detail': 'Backup created successfully.',
+            'filename': filename,
+            'size': stat.st_size,
+            'size_display': f'{stat.st_size / (1024 * 1024):.2f} MB' if stat.st_size > 1024 * 1024 else f'{stat.st_size / 1024:.1f} KB',
+        })
+    except Exception as e:
+        return Response({'detail': f'Backup failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def backup_download(request):
+    if not _validate_pin(request):
+        return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
+    import os
+    filename = request.data.get('filename', '')
+    if not filename or '..' in filename or '/' in filename:
+        return Response({'detail': 'Invalid filename.'}, status=status.HTTP_400_BAD_REQUEST)
+    filepath = os.path.join(BACKUP_DIR, filename)
+    if not os.path.isfile(filepath):
+        return Response({'detail': 'Backup file not found.'}, status=status.HTTP_404_NOT_FOUND)
+    from django.http import FileResponse
+    return FileResponse(open(filepath, 'rb'), as_attachment=True, filename=filename)
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+@parser_classes([MultiPartParser, FormParser])
+def backup_restore(request):
+    if not _validate_pin(request):
+        return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
+    import os, subprocess, gzip
+    backup_file = request.FILES.get('file')
+    if not backup_file:
+        return Response({'detail': 'No backup file provided.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not backup_file.name.endswith('.sql.gz'):
+        return Response({'detail': 'File must be a .sql.gz backup.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    safety_timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    safety_filename = f'adel_resort_pre_restore_{safety_timestamp}.sql.gz'
+    safety_filepath = os.path.join(BACKUP_DIR, safety_filename)
+
+    try:
+        result = subprocess.run(
+            ['pg_dump', 'adel_resort'],
+            capture_output=True, text=True, timeout=300,
+        )
+        if result.returncode != 0:
+            return Response({'detail': f'Safety backup failed: {result.stderr}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        with gzip.open(safety_filepath, 'wb') as f:
+            f.write(result.stdout.encode('utf-8') if isinstance(result.stdout, str) else result.stdout)
+
+        upload_path = os.path.join(BACKUP_DIR, f'upload_{safety_timestamp}.sql.gz')
+        with open(upload_path, 'wb') as f:
+            for chunk in backup_file.chunks():
+                f.write(chunk)
+
+        with gzip.open(upload_path, 'rb') as f:
+            sql_content = f.read()
+
+        restore_result = subprocess.run(
+            ['psql', 'adel_resort'],
+            input=sql_content,
+            capture_output=True, timeout=600,
+        )
+        os.remove(upload_path)
+
+        if restore_result.returncode != 0:
+            return Response({
+                'detail': 'Restore completed with errors.',
+                'safety_backup': safety_filename,
+                'output': restore_result.stderr.decode('utf-8', errors='replace') if isinstance(restore_result.stderr, bytes) else restore_result.stderr,
+            }, status=status.HTTP_207_MULTI_STATUS)
+
+        try:
+            from accounts.models import log_activity
+            log_activity(request.user, 'backup_restore', f'Database restored from {backup_file.name}. Safety backup: {safety_filename}')
+        except Exception:
+            pass
+
+        return Response({
+            'detail': 'Database restored successfully.',
+            'safety_backup': safety_filename,
+        })
+    except Exception as e:
+        if os.path.isfile(upload_path):
+            os.remove(upload_path)
+        return Response({'detail': f'Restore failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

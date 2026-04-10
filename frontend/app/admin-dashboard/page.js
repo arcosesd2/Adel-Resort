@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, ShieldAlert } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, ShieldAlert, Database } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -345,6 +345,10 @@ function AdminDashboardContent() {
               <Link href="/admin-dashboard/activity-log" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
                 <ClipboardList size={20} className="text-gray-500 group-hover:text-ocean-600" />
                 <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Activity Log</span>
+              </Link>
+              <Link href="/admin-dashboard/backups" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Database size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Backups</span>
               </Link>
               <Link href="/admin-dashboard/debug" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-red-200 bg-white hover:bg-red-50 hover:border-red-300 transition-all text-center group">
                 <ShieldAlert size={20} className="text-red-400 group-hover:text-red-600" />

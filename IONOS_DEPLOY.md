@@ -243,7 +243,7 @@ crontab -e
 Add these lines:
 
 ```cron
-# Database backup daily at 2 AM
+# Database backup daily at 2 AM (emails backup to Gmail)
 0 2 * * * /home/adel/adel-beach-resort/deploy/backup-db.sh >> /var/log/backup.log 2>&1
 
 # Cancel expired bookings (unpaid > 1h) — every 5 minutes
@@ -286,6 +286,66 @@ Add these lines:
 ---
 
 ## Step 13: Create Django Superuser
+
+```bash
+cd /home/adel/adel-beach-resort/backend
+source venv/bin/activate
+python manage.py createsuperuser
+```
+
+Admin panel: `https://api.adel-resort.ph/admin/`
+
+---
+
+## Step 14: Set Up msmtp for Backup Emails
+
+The backup script sends database backups to Gmail. Install and configure msmtp:
+
+```bash
+sudo apt install msmtp msmtp-mta
+
+# Create config file
+sudo nano /etc/msmtprc
+```
+
+Add this configuration (use a Gmail App Password, not your regular password):
+
+```
+defaults
+auth on
+tls on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile /var/log/msmtp.log
+
+account adel-backup
+host smtp.gmail.com
+port 587
+from adel-backup@adel-resort.ph
+user bkmoonsalter@gmail.com
+password YOUR_GMAIL_APP_PASSWORD
+
+account default : adel-backup
+```
+
+```bash
+# Set permissions
+sudo chmod 600 /etc/msmtprc
+
+# Test email sending
+echo "Test email from Adel Resort backup" | msmtp -a adel-backup bkmoonsalter@gmail.com
+
+# Make sure log file exists
+sudo touch /var/log/msmtp.log
+sudo chown adel:adel /var/log/msmtp.log
+```
+
+**To create a Gmail App Password:**
+1. Go to https://myaccount.google.com/security
+2. Enable 2-Step Verification (if not already)
+3. Go to App Passwords → Create a new app password for "Mail" on "Other (Custom name)" → enter "Adel Resort Backup"
+4. Use the generated 16-character password in the msmtp config
+
+---
 
 ```bash
 cd /home/adel/adel-beach-resort/backend
