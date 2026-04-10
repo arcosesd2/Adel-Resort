@@ -24,16 +24,22 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] Backup created: $BACKUP_FILE" >> "$LOG_FILE
 
 # Send email with backup attached
 FILE_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
-EMAIL_BODY="Adel Resort Database Backup
+SUBJECT="Adel Resort DB Backup - $TIMESTAMP"
+
+cat <<EOF | msmtp -a adel-backup --attachment "$BACKUP_FILE" "$BACKUP_EMAIL" 2>> "$LOG_FILE" || echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Email send failed" >> "$LOG_FILE"
+Subject: $SUBJECT
+From: adel-backup@adel-resort.ph
+To: $BACKUP_EMAIL
+
+Adel Resort Database Backup
 
 Timestamp: $(date '+%Y-%m-%d %H:%M:%S')
 File: adel_resort_$TIMESTAMP.sql.gz
 Size: $FILE_SIZE
 Server: $(hostname)
 
-This is an automated daily backup."
-
-echo "$EMAIL_BODY" | msmtp -a adel-backup --subject "Adel Resort DB Backup - $TIMESTAMP" -a "$BACKUP_FILE" "$BACKUP_EMAIL" 2>> "$LOG_FILE" || echo "[$(date '+%Y-%m-%d %H:%M:%S')] Warning: Email send failed" >> "$LOG_FILE"
+This is an automated daily backup.
+EOF
 
 # Prune backups older than 30 days
 find "$BACKUP_DIR" -name "adel_resort_*.sql.gz" -mtime +30 -delete
