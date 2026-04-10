@@ -246,6 +246,9 @@ Add these lines:
 # Database backup daily at 2 AM (emails backup to Gmail)
 0 2 * * * /home/adel/adel-beach-resort/deploy/backup-db.sh >> /var/log/backup.log 2>&1
 
+# Local database backup every 30 minutes (no email, pruned after 7 days)
+*/30 * * * * /home/adel/adel-beach-resort/deploy/backup-db-local.sh >> /var/log/backup-local.log 2>&1
+
 # Cancel expired bookings (unpaid > 1h) — every 5 minutes
 */5 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py cancel_expired_bookings >> /var/log/cron-bookings.log 2>&1
 
