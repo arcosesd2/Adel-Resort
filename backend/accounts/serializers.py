@@ -49,12 +49,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserManagementSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False, min_length=8)
+    device_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'last_name', 'phone', 'email',
-                  'is_active', 'is_staff', 'is_superadmin', 'date_joined', 'password')
-        read_only_fields = ('id', 'date_joined')
+                  'is_active', 'is_staff', 'is_superadmin', 'date_joined', 'password', 'device_count')
+        read_only_fields = ('id', 'date_joined', 'device_count')
+
+    def get_device_count(self, obj):
+        return obj.registered_devices.filter(is_active=True).count()
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)

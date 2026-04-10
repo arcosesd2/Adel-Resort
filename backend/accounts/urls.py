@@ -46,6 +46,10 @@ urlpatterns = [
     path('login-activity/', views.login_activity, name='login-activity'),
     path('activity-log/', views.activity_log, name='activity-log'),
 
+    # Device authorization
+    path('authorize-device/', views.authorize_device, name='authorize-device'),
+    path('users/<int:pk>/reset-devices/', views.reset_user_devices, name='reset-user-devices'),
+
     # Superadmin: Device management
     path('devices/', views.device_list, name='device-list'),
     path('devices/from-attempt/', views.device_from_attempt, name='device-from-attempt'),

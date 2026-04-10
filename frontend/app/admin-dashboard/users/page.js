@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Plus, Trash2, ToggleLeft, ToggleRight, X, ArrowLeft } from 'lucide-react'
+import { Shield, Plus, Trash2, ToggleLeft, ToggleRight, X, ArrowLeft, Smartphone } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
@@ -85,6 +85,17 @@ export default function UsersPage() {
     }
   }
 
+  const handleResetDevices = async (u) => {
+    if (!confirm(`Reset device authorization for ${u.username}?\n\nThis will log them out and allow them to authorize a new device on next login.`)) return
+    try {
+      const { data } = await api.post(`/auth/users/${u.id}/reset-devices/`)
+      toast.success(data.detail)
+      fetchUsers()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to reset devices.')
+    }
+  }
+
   const roleBadge = (u) => {
     if (u.is_superadmin) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Superadmin</span>
     if (u.is_staff) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Staff</span>
@@ -120,8 +131,9 @@ export default function UsersPage() {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Phone</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
                   <th className="text-center px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
-                  <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+<th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Joined</th>
+                    <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Device</th>
+                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -141,6 +153,16 @@ export default function UsersPage() {
                       )}
                     </td>
                     <td className="px-6 py-3 text-sm text-gray-500">{new Date(u.date_joined).toLocaleDateString()}</td>
+                    <td className="px-6 py-3 text-sm">
+                      {u.is_staff && !u.is_superadmin ? (
+                        <span className="flex items-center gap-1 text-xs">
+                          <Smartphone size={12} className={u.device_count > 0 ? 'text-green-600' : 'text-gray-400'} />
+                          {u.device_count || 0} device{u.device_count !== 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-6 py-3 text-right space-x-2">
                       <button onClick={() => openEdit(u)} className="text-gray-500 hover:text-ocean-600 text-xs underline">Edit</button>
                       {!u.is_superadmin && (
@@ -148,6 +170,11 @@ export default function UsersPage() {
                           <button onClick={() => handleToggleActive(u)} className="text-gray-500 hover:text-ocean-600" title="Toggle active">
                             {u.is_active ? <ToggleRight size={18} className="inline" /> : <ToggleLeft size={18} className="inline" />}
                           </button>
+                          {u.is_staff && u.device_count > 0 && (
+                            <button onClick={() => handleResetDevices(u)} className="text-gray-500 hover:text-amber-600" title="Reset device authorization">
+                              <Smartphone size={16} className="inline" />
+                            </button>
+                          )}
                           <button onClick={() => handleDelete(u)} className="text-gray-500 hover:text-red-600" title="Delete">
                             <Trash2 size={16} className="inline" />
                           </button>

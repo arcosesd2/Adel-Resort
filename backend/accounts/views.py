@@ -110,18 +110,24 @@ def login(request):
         )
         return Response({'non_field_errors': ['Account is disabled.']}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Device restriction: staff (non-superadmin) must use a registered device
+    # Device restriction: staff (non-superadmin) must use a registered device or authorize a new one
     if user.is_staff and not user.is_superadmin and fingerprint:
         device_exists = RegisteredDevice.objects.filter(
             user=user, fingerprint=fingerprint, is_active=True
         ).exists()
         if not device_exists:
+            has_other_devices = RegisteredDevice.objects.filter(
+                user=user, is_active=True
+            ).exists()
             LoginAttempt.objects.create(
                 user=user, username=username, fingerprint=fingerprint, ip_address=ip,
                 user_agent=ua, device_info=device_info,
                 success=False, failure_reason='unregistered_device',
             )
-            return Response({'non_field_errors': ['Invalid credentials.']}, status=status.HTTP_400_BAD_REQUEST)
+            if has_other_devices:
+                return Response({'non_field_errors': ['This device is not authorized. Contact your admin to approve it.'], 'code': 'device_not_authorized'}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({'non_field_errors': ['Please authorize this device to continue.'], 'code': 'device_authorization_required'}, status=status.HTTP_403_FORBIDDEN)
 
     # Success
     LoginAttempt.objects.create(
@@ -525,6 +531,78 @@ def login_activity(request):
 
 
 # ─── Superadmin: Device Management ────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def authorize_device(request):
+    """Authorize a device for a staff user logging in for the first time."""
+    username = request.data.get('username', '')
+    password = request.data.get('password', '')
+    fingerprint = request.data.get('device_fingerprint', '')
+    device_info = request.data.get('device_info', {})
+    device_name = device_info.get('device_name', '') if isinstance(device_info, dict) else ''
+
+    if not all([username, password, fingerprint]):
+        return Response({'detail': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = authenticate(username=username, password=password)
+    if not user:
+        return Response({'detail': 'Invalid credentials.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not user.is_active:
+        return Response({'detail': 'Account is disabled.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not user.is_staff or user.is_superadmin:
+        return Response({'detail': 'Device authorization is for staff accounts only.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    has_other_devices = RegisteredDevice.objects.filter(user=user, is_active=True).exists()
+    if has_other_devices:
+        return Response({'detail': 'Your account already has authorized devices. Contact your admin.'}, status=status.HTTP_403_FORBIDDEN)
+
+    device, created = RegisteredDevice.objects.get_or_create(
+        user=user,
+        fingerprint=fingerprint,
+        defaults={
+            'device_name': device_name,
+            'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+        }
+    )
+    if not created and not device.is_active:
+        device.is_active = True
+        device.save()
+
+    LoginAttempt.objects.create(
+        user=user, username=username, fingerprint=fingerprint,
+        ip_address=get_client_ip(request),
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        device_info=device_info, success=True,
+    )
+    log_activity(user, 'device', f'Authorized device: {device_name or fingerprint[:12]}', ip_address=get_client_ip(request))
+
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'user': UserSerializer(user, context={'request': request}).data,
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'detail': 'Device authorized successfully.',
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def reset_user_devices(request, pk):
+    """Reset all devices for a staff user, allowing them to authorize a new device."""
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if not user.is_staff:
+        return Response({'detail': 'Device reset is for staff accounts only.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    count, _ = RegisteredDevice.objects.filter(user=user).delete()
+    _blacklist_all_tokens(user)
+    log_activity(request.user, 'device', f'Reset {count} device(s) for "{user.username}"', ip_address=get_client_ip(request))
+    return Response({'detail': f'Reset {count} device(s). {user.username} can now authorize a new device on next login.'})
+
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsSuperAdmin])
