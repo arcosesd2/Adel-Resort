@@ -411,7 +411,10 @@ DEBUG_PIN = '6282208'
 
 
 def _validate_pin(request):
-    pin = request.data.get('pin', '') or request.query_params.get('pin', '')
+    if request.method == 'GET':
+        pin = request.query_params.get('pin', '')
+    else:
+        pin = request.data.get('pin', '')
     return pin == DEBUG_PIN
 
 
