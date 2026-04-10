@@ -79,7 +79,11 @@ function CheckoutContent() {
       const hours = Math.floor(diff / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-      setTimeLeft(`${hours}h ${minutes}m ${seconds}s`)
+      if (hours > 0) {
+        setTimeLeft(`${hours}h ${minutes}m ${seconds}s`)
+      } else {
+        setTimeLeft(`${minutes}m ${seconds}s`)
+      }
     }
     updateTimer()
     const interval = setInterval(updateTimer, 1000)
@@ -140,12 +144,12 @@ function CheckoutContent() {
 
         {/* Payment Deadline Warning */}
         {timeLeft && timeLeft !== 'expired' && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center gap-3">
-            <AlertTriangle className="text-amber-500 flex-shrink-0" size={22} />
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+            <AlertTriangle className="text-red-500 flex-shrink-0" size={22} />
             <div>
-              <p className="font-semibold text-amber-800">Payment deadline: {timeLeft} remaining</p>
-              <p className="text-amber-600 text-sm">
-                Please complete your payment within 24 hours of booking. Unpaid reservations will be automatically cancelled.
+              <p className="font-semibold text-red-800">Payment deadline: {timeLeft} remaining</p>
+              <p className="text-red-600 text-sm">
+                Please complete your payment within 1 hour of booking. Unpaid reservations will be automatically cancelled.
               </p>
             </div>
           </div>

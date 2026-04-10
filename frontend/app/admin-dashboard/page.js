@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, ShieldAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -319,6 +319,9 @@ function AdminDashboardContent() {
             </Link>
             <Link href="/admin-dashboard/activity-log" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
               <ClipboardList size={16} /> Activity Log
+            </Link>
+            <Link href="/admin-dashboard/debug" className="btn-outline text-sm px-4 py-2 flex items-center gap-2">
+              <ShieldAlert size={16} /> Debug & Reset
             </Link>
           </>
         )}

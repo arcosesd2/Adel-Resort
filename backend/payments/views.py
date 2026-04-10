@@ -14,7 +14,7 @@ from .serializers import SubmitProofSerializer, GCashConfigSerializer, AdminPaym
 from accounts.permissions import IsSuperAdmin
 from vouchers.utils import get_booking_voucher_validity_status
 
-PAYMENT_DEADLINE_HOURS = 24
+PAYMENT_DEADLINE_MINUTES = 60
 
 
 @api_view(['POST'])
@@ -40,8 +40,8 @@ def submit_proof_of_payment(request):
     if hasattr(booking, 'payment'):
         return Response({'detail': 'Payment proof already submitted.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check 24-hour payment deadline
-    deadline = booking.created_at + timedelta(hours=PAYMENT_DEADLINE_HOURS)
+    # Check payment deadline (1 hour after booking creation)
+    deadline = booking.created_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
     if timezone.now() > deadline:
         booking.status = BookingStatus.CANCELLED
         booking.save(update_fields=['status'])

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, MessageSquare } from 'lucide-react'
+import { Users, MessageSquare, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SlotPicker from './SlotPicker'
 import useAuthStore from '@/store/authStore'
@@ -223,6 +223,13 @@ export default function BookingForm({ room }) {
         By booking, you agree to our{' '}
         <a href="/refund-policy" target="_blank" className="text-ocean-600 underline">Refund & Cancellation Policy</a>.
       </p>
+
+      {isAuthenticated && slots.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 flex items-start gap-2">
+          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+          <span>You&apos;ll have <strong>1 hour</strong> to complete payment after booking. Unpaid reservations are automatically cancelled.</span>
+        </div>
+      )}
 
       <button
         type="submit"

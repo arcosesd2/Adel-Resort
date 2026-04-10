@@ -83,7 +83,7 @@ export default function BookingDetailPage() {
                 <span className="font-bold">
                   ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
                 </span>{' '}
-                within 24 hours of approval (by{' '}
+                within 1 hour of approval (by{' '}
                 {format(parseISO(booking.full_payment_deadline), 'MMM d, yyyy h:mm a')}).
               </p>
             </div>
@@ -101,14 +101,14 @@ export default function BookingDetailPage() {
         )}
 
         {booking.status === 'pending' && !booking.payment_submitted && booking.payment_deadline && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
-            <AlertTriangle className="text-amber-500 flex-shrink-0" size={28} />
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
+            <AlertTriangle className="text-red-500 flex-shrink-0" size={28} />
             <div>
-              <h2 className="font-semibold text-amber-800">Payment Required</h2>
-              <p className="text-amber-600 text-sm">
+              <h2 className="font-semibold text-red-800">Payment Required</h2>
+              <p className="text-red-600 text-sm">
                 Please complete payment before{' '}
                 {format(parseISO(booking.payment_deadline), 'MMM d, yyyy h:mm a')}.
-                Unpaid reservations are automatically cancelled after 24 hours.
+                Unpaid reservations are automatically cancelled after 1 hour.
               </p>
             </div>
           </div>

@@ -246,8 +246,8 @@ Add these lines:
 # Database backup daily at 2 AM
 0 2 * * * /home/adel/adel-beach-resort/deploy/backup-db.sh >> /var/log/backup.log 2>&1
 
-# Cancel expired bookings (unpaid > 24h) — every hour
-0 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py cancel_expired_bookings >> /var/log/cron-bookings.log 2>&1
+# Cancel expired bookings (unpaid > 1h) — every 5 minutes
+*/5 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py cancel_expired_bookings >> /var/log/cron-bookings.log 2>&1
 
 # Expire stale pending payments (> 48h unverified) — every 2 hours
 0 */2 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py expire_stale_payments >> /var/log/cron-payments.log 2>&1
@@ -258,8 +258,8 @@ Add these lines:
 # Deactivate expired vouchers — daily at 3 AM
 0 3 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py deactivate_expired_vouchers >> /var/log/cron-vouchers.log 2>&1
 
-# Warn staff about bookings approaching payment deadline — every hour at :30
-30 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py warn_payment_deadline >> /var/log/cron-bookings.log 2>&1
+# Warn staff about bookings approaching payment deadline (1h deadline) — every 15 minutes
+*/15 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py warn_payment_deadline >> /var/log/cron-bookings.log 2>&1
 
 # Send abandoned booking emails (1h after no payment) — every 30 min
 */30 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py send_abandoned_booking_emails >> /var/log/cron-emails.log 2>&1

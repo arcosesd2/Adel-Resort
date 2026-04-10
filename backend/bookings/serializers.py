@@ -6,7 +6,7 @@ from django.utils import timezone
 from .models import Booking
 from rooms.serializers import RoomListSerializer
 
-PAYMENT_DEADLINE_HOURS = 24
+PAYMENT_DEADLINE_MINUTES = 60
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -38,7 +38,7 @@ class BookingSerializer(serializers.ModelSerializer):
         return None
 
     def get_payment_deadline(self, obj):
-        deadline = obj.created_at + timedelta(hours=PAYMENT_DEADLINE_HOURS)
+        deadline = obj.created_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
         return deadline.isoformat()
 
     def get_payment_type(self, obj):
@@ -52,11 +52,11 @@ class BookingSerializer(serializers.ModelSerializer):
         return None
 
     def get_full_payment_deadline(self, obj):
-        """24h deadline after admin approval for downpayment bookings."""
+        """1-hour deadline after admin approval for downpayment bookings."""
         if (obj.approved_at
                 and hasattr(obj, 'payment')
                 and obj.payment.payment_type == 'downpayment'):
-            deadline = obj.approved_at + timedelta(hours=PAYMENT_DEADLINE_HOURS)
+            deadline = obj.approved_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
             return deadline.isoformat()
         return None
 

@@ -307,13 +307,102 @@ def export_revenue_csv(request):
     writer = csv.writer(response)
     writer.writerow(['Date', 'Booking Ref', 'Guest', 'Room', 'Amount', 'Payment Type'])
 
-    for p in qs:
-        guest_name = f'{p.booking.user.first_name} {p.booking.user.last_name}'.strip() or p.booking.user.username
-        writer.writerow([
-            p.created_at.strftime('%Y-%m-%d %H:%M'),
-            p.booking.reference_code, guest_name, p.booking.room.name,
-            p.amount,
-            getattr(p, 'payment_type', 'full'),
-        ])
-
     return response
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def debug_reset(request):
+    DEBUG_PIN = '6282208'
+
+    pin = request.data.get('pin', '')
+    if pin != DEBUG_PIN:
+        return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
+
+    categories = request.data.get('categories', [])
+    if not categories:
+        return Response({'detail': 'No categories selected.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    valid_categories = [
+        'bookings', 'payments', 'reviews', 'chat', 'notifications',
+        'activity_logs', 'login_attempts', 'registered_devices',
+        'analytics', 'favorites',
+    ]
+    invalid = [c for c in categories if c not in valid_categories]
+    if invalid:
+        return Response({'detail': f'Invalid categories: {", ".join(invalid)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+    results = {}
+
+    if 'bookings' in categories:
+        from vouchers.models import VoucherUsage
+        deleted_voucher_usage, _ = VoucherUsage.objects.all().delete()
+        deleted_bookings, _ = Booking.objects.all().delete()
+        results['bookings'] = deleted_bookings
+        results['voucher_usages'] = deleted_voucher_usage
+
+    if 'payments' in categories:
+        import cloudinary.uploader
+        from payments.models import Payment
+        proofs = Payment.objects.filter(proof_of_payment__isnull=False).exclude(proof_of_payment='').values_list('proof_of_payment', flat=True)
+        deleted_count = 0
+        for proof in proofs:
+            try:
+                cloudinary.uploader.destroy(proof, invalidate=True)
+            except Exception:
+                pass
+            deleted_count += 1
+        deleted_payments, _ = Payment.objects.all().delete()
+        results['payments'] = deleted_payments
+        results['payment_proofs_deleted'] = deleted_count
+
+    if 'reviews' in categories:
+        deleted_reviews, _ = Review.objects.all().delete()
+        results['reviews'] = deleted_reviews
+
+    if 'chat' in categories:
+        from chat.models import Conversation, Message
+        deleted_messages, _ = Message.objects.all().delete()
+        deleted_conversations, _ = Conversation.objects.all().delete()
+        results['conversations'] = deleted_conversations
+        results['chat_messages'] = deleted_messages
+
+    if 'notifications' in categories:
+        from accounts.models import Notification
+        deleted_notifications, _ = Notification.objects.all().delete()
+        results['notifications'] = deleted_notifications
+
+    if 'activity_logs' in categories:
+        from accounts.models import ActivityLog
+        deleted_logs, _ = ActivityLog.objects.all().delete()
+        results['activity_logs'] = deleted_logs
+
+    if 'login_attempts' in categories:
+        from accounts.models import LoginAttempt
+        deleted_attempts, _ = LoginAttempt.objects.all().delete()
+        results['login_attempts'] = deleted_attempts
+
+    if 'registered_devices' in categories:
+        from accounts.models import RegisteredDevice
+        deleted_devices, _ = RegisteredDevice.objects.all().delete()
+        results['registered_devices'] = deleted_devices
+
+    if 'analytics' in categories:
+        from analytics.models import UniqueVisitor
+        deleted_pageviews, _ = PageView.objects.all().delete()
+        deleted_visitors, _ = UniqueVisitor.objects.all().delete()
+        results['page_views'] = deleted_pageviews
+        results['unique_visitors'] = deleted_visitors
+
+    if 'favorites' in categories:
+        from accounts.models import FavoriteRoom
+        deleted_favorites, _ = FavoriteRoom.objects.all().delete()
+        results['favorite_rooms'] = deleted_favorites
+
+    try:
+        from accounts.models import log_activity
+        log_activity(request.user, 'debug_reset', f'Debug reset performed: {", ".join(categories)}')
+    except Exception:
+        pass
+
+    return Response({'detail': 'Debug reset completed.', 'results': results})

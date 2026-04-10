@@ -7,4 +7,5 @@ urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
     path('export/bookings/', views.export_bookings_csv, name='export-bookings-csv'),
     path('export/revenue/', views.export_revenue_csv, name='export-revenue-csv'),
+    path('debug-reset/', views.debug_reset, name='debug-reset'),
 ]
