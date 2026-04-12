@@ -33,7 +33,7 @@ export default function OccupancyPage() {
         <Link href="/admin-dashboard" className="btn-outline text-sm px-3 py-1.5 flex items-center gap-1">
           <ArrowLeft size={14} /> Back
         </Link>
-        <h1 className="text-3xl font-serif font-bold text-ocean-800">Room Occupancy</h1>
+        <h1 className="text-3xl font-serif font-bold text-ocean-800">Room Overview</h1>
       </div>
 
       {loading ? (

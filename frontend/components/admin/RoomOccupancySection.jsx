@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Home, ChevronDown, ChevronRight } from 'lucide-react'
-import SlotPicker from '@/components/SlotPicker'
+import OccupancyCalendar from '@/components/admin/OccupancyCalendar'
 
 export default function RoomOccupancySection({ data }) {
   const [open, setOpen] = useState(true)
@@ -27,7 +27,7 @@ export default function RoomOccupancySection({ data }) {
         className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
-          <Home size={20} /> Room Occupancy Overview
+          <Home size={20} /> Room Overview
         </h2>
         {open ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
       </button>
@@ -79,7 +79,7 @@ export default function RoomOccupancySection({ data }) {
                     {isExpanded && (
                       <tr className="bg-gray-50/60">
                         <td colSpan={5} className="px-6 pb-4">
-                          <SlotPicker
+                          <OccupancyCalendar
                             key={room.room_id}
                             roomId={room.room_id}
                             isDayOnly={room.is_day_only}

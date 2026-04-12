@@ -407,10 +407,12 @@ def debug_reset(request):
 
 
 BACKUP_DIR = '/home/adel/backups'
-DEBUG_PIN = '6282208'
+DEBUG_PIN = os.environ.get('ANALYTICS_DEBUG_PIN', '')
 
 
 def _validate_pin(request):
+    if not DEBUG_PIN:
+        return False
     if request.method == 'GET':
         pin = request.query_params.get('pin', '')
     else:

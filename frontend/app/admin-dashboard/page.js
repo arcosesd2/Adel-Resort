@@ -335,7 +335,7 @@ function AdminDashboardContent() {
           </Link>
           <Link href="/admin-dashboard/occupancy" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
             <Home size={20} className="text-gray-500 group-hover:text-ocean-600" />
-            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Occupancy</span>
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Room Overview</span>
           </Link>
           <Link href="/admin-dashboard/reviews" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
             <Star size={20} className="text-gray-500 group-hover:text-ocean-600" />
