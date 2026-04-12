@@ -54,13 +54,21 @@ class BookingDetailView(generics.RetrieveDestroyAPIView):
         booking.status = BookingStatus.CANCELLED
         booking.save()
         try:
-            from accounts.models import notify_staff
+            from accounts.models import notify_staff, create_notification
+            # Notify all staff
             notify_staff(
                 'booking_cancelled',
                 'Booking Cancelled',
                 f'Guest {booking.user.get_full_name() or booking.user.username} cancelled booking #{booking.id} for {booking.room.name}.',
                 '/admin-dashboard/bookings',
                 exclude_user=request.user,
+            )
+            # Confirm to the guest
+            create_notification(
+                booking.user, 'booking_cancelled',
+                'Booking Cancelled',
+                f'Your booking for {booking.room.name} has been cancelled.',
+                f'/booking/{booking.id}',
             )
         except Exception:
             pass
@@ -339,6 +347,15 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                         f'/booking/{booking.id}',
                     )
                     send_booking_cancelled_email(booking.user, booking)
+                    # Notify other staff
+                    from accounts.models import notify_staff
+                    notify_staff(
+                        'booking_cancelled',
+                        'Booking Cancelled by Admin',
+                        f'{request.user.get_full_name() or request.user.username} cancelled booking #{booking.id} for {booking.room.name} ({booking.user.get_full_name() or booking.user.username}).',
+                        '/admin-dashboard/bookings',
+                        exclude_user=request.user,
+                    )
                 elif new_status == BookingStatus.COMPLETED:
                     create_notification(
                         booking.user, 'booking_completed',
