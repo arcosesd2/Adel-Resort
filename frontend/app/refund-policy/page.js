@@ -23,15 +23,12 @@ export default function RefundPolicyPage() {
 
           <h3>Confirmed Bookings (Payment Verified)</h3>
           <p>
-            Once a booking has been confirmed and payment has been verified by our staff, cancellation
-            is handled on a case-by-case basis. Please contact us directly to discuss cancellation options:
+            Once a booking has been confirmed and payment has been verified by our staff,
+            please contact us directly regarding any refund or cancellation requests.
+            You may reach us through our <strong>Chat</strong> feature, email us at{' '}
+            <a href="mailto:arnelarcos@adel-resort.ph">arnelarcos@adel-resort.ph</a>, or call us at 09685361395.
+            Each request is handled on a case-by-case basis.
           </p>
-          <ul>
-            <li><strong>More than 7 days before check-in:</strong> Eligible for a full refund minus processing fees.</li>
-            <li><strong>3 to 7 days before check-in:</strong> Eligible for a 50% refund.</li>
-            <li><strong>Less than 3 days before check-in:</strong> No refund. The booking may be rescheduled subject to availability.</li>
-            <li><strong>No-shows:</strong> No refund will be issued for no-shows.</li>
-          </ul>
 
           <h2>2. Cancellation by the Resort</h2>
           <p>
@@ -83,7 +80,7 @@ export default function RefundPolicyPage() {
           <h2>8. Contact</h2>
           <p>
             For any questions about this policy, please contact us at{' '}
-            <a href="mailto:adelbeachresortph@gmail.com">adelbeachresortph@gmail.com</a> or call 09685361395.
+            <a href="mailto:arnelarcos@adel-resort.ph">arnelarcos@adel-resort.ph</a> or call 09685361395.
           </p>
         </div>
       </div>

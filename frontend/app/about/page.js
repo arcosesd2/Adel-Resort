@@ -68,7 +68,7 @@ export default function AboutPage() {
                 <Mail className="text-ocean-500 mt-0.5 flex-shrink-0" size={20} />
                 <div>
                   <p className="font-medium text-gray-900">Email</p>
-                  <p className="text-gray-600 text-sm">adelbeachresortph@gmail.com</p>
+                  <p className="text-gray-600 text-sm">arnelarcos@adel-resort.ph</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">

@@ -66,15 +66,29 @@ function AdminDashboardContent() {
     const v = vouchers.find(v => v.code.toLowerCase() === onsiteVoucherCode.trim().toLowerCase())
     if (!v) return { error: 'Voucher not found' }
     if (!v.is_active) return { error: 'Voucher is inactive' }
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
-    if (now < new Date(v.valid_from)) return { error: 'Voucher not yet valid' }
-    if (now > new Date(v.valid_until)) return { error: 'Voucher expired' }
     if (v.max_uses && v.times_used >= v.max_uses) return { error: 'Voucher fully used' }
+
+    // Validate against booking dates (same logic as backend) instead of current time
+    const bookingDates = onsiteForm.slots.map(s => s.date).filter(Boolean)
+    if (bookingDates.length > 0) {
+      const vFrom = v.valid_from?.split('T')[0] || v.valid_from
+      const vUntil = v.valid_until?.split('T')[0] || v.valid_until
+      const earliest = bookingDates.sort()[0]
+      const latest = bookingDates.sort()[bookingDates.length - 1]
+      if (earliest < vFrom) return { error: 'Voucher not yet valid for selected dates' }
+      if (latest > vUntil) return { error: 'Voucher expired for selected dates' }
+    } else {
+      // No slots selected yet — check against current date
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }))
+      if (now < new Date(v.valid_from)) return { error: 'Voucher not yet valid' }
+      if (now > new Date(v.valid_until)) return { error: 'Voucher expired' }
+    }
+
     return {
       valid: true,
       label: v.discount_type === 'percentage' ? `${v.discount_value}% off` : `₱${v.discount_value} off`,
     }
-  }, [onsiteVoucherCode, vouchers])
+  }, [onsiteVoucherCode, vouchers, onsiteForm.slots])
 
   // Page views collapse state
   const [pageViewsOpen, setPageViewsOpen] = useState(false)

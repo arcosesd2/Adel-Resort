@@ -113,6 +113,7 @@ class Notification(models.Model):
         PENDING_PAYMENT_REVIEW = 'pending_payment_review', 'Pending Payment Review'
         NEW_BOOKING = 'new_booking', 'New Booking'
         NEW_REVIEW_PENDING = 'new_review_pending', 'New Review Pending'
+        NEW_MESSAGE = 'new_message', 'New Message'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     notification_type = models.CharField(max_length=30, choices=NotificationType.choices)

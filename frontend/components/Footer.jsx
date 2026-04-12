@@ -99,7 +99,7 @@ export default function Footer() {
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <Mail size={16} className="text-sand-400" />
-                  arnel_arcos@adel-resort.com
+                  arnelarcos@adel-resort.ph
                 </li>
               </ul>
             </StaggerItem>

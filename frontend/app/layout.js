@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
           description: 'Beach resort in Lawigan, Surigao Del Sur offering cottages, rooms, and event spaces.',
           url: 'https://adel-resort.ph',
           telephone: '09685361395',
-          email: 'adelbeachresortph@gmail.com',
+          email: 'arnelarcos@adel-resort.ph',
           address: {
             '@type': 'PostalAddress',
             streetAddress: 'Lawigan',

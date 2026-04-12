@@ -12,6 +12,7 @@ from .serializers import (
     SendMessageSerializer,
     MessageSerializer,
 )
+from accounts.models import create_notification, notify_staff, Notification
 
 
 @api_view(['GET'])
@@ -39,6 +40,14 @@ def start_conversation(request):
         content=serializer.validated_data['message'],
         is_staff_reply=False,
     )
+    # Notify all staff about the new conversation
+    notify_staff(
+        Notification.NotificationType.NEW_MESSAGE,
+        'New Conversation',
+        f'{request.user.get_full_name() or request.user.username} started a conversation: {conversation.subject}',
+        link='/admin-dashboard',
+    )
+
     detail = ConversationDetailSerializer(conversation, context={'request': request})
     return Response(detail.data, status=status.HTTP_201_CREATED)
 
@@ -91,6 +100,27 @@ def send_message(request, pk):
     )
     # Update conversation timestamp
     conversation.save(update_fields=['updated_at'])
+
+    # Notify the other party
+    sender_name = request.user.get_full_name() or request.user.username
+    preview = (serializer.validated_data['content'][:80] + '...') if len(serializer.validated_data['content']) > 80 else serializer.validated_data['content']
+    if request.user.is_staff:
+        # Staff replied — notify the customer
+        create_notification(
+            conversation.customer,
+            Notification.NotificationType.NEW_MESSAGE,
+            'New Reply from Staff',
+            f'{sender_name} replied to your conversation: {preview}',
+            link='/dashboard',
+        )
+    else:
+        # Customer sent — notify all staff
+        notify_staff(
+            Notification.NotificationType.NEW_MESSAGE,
+            'New Message',
+            f'{sender_name}: {preview}',
+            link='/admin-dashboard',
+        )
 
     return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
 
