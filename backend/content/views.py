@@ -1,6 +1,7 @@
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes, throttle_classes
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -287,10 +288,15 @@ def admin_pricing_detail(request, pk):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ───── Newsletter (Public) ─────
+# ───── Newsletter (Public) ────���
+
+class NewsletterThrottle(AnonRateThrottle):
+    rate = '5/hour'
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([NewsletterThrottle])
 def newsletter_subscribe(request):
     serializer = NewsletterSubscribeSerializer(data=request.data)
     if not serializer.is_valid():

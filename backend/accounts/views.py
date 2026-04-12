@@ -523,10 +523,16 @@ def login_activity(request):
 
     days = request.query_params.get('days')
     if days:
-        since = timezone.now() - timedelta(days=int(days))
-        qs = qs.filter(created_at__gte=since)
+        try:
+            since = timezone.now() - timedelta(days=int(days))
+            qs = qs.filter(created_at__gte=since)
+        except (ValueError, TypeError):
+            pass
 
-    page_size = min(int(request.query_params.get('limit', 100)), 200)
+    try:
+        page_size = min(int(request.query_params.get('limit', 100)), 200)
+    except (ValueError, TypeError):
+        page_size = 100
     return Response(LoginAttemptSerializer(qs[:page_size], many=True).data)
 
 
@@ -684,14 +690,20 @@ def activity_log(request):
 
     days = request.query_params.get('days')
     if days:
-        since = timezone.now() - timedelta(days=int(days))
-        qs = qs.filter(created_at__gte=since)
+        try:
+            since = timezone.now() - timedelta(days=int(days))
+            qs = qs.filter(created_at__gte=since)
+        except (ValueError, TypeError):
+            pass
 
     search = request.query_params.get('search', '').strip()
     if search:
         qs = qs.filter(action__icontains=search)
 
-    page_size = min(int(request.query_params.get('limit', 100)), 500)
+    try:
+        page_size = min(int(request.query_params.get('limit', 100)), 500)
+    except (ValueError, TypeError):
+        page_size = 100
     return Response(ActivityLogSerializer(qs[:page_size], many=True).data)
 
 

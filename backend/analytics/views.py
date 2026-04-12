@@ -35,6 +35,7 @@ def track_page_view(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([AnalyticsRateThrottle])
 def public_stats(request):
     total_guests = (
         Booking.objects
@@ -315,10 +316,12 @@ def export_revenue_csv(request):
 @api_view(['POST'])
 @permission_classes([IsSuperAdmin])
 def debug_reset(request):
-    DEBUG_PIN = '6282208'
+    reset_pin = os.environ.get('ANALYTICS_DEBUG_PIN', '')
+    if not reset_pin:
+        return Response({'detail': 'Debug reset is disabled.'}, status=status.HTTP_403_FORBIDDEN)
 
     pin = request.data.get('pin', '')
-    if pin != DEBUG_PIN:
+    if not pin or pin != reset_pin:
         return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
 
     categories = request.data.get('categories', [])
@@ -408,17 +411,17 @@ def debug_reset(request):
 
 
 BACKUP_DIR = '/home/adel/backups'
-DEBUG_PIN = os.environ.get('ANALYTICS_DEBUG_PIN', '')
+_BACKUP_PIN = os.environ.get('ANALYTICS_DEBUG_PIN', '')
 
 
 def _validate_pin(request):
-    if not DEBUG_PIN:
+    if not _BACKUP_PIN:
         return False
     if request.method == 'GET':
         pin = request.query_params.get('pin', '')
     else:
         pin = request.data.get('pin', '')
-    return pin == DEBUG_PIN
+    return bool(pin) and pin == _BACKUP_PIN
 
 
 @api_view(['GET'])
@@ -492,7 +495,11 @@ def backup_download(request):
         return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
     import os
     filename = request.data.get('filename', '')
-    if not filename or '..' in filename or '/' in filename:
+    if not filename:
+        return Response({'detail': 'Invalid filename.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Sanitize: strip any path components to prevent directory traversal
+    filename = os.path.basename(filename)
+    if not filename.endswith('.sql.gz'):
         return Response({'detail': 'Invalid filename.'}, status=status.HTTP_400_BAD_REQUEST)
     filepath = os.path.join(BACKUP_DIR, filename)
     if not os.path.isfile(filepath):
