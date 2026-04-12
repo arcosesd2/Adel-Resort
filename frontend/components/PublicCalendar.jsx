@@ -1,17 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { parseISO } from 'date-fns'
-import api from '@/lib/api'
+import { useState, useEffect, useMemo } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-
-const SUB_COL_WIDTH = 38 // px per sub-column (Day or Night)
-const DAY_COL_WIDTH = SUB_COL_WIDTH * 2 // px per full day column
+import api from '@/lib/api'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
-
-const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_ABBR = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 const ROOM_TYPES = [
   { value: 'cottage', label: 'Cottage' },
@@ -24,16 +19,20 @@ const ROOM_TYPES = [
 ]
 
 const TYPE_COLORS = {
-  cottage:         { bg: '#dbeafe', bar: '#3b82f6', text: '#1e40af' },
-  dos_andanas:     { bg: '#ede9fe', bar: '#8b5cf6', text: '#5b21b6' },
-  lavender_house:  { bg: '#fce7f3', bar: '#ec4899', text: '#9d174d' },
-  ac_karaoke:      { bg: '#d1fae5', bar: '#10b981', text: '#065f46' },
-  kubo:            { bg: '#ccfbf1', bar: '#14b8a6', text: '#115e59' },
-  function_hall:   { bg: '#e0e7ff', bar: '#6366f1', text: '#3730a3' },
-  trapal_table:    { bg: '#fef9c3', bar: '#eab308', text: '#854d0e' },
+  cottage:         { bg: '#dbeafe', border: '#93c5fd', text: '#1e40af' },
+  dos_andanas:     { bg: '#ede9fe', border: '#c4b5fd', text: '#5b21b6' },
+  lavender_house:  { bg: '#fce7f3', border: '#f9a8d4', text: '#9d174d' },
+  ac_karaoke:      { bg: '#d1fae5', border: '#6ee7b7', text: '#065f46' },
+  kubo:            { bg: '#ccfbf1', border: '#5eead4', text: '#115e59' },
+  function_hall:   { bg: '#e0e7ff', border: '#a5b4fc', text: '#3730a3' },
+  trapal_table:    { bg: '#fef9c3', border: '#fde047', text: '#854d0e' },
 }
 
-const DEFAULT_COLOR = { bg: '#f3f4f6', bar: '#6b7280', text: '#374151' }
+const DEFAULT_COLOR = { bg: '#f3f4f6', border: '#d1d5db', text: '#374151' }
+
+function fmtDate(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
 
 function getTypeLabel(value) {
   return ROOM_TYPES.find(t => t.value === value)?.label || value
@@ -43,16 +42,27 @@ function getTypeColor(type) {
   return TYPE_COLORS[type] || DEFAULT_COLOR
 }
 
+/** Color for availability badge based on how full the type is */
+function availColor(booked, total) {
+  if (total === 0) return 'bg-gray-200 text-gray-500'
+  if (booked >= total) return 'bg-red-500 text-white'
+  const pct = (booked / total) * 100
+  if (pct >= 80) return 'bg-orange-500 text-white'
+  if (pct >= 50) return 'bg-amber-500 text-white'
+  if (pct > 0) return 'bg-emerald-500 text-white'
+  return 'bg-gray-100 text-gray-500'
+}
+
 export default function PublicCalendar() {
   const [roomsAvailability, setRoomsAvailability] = useState([])
   const [loading, setLoading] = useState(true)
   const today = new Date()
+  const todayStr = fmtDate(today.getFullYear(), today.getMonth(), today.getDate())
   const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
-  const scrollRef = useRef(null)
 
   useEffect(() => {
-    const fetchAll = async () => {
+    ;(async () => {
       try {
         const { data } = await api.get('/rooms/all-availability/')
         setRoomsAvailability(data)
@@ -61,124 +71,85 @@ export default function PublicCalendar() {
       } finally {
         setLoading(false)
       }
-    }
-    fetchAll()
-  }, [])
-
-  // Auto-scroll to today when month changes or data loads
-  useEffect(() => {
-    if (loading || !scrollRef.current) return
-    const isCurrentMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth()
-    if (isCurrentMonth) {
-      const todayIndex = today.getDate() - 1
-      scrollRef.current.scrollLeft = Math.max(0, todayIndex * DAY_COL_WIDTH - DAY_COL_WIDTH)
-    } else {
-      scrollRef.current.scrollLeft = 0
-    }
-  }, [loading, viewYear, viewMonth])
-
-  const scrollByDays = useCallback((days) => {
-    if (!scrollRef.current) return
-    scrollRef.current.scrollBy({ left: days * DAY_COL_WIDTH, behavior: 'smooth' })
+    })()
   }, [])
 
   const prevMonth = () => {
     if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1) }
     else setViewMonth(m => m - 1)
   }
-
   const nextMonth = () => {
     if (viewMonth === 11) { setViewMonth(0); setViewYear(v => v + 1) }
     else setViewMonth(m => m + 1)
   }
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
-  const gridTotalWidth = daysInMonth * DAY_COL_WIDTH
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
 
-  const daysArray = useMemo(() => {
-    return Array.from({ length: daysInMonth }, (_, i) => {
-      const date = new Date(viewYear, viewMonth, i + 1)
+  const calendarDays = useMemo(() => {
+    const days = []
+    for (let i = 0; i < firstDayOfWeek; i++) days.push(null)
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = fmtDate(viewYear, viewMonth, d)
+      const date = new Date(viewYear, viewMonth, d)
+      const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate())
       const dayOfWeek = date.getDay()
-      return {
-        day: i + 1,
-        dayOfWeek,
-        abbr: DAY_ABBR[dayOfWeek],
-        isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
-        isToday:
-          date.getFullYear() === today.getFullYear() &&
-          date.getMonth() === today.getMonth() &&
-          date.getDate() === today.getDate(),
-      }
-    })
-  }, [viewYear, viewMonth, daysInMonth])
+      days.push({ day: d, dateStr, isPast, isToday: dateStr === todayStr, isWeekend: dayOfWeek === 0 || dayOfWeek === 6 })
+    }
+    return days
+  }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek])
 
-  const groupedRooms = useMemo(() => {
+  /**
+   * Aggregate rooms by type.
+   * For each type: total units = sum of max_rooms across all rooms of that type.
+   * Per date: booked count = number of booked slots on that date (across all rooms of that type).
+   *
+   * For slot-mode rooms with day/night, we track day and night separately.
+   * For overnight/24hr rooms, one slot per date.
+   */
+  const typeGroups = useMemo(() => {
     const typeOrder = ROOM_TYPES.map(t => t.value)
     const groups = {}
 
     for (const room of roomsAvailability) {
       const type = room.room_type
-      if (!groups[type]) groups[type] = []
-      groups[type].push(room)
+      if (!groups[type]) {
+        groups[type] = {
+          type,
+          label: getTypeLabel(type),
+          color: getTypeColor(type),
+          totalUnits: 0,
+          hasSlotMode: false,
+          hasDayOnly: true,
+          // Per-date booked counts: { "2026-04-13": count } or { "2026-04-13:day": count, "2026-04-13:night": count }
+          bookedByDate: {},
+          bookedBySlot: {},
+        }
+      }
+
+      const g = groups[type]
+      g.totalUnits += room.max_rooms
+
+      if (room.booking_mode === 'slot') {
+        g.hasSlotMode = true
+        if (!room.is_day_only) g.hasDayOnly = false
+      } else {
+        g.hasDayOnly = false
+      }
+
+      for (const s of (room.booked_slots || [])) {
+        // Total per date
+        g.bookedByDate[s.date] = (g.bookedByDate[s.date] || 0) + 1
+        // Per slot type
+        const slotKey = `${s.date}:${s.slot}`
+        g.bookedBySlot[slotKey] = (g.bookedBySlot[slotKey] || 0) + 1
+      }
     }
 
     return typeOrder
-      .filter(type => groups[type]?.length > 0)
-      .map(type => ({
-        type,
-        label: getTypeLabel(type),
-        color: getTypeColor(type),
-        rooms: groups[type],
-      }))
+      .filter(type => groups[type])
+      .map(type => groups[type])
   }, [roomsAvailability])
-
-  const BOOKING_OUTLINE_COLORS = [
-    '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
-  ]
-
-  // Returns a map: { [dayNumber]: { day: booking_id|false, night: booking_id|false } }
-  function computeBookedCells(room) {
-    const cells = {}
-    const slots = room.booked_slots || []
-
-    for (const s of slots) {
-      const d = parseISO(s.date)
-      if (d.getFullYear() !== viewYear || d.getMonth() !== viewMonth) continue
-      const dayNum = d.getDate()
-      if (!cells[dayNum]) cells[dayNum] = { day: false, night: false }
-      cells[dayNum][s.slot] = s.booking_id || true
-    }
-    return cells
-  }
-
-  /** Group consecutive sub-columns with the same booking_id into spans. */
-  function computeBookingSpans(bookedCells) {
-    const spans = []
-    let cur = null // { bookingId, start, length }
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const cell = bookedCells[d] || {}
-      const subs = [
-        { bookingId: cell.day || false, subIdx: (d - 1) * 2 },
-        { bookingId: cell.night || false, subIdx: (d - 1) * 2 + 1 },
-      ]
-      for (const { bookingId, subIdx } of subs) {
-        if (bookingId && cur && cur.bookingId === bookingId) {
-          cur.length++
-        } else {
-          if (cur) spans.push(cur)
-          cur = bookingId ? { bookingId, start: subIdx, length: 1 } : null
-        }
-      }
-    }
-    if (cur) spans.push(cur)
-    return spans
-  }
-
-  function getSpanColor(bookingId) {
-    if (!bookingId || bookingId === true) return '#6b7280'
-    return BOOKING_OUTLINE_COLORS[bookingId % BOOKING_OUTLINE_COLORS.length]
-  }
 
   if (loading) {
     return (
@@ -188,10 +159,14 @@ export default function PublicCalendar() {
     )
   }
 
+  if (typeGroups.length === 0) {
+    return <p className="text-center text-gray-400 py-12">No rooms available.</p>
+  }
+
   return (
-    <div>
+    <div className="space-y-6">
       {/* Month navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between">
         <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <ChevronLeft size={20} />
         </button>
@@ -204,192 +179,129 @@ export default function PublicCalendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-5">
-        <div className="flex items-center gap-1.5 text-sm">
-          <span className="w-4 h-4 rounded-sm inline-block bg-ocean-500" />
-          <span className="text-gray-600">D — Day (8AM–5PM)</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-sm">
-          <span className="w-4 h-4 rounded-sm inline-block bg-slate-700" />
-          <span className="text-gray-600">N — Night (5PM–8AM)</span>
-        </div>
+      <div className="flex flex-wrap items-center gap-3 text-xs">
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded bg-gray-100 border border-gray-300 inline-block" /> All Available
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded bg-emerald-500 inline-block" /> Some Booked
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded bg-amber-500 inline-block" /> 50%+ Booked
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded bg-orange-500 inline-block" /> 80%+ Booked
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded bg-red-500 inline-block" /> Fully Booked
+        </span>
       </div>
 
-      {/* Week scroll buttons */}
-      <div className="flex items-center justify-between mb-2">
-        <button
-          onClick={() => scrollByDays(-7)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          <ChevronLeft size={16} /> Previous 7 days
-        </button>
-        <span className="text-xs text-gray-400">Swipe or scroll to browse</span>
-        <button
-          onClick={() => scrollByDays(7)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800 transition-colors"
-        >
-          Next 7 days <ChevronRight size={16} />
-        </button>
-      </div>
+      {/* One calendar card per room type */}
+      {typeGroups.map(group => {
+        const showSlots = group.hasSlotMode && !group.hasDayOnly
 
-      {/* Timeline */}
-      <div className="rounded-xl border border-gray-200 bg-white">
-        <div className="flex">
-          {/* Sticky room name column */}
-          <div className="w-[140px] min-w-[140px] flex-shrink-0 z-20">
-            {/* Header cells — 2 rows to match date + D/N header */}
-            <div className="bg-gray-100 border-r border-b border-gray-200 px-3 font-semibold text-sm text-gray-700" style={{ height: '34px', display: 'flex', alignItems: 'center' }}>
-              Room
+        return (
+          <div key={group.type} className="card overflow-hidden">
+            {/* Type header */}
+            <div
+              className="px-5 py-3 border-b flex items-center justify-between"
+              style={{ backgroundColor: group.color.bg, borderColor: group.color.border }}
+            >
+              <h3 className="font-semibold text-base" style={{ color: group.color.text }}>
+                {group.label}
+              </h3>
+              <span className="text-sm font-medium" style={{ color: group.color.text }}>
+                {group.totalUnits} unit{group.totalUnits !== 1 ? 's' : ''} total
+              </span>
             </div>
-            <div className="bg-gray-50 border-r border-b border-gray-200 px-3 text-xs text-gray-400" style={{ height: '22px', display: 'flex', alignItems: 'center' }}>
-            </div>
-            {/* Group headers + room name cells */}
-            {groupedRooms.map(group => (
-              <div key={group.type}>
-                <div
-                  className="flex items-center gap-2 px-3 font-semibold text-sm border-b border-r border-gray-200"
-                  style={{ backgroundColor: group.color.bg, color: group.color.text, height: '33px' }}
-                >
-                  <span
-                    className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0"
-                    style={{ backgroundColor: group.color.bar }}
-                  />
-                  <span className="truncate">{group.label}</span>
+
+            {/* Calendar */}
+            <div className="p-4">
+              <div className="border rounded-xl overflow-hidden">
+                {/* Day headers */}
+                <div className="grid grid-cols-7 bg-gray-50 border-b">
+                  {DAY_ABBR.map(d => (
+                    <div key={d} className="text-center text-[10px] font-semibold text-gray-500 py-1.5">{d}</div>
+                  ))}
                 </div>
-                {group.rooms.map(room => (
-                  <div
-                    key={room.room_id}
-                    className="bg-white border-r border-b border-gray-100 px-3 text-sm text-gray-700 truncate flex items-center"
-                    title={room.room_name}
-                    style={{ height: '40px' }}
-                  >
-                    {room.room_name}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
 
-          {/* Scrollable days area */}
-          <div className="flex-1 overflow-x-auto" ref={scrollRef}>
-            <div style={{ width: `${gridTotalWidth}px` }}>
-              {/* Header row 1: Day name + number */}
-              <div className="flex border-b border-gray-200" style={{ height: '34px' }}>
-                {daysArray.map(d => (
-                  <div
-                    key={d.day}
-                    className={`text-center text-xs leading-tight flex flex-col justify-center ${
-                      d.isToday
-                        ? 'bg-ocean-100 font-bold text-ocean-700'
-                        : d.isWeekend
-                          ? 'bg-gray-100 text-gray-500'
-                          : 'bg-gray-50 text-gray-500'
-                    }`}
-                    style={{
-                      width: `${DAY_COL_WIDTH}px`,
-                      minWidth: `${DAY_COL_WIDTH}px`,
-                      borderRight: '2px solid #d1d5db',
-                    }}
-                  >
-                    <div className="font-medium text-[10px]">{d.abbr}</div>
-                    <div className="text-sm font-semibold">{d.day}</div>
-                  </div>
-                ))}
-              </div>
+                {/* Calendar grid */}
+                <div className="grid grid-cols-7">
+                  {calendarDays.map((cell, idx) => {
+                    if (!cell) return <div key={`e-${idx}`} className="border-b border-r border-gray-100 h-[4.5rem]" />
 
-              {/* Header row 2: D | N sub-labels */}
-              <div className="flex border-b border-gray-300" style={{ height: '22px' }}>
-                {daysArray.map(d => (
-                  <div
-                    key={d.day}
-                    className="flex"
-                    style={{
-                      width: `${DAY_COL_WIDTH}px`,
-                      minWidth: `${DAY_COL_WIDTH}px`,
-                      borderRight: '2px solid #d1d5db',
-                    }}
-                  >
-                    <div
-                      className={`flex-1 text-center text-[9px] font-bold flex items-center justify-center ${
-                        d.isToday ? 'bg-ocean-50 text-ocean-600' : 'bg-amber-50 text-amber-700'
-                      }`}
-                      style={{ borderRight: '1px solid #cbd5e1' }}
-                    >
-                      D
-                    </div>
-                    <div
-                      className={`flex-1 text-center text-[9px] font-bold flex items-center justify-center ${
-                        d.isToday ? 'bg-ocean-50 text-ocean-600' : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      N
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    const { day, dateStr, isPast, isToday, isWeekend } = cell
 
-              {/* Room groups */}
-              {groupedRooms.map(group => (
-                <div key={group.type}>
-                  {/* Group header spacer (matches sticky side) */}
-                  <div
-                    className="border-b border-gray-200"
-                    style={{ backgroundColor: group.color.bg, height: '33px' }}
-                  />
+                    if (showSlots) {
+                      // Slot mode: show day and night separately
+                      const dayBooked = group.bookedBySlot[`${dateStr}:day`] || 0
+                      const nightBooked = group.bookedBySlot[`${dateStr}:night`] || 0
+                      const total = group.totalUnits
 
-                  {/* Room rows */}
-                  {group.rooms.map(room => {
-                    const bookedCells = computeBookedCells(room)
-                    const spans = computeBookingSpans(bookedCells)
-                    return (
-                      <div key={room.room_id} className="relative flex border-b border-gray-100" style={{ height: '40px' }}>
-                        {/* Background cells for borders & highlighting */}
-                        {daysArray.map(d => (
-                          <div
-                            key={d.day}
-                            className="flex"
-                            style={{
-                              width: `${DAY_COL_WIDTH}px`,
-                              minWidth: `${DAY_COL_WIDTH}px`,
-                              borderRight: '2px solid #e5e7eb',
-                            }}
-                          >
-                            <div
-                              className={`flex-1 ${d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''}`}
-                              style={{ borderRight: '1px solid #e2e8f0' }}
-                            />
-                            <div className={`flex-1 ${d.isToday ? 'bg-ocean-50/50' : d.isWeekend ? 'bg-gray-50/50' : ''}`} />
+                      return (
+                        <div
+                          key={dateStr}
+                          className={`border-b border-r border-gray-100 p-1 ${isPast ? 'opacity-50 bg-gray-50' : isToday ? 'bg-ocean-50' : isWeekend ? 'bg-gray-50/50' : 'bg-white'}`}
+                        >
+                          <div className={`text-xs font-medium mb-0.5 ${isToday ? 'text-ocean-700 font-bold' : isPast ? 'text-gray-400' : 'text-gray-600'}`}>
+                            {day}
                           </div>
-                        ))}
-                        {/* Booking span overlays */}
-                        {spans.map((span, i) => (
-                          <div
-                            key={i}
-                            className="absolute rounded-sm"
-                            title={`${room.room_name} — Booked`}
-                            style={{
-                              left: `${span.start * SUB_COL_WIDTH + 1}px`,
-                              width: `${span.length * SUB_COL_WIDTH - 2}px`,
-                              top: '8px',
-                              height: '24px',
-                              backgroundColor: getSpanColor(span.bookingId),
-                              opacity: 0.85,
-                            }}
-                          />
-                        ))}
+                          <div className="flex gap-0.5">
+                            <div
+                              className={`flex-1 text-center rounded text-[9px] font-bold py-0.5 ${availColor(dayBooked, total)}`}
+                              title={`Day: ${total - dayBooked} of ${total} available`}
+                            >
+                              {total - dayBooked}/{total}
+                            </div>
+                            <div
+                              className={`flex-1 text-center rounded text-[9px] font-bold py-0.5 ${availColor(nightBooked, total)}`}
+                              title={`Night: ${total - nightBooked} of ${total} available`}
+                            >
+                              {total - nightBooked}/{total}
+                            </div>
+                          </div>
+                          <div className="flex gap-0.5 mt-0.5">
+                            <span className="flex-1 text-center text-[8px] text-gray-400">Day</span>
+                            <span className="flex-1 text-center text-[8px] text-gray-400">Night</span>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    // Overnight / 24hr / day-only: single count per date
+                    const booked = group.bookedByDate[dateStr] || 0
+                    const total = group.totalUnits
+                    const available = total - booked
+
+                    return (
+                      <div
+                        key={dateStr}
+                        className={`border-b border-r border-gray-100 p-1 ${isPast ? 'opacity-50 bg-gray-50' : isToday ? 'bg-ocean-50' : isWeekend ? 'bg-gray-50/50' : 'bg-white'}`}
+                      >
+                        <div className={`text-xs font-medium mb-1 ${isToday ? 'text-ocean-700 font-bold' : isPast ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {day}
+                        </div>
+                        <div
+                          className={`text-center rounded text-[10px] font-bold py-0.5 ${availColor(booked, total)}`}
+                          title={`${available} of ${total} available`}
+                        >
+                          {available}/{total}
+                        </div>
                       </div>
                     )
                   })}
                 </div>
-              ))}
+              </div>
+
+              {/* Sub-legend for slot mode */}
+              {showSlots && (
+                <p className="text-[10px] text-gray-400 mt-2">Numbers show available/total units per slot. Day = 8AM–5PM, Night = 5PM–8AM.</p>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-
-      <p className="text-center text-sm text-gray-400 mt-4">
-        Each date is split into Day (D) and Night (N) slots
-      </p>
+        )
+      })}
     </div>
   )
 }
