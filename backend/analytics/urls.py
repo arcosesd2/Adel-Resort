@@ -12,4 +12,5 @@ urlpatterns = [
     path('backups/create/', views.backup_create, name='backup-create'),
     path('backups/download/', views.backup_download, name='backup-download'),
     path('backups/restore/', views.backup_restore, name='backup-restore'),
+    path('backups/quick-restore/', views.backup_quick_restore, name='backup-quick-restore'),
 ]

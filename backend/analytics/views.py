@@ -572,3 +572,73 @@ def backup_restore(request):
         if os.path.isfile(upload_path):
             os.remove(upload_path)
         return Response({'detail': f'Restore failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsSuperAdmin])
+def backup_quick_restore(request):
+    """Restore from the latest local backup (created every 30 minutes by cron)."""
+    if not _validate_pin(request):
+        return Response({'detail': 'Invalid PIN.'}, status=status.HTTP_403_FORBIDDEN)
+    import subprocess, gzip
+
+    # Find the latest local backup
+    if not os.path.isdir(BACKUP_DIR):
+        return Response({'detail': 'No backup directory found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    local_backups = sorted(
+        [f for f in os.listdir(BACKUP_DIR) if f.endswith('_local.sql.gz')],
+        reverse=True,
+    )
+    if not local_backups:
+        return Response({'detail': 'No local backups found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    latest_file = local_backups[0]
+    latest_path = os.path.join(BACKUP_DIR, latest_file)
+
+    # Create a safety backup first
+    safety_timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+    safety_filename = f'adel_resort_pre_quickrestore_{safety_timestamp}.sql.gz'
+    safety_filepath = os.path.join(BACKUP_DIR, safety_filename)
+
+    try:
+        result = subprocess.run(
+            ['pg_dump', 'adel_resort'],
+            capture_output=True, text=True, timeout=300,
+        )
+        if result.returncode != 0:
+            return Response({'detail': f'Safety backup failed: {result.stderr}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        with gzip.open(safety_filepath, 'wb') as f:
+            f.write(result.stdout.encode('utf-8') if isinstance(result.stdout, str) else result.stdout)
+
+        # Restore from the latest local backup
+        with gzip.open(latest_path, 'rb') as f:
+            sql_content = f.read()
+
+        restore_result = subprocess.run(
+            ['psql', 'adel_resort'],
+            input=sql_content,
+            capture_output=True, timeout=600,
+        )
+
+        if restore_result.returncode != 0:
+            return Response({
+                'detail': 'Quick restore completed with warnings.',
+                'restored_from': latest_file,
+                'safety_backup': safety_filename,
+                'output': restore_result.stderr.decode('utf-8', errors='replace') if isinstance(restore_result.stderr, bytes) else restore_result.stderr,
+            }, status=status.HTTP_207_MULTI_STATUS)
+
+        try:
+            from accounts.models import log_activity
+            log_activity(request.user, 'backup_quick_restore', f'Quick restore from {latest_file}. Safety backup: {safety_filename}')
+        except Exception:
+            pass
+
+        return Response({
+            'detail': 'Database restored successfully from latest backup.',
+            'restored_from': latest_file,
+            'safety_backup': safety_filename,
+        })
+    except Exception as e:
+        return Response({'detail': f'Quick restore failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -111,6 +111,7 @@ export default function Footer() {
             <p className="text-center text-ocean-400 text-sm">
               &copy; {new Date().getFullYear()} Adel Beach Resort. All rights reserved.
             </p>
+            <p className="text-center text-ocean-600 text-xs mt-2">v2.4.0</p>
           </div>
         </div>
       </footer>
