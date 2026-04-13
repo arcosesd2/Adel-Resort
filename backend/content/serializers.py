@@ -30,10 +30,12 @@ class EventSerializer(ImageURLMixin, serializers.ModelSerializer):
 
 class PromotionSerializer(ImageURLMixin, serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
+    discount_type_display = serializers.CharField(source='get_discount_type_display', read_only=True)
+    schedule_type_display = serializers.CharField(source='get_schedule_type_display', read_only=True)
 
     class Meta:
         model = Promotion
-        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_info', 'valid_from', 'valid_until']
+        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_type', 'discount_type_display', 'discount_value', 'schedule_type', 'schedule_type_display', 'valid_from', 'valid_until', 'applicable_days', 'room_types', 'allows_voucher', 'min_booking_amount']
 
 
 class PricingSerializer(serializers.ModelSerializer):
@@ -64,10 +66,12 @@ class AdminEventSerializer(ImageURLMixin, serializers.ModelSerializer):
 
 class AdminPromotionSerializer(ImageURLMixin, serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
+    discount_type_display = serializers.CharField(source='get_discount_type_display', read_only=True)
+    schedule_type_display = serializers.CharField(source='get_schedule_type_display', read_only=True)
 
     class Meta:
         model = Promotion
-        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_info', 'valid_from', 'valid_until', 'is_active', 'announcement_sent_at', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'description', 'image', 'image_url', 'discount_type', 'discount_type_display', 'discount_value', 'schedule_type', 'schedule_type_display', 'valid_from', 'valid_until', 'applicable_days', 'room_types', 'allows_voucher', 'min_booking_amount', 'is_active', 'announcement_sent_at', 'created_at', 'updated_at']
         read_only_fields = ['announcement_sent_at', 'created_at', 'updated_at']
 
 

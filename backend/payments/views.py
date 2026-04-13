@@ -52,7 +52,23 @@ def submit_proof_of_payment(request):
 
     amount = booking.total_price
     discount_amount = Decimal('0')
+    promo_discount_amount = Decimal('0')
     voucher_code = request.data.get('voucher_code', '').strip()
+    promotion_id = request.data.get('promotion_id')
+
+    if promotion_id:
+        from content.models import Promotion
+        from vouchers.views import _is_promotion_applicable, _calc_promo_discount
+        try:
+            promo = Promotion.objects.get(pk=promotion_id, is_active=True)
+            booking_dates = [slot['date'] for slot in booking.slots] if booking.slots else [booking.check_in.isoformat()]
+            room_type = booking.room.room_type
+            if _is_promotion_applicable(promo, booking_dates, room_type):
+                if not promo.min_booking_amount or amount >= promo.min_booking_amount:
+                    promo_discount_amount = _calc_promo_discount(promo, amount)
+                    amount = amount - promo_discount_amount
+        except (Promotion.DoesNotExist, ValueError):
+            pass
 
     if voucher_code:
         from django.db import transaction
@@ -63,6 +79,15 @@ def submit_proof_of_payment(request):
                 voucher = Voucher.objects.select_for_update().get(code__iexact=voucher_code)
             except Voucher.DoesNotExist:
                 return Response({'detail': 'Invalid voucher code.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if promotion_id and promo_discount_amount > 0:
+                from content.models import Promotion
+                try:
+                    promo = Promotion.objects.get(pk=promotion_id)
+                    if not promo.allows_voucher:
+                        return Response({'detail': 'This promotion cannot be combined with a voucher.'}, status=status.HTTP_400_BAD_REQUEST)
+                except Promotion.DoesNotExist:
+                    pass
 
             booking_dates = [slot['date'] for slot in booking.slots] if booking.slots else [booking.check_in]
             if not voucher.is_active or get_booking_voucher_validity_status(voucher, booking_dates) != 'valid':

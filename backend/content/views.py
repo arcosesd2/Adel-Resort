@@ -1,3 +1,4 @@
+from django.db import models as db_models
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes, throttle_classes
@@ -44,7 +45,14 @@ class PromotionListView(ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Promotion.objects.filter(is_active=True, valid_until__gte=timezone.now().date())
+        today = timezone.now().date()
+        return Promotion.objects.filter(
+            is_active=True,
+        ).filter(
+            models.Q(schedule_type='permanent')
+            | models.Q(schedule_type='recurring')
+            | db_models.Q(schedule_type='duration', valid_from__lte=today, valid_until__gte=today)
+        )
 
 
 class PricingListView(ListAPIView):

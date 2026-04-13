@@ -21,6 +21,8 @@ function CheckoutContent() {
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherApplied, setVoucherApplied] = useState(null)
   const [applyingVoucher, setApplyingVoucher] = useState(false)
+  const [promotions, setPromotions] = useState([])
+  const [selectedPromo, setSelectedPromo] = useState(null)
   const [paymentType, setPaymentType] = useState('full')
   const [timeLeft, setTimeLeft] = useState('')
 
@@ -54,6 +56,9 @@ function CheckoutContent() {
           return
         }
         setBooking(data)
+        api.get(`/vouchers/promotions/?booking_id=${bookingId}`)
+          .then(({ data }) => setPromotions(data))
+          .catch(() => {})
       } catch {
         router.push('/dashboard')
       } finally {
@@ -94,10 +99,9 @@ function CheckoutContent() {
     if (!voucherCode.trim()) return
     setApplyingVoucher(true)
     try {
-      const { data } = await api.post('/vouchers/validate/', {
-        code: voucherCode.trim(),
-        booking_id: bookingId,
-      })
+      const payload = { code: voucherCode.trim(), booking_id: bookingId }
+      if (selectedPromo) payload.promotion_id = selectedPromo.id
+      const { data } = await api.post('/vouchers/validate/', payload)
       setVoucherApplied(data)
       toast.success('Voucher applied!')
     } catch (err) {
@@ -127,7 +131,7 @@ function CheckoutContent() {
 
   if (!booking) return null
 
-  const basePrice = voucherApplied ? parseFloat(voucherApplied.final_price) : parseFloat(booking.total_price)
+  const basePrice = voucherApplied ? parseFloat(voucherApplied.final_price) : selectedPromo ? parseFloat(selectedPromo.final_price) : parseFloat(booking.total_price)
   const amountDue = paymentType === 'downpayment' ? (basePrice * 0.2).toFixed(2) : basePrice.toFixed(2)
   const remainingBalance = paymentType === 'downpayment' ? (basePrice * 0.8).toFixed(2) : '0.00'
 
@@ -180,6 +184,18 @@ function CheckoutContent() {
                   </span>
                   <span className="font-medium">₱{booking.total_price}</span>
                 </div>
+                {selectedPromo && !voucherApplied && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Promotion ({selectedPromo.title})</span>
+                    <span>-₱{selectedPromo.discount_amount}</span>
+                  </div>
+                )}
+                {voucherApplied && voucherApplied.promotion_discount && parseFloat(voucherApplied.promotion_discount) > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Promotion Discount</span>
+                    <span>-₱{voucherApplied.promotion_discount}</span>
+                  </div>
+                )}
                 {voucherApplied && (
                   <div className="flex justify-between text-green-600">
                     <span>Voucher ({voucherApplied.code})</span>
@@ -250,7 +266,61 @@ function CheckoutContent() {
                 )}
               </div>
 
+              {/* Promotions */}
+              {promotions.length > 0 && (
+                <div className="mt-4 border-t pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Tag size={14} className="inline mr-1" />
+                    Available Promotions
+                  </label>
+                  <div className="space-y-2">
+                    {promotions.map(promo => (
+                      <label
+                        key={promo.id}
+                        className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                          selectedPromo?.id === promo.id
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="promotion"
+                          checked={selectedPromo?.id === promo.id}
+                          onChange={() => { setSelectedPromo(promo); setVoucherApplied(null) }}
+                          className="accent-green-600"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-gray-800 text-sm">{promo.title}</span>
+                          <span className="ml-2 text-xs font-bold text-green-700">-₱{promo.discount_amount}</span>
+                          {!promo.allows_voucher && (
+                            <span className="ml-2 text-xs text-gray-400">(cannot combine with voucher)</span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                    <label
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                        !selectedPromo
+                          ? 'border-gray-400 bg-gray-50'
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="promotion"
+                        checked={!selectedPromo}
+                        onChange={() => { setSelectedPromo(null); setVoucherApplied(null) }}
+                        className="accent-gray-600"
+                      />
+                      <span className="text-sm text-gray-600">No promotion</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {/* Voucher Code Input */}
+              {(!selectedPromo || selectedPromo.allows_voucher) && (
               <div className="mt-4 border-t pt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Tag size={14} className="inline mr-1" />
@@ -284,7 +354,9 @@ function CheckoutContent() {
                     </button>
                   </div>
                 )}
+                )}
               </div>
+              )}
 
               <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 bg-gray-50 rounded-lg p-3">
                 <Shield size={16} className="text-ocean-500 flex-shrink-0" />
@@ -309,6 +381,7 @@ function CheckoutContent() {
               totalAmount={amountDue}
               paymentType={paymentType}
               voucherCode={voucherApplied?.code || ''}
+              promotionId={selectedPromo?.id || ''}
               onSuccess={handlePaymentSuccess}
             />
           </div></FadeInUp>

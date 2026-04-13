@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('validate/', views.validate_voucher),
+    path('promotions/', views.applicable_promotions),
     path('', views.voucher_list_create),
     path('<int:pk>/toggle/', views.voucher_toggle),
     path('<int:pk>/', views.voucher_delete),

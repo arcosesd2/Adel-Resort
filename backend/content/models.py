@@ -48,19 +48,35 @@ class Event(models.Model):
 
 
 class Promotion(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('percentage', 'Percentage'),
+        ('fixed', 'Fixed Amount'),
+    ]
+    SCHEDULE_TYPE_CHOICES = [
+        ('duration', 'Date Range'),
+        ('recurring', 'Recurring (Weekly)'),
+        ('permanent', 'Permanent'),
+    ]
+
     title = models.CharField(max_length=200)
     description = models.TextField()
     image = models.ImageField(upload_to='promotions/', blank=True, null=True)
-    discount_info = models.CharField(max_length=200)
-    valid_from = models.DateField()
-    valid_until = models.DateField()
+    discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES, default='percentage')
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    schedule_type = models.CharField(max_length=10, choices=SCHEDULE_TYPE_CHOICES, default='duration')
+    valid_from = models.DateField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True)
+    applicable_days = models.JSONField(default=list)
+    room_types = models.JSONField(default=list)
+    allows_voucher = models.BooleanField(default=False)
+    min_booking_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     announcement_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-valid_from']
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.title

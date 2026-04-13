@@ -357,7 +357,7 @@ export default function PublicCalendar() {
                                 <div
                                   className={`flex-1 flex items-center justify-center text-[10px] font-bold transition-colors ${
                                     d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
-                                  } ${cellBg(dayBooked, max)} ${!cellBg(dayBooked, max) ? (d.isWeekend ? 'bg-gray-50/50 text-gray-400' : 'text-gray-400') : ''}`}
+                                  } ${cellBg(dayBooked, max)} ${!cellBg(dayBooked, max) ? 'text-gray-400' : ''}`}
                                   style={{ borderRight: '1px solid #e2e8f0' }}
                                   title={`${room.room_name} — Day: ${dayBooked}/${max} booked`}
                                 >
@@ -373,7 +373,7 @@ export default function PublicCalendar() {
                                   <div
                                     className={`flex-1 flex items-center justify-center text-[10px] font-bold transition-colors ${
                                       d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
-                                    } ${cellBg(nightBooked, max)} ${!cellBg(nightBooked, max) ? (d.isWeekend ? 'bg-gray-50/50 text-gray-400' : 'text-gray-400') : ''}`}
+                                    } ${cellBg(nightBooked, max)} ${!cellBg(nightBooked, max) ? 'text-gray-400' : ''}`}
                                     title={`${room.room_name} — Night: ${nightBooked}/${max} booked`}
                                   >
                                     {nightBooked > 0 ? `${nightBooked}/${max}` : ''}
@@ -392,7 +392,7 @@ export default function PublicCalendar() {
                               key={d.day}
                               className={`flex items-center justify-center text-[10px] font-bold transition-colors ${
                                 d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
-                              } ${cellBg(booked, max)} ${!cellBg(booked, max) ? (d.isWeekend ? 'bg-gray-50/50 text-gray-400' : 'text-gray-400') : ''}`}
+                              } ${cellBg(booked, max)} ${!cellBg(booked, max) ? 'text-gray-400' : ''}`}
                               style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px`, borderRight: '2px solid #e5e7eb' }}
                               title={`${room.room_name} — ${booked}/${max} booked`}
                             >

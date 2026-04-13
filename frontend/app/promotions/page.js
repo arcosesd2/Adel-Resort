@@ -9,6 +9,22 @@ import { cloudinaryUrl } from '@/lib/cloudinary'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80'
 
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+function discountBadge(promo) {
+  const val = promo.discount_value
+  return promo.discount_type === 'percentage' ? `${val}% OFF` : `₱${Number(val).toLocaleString()} OFF`
+}
+
+function scheduleText(promo) {
+  if (promo.schedule_type === 'permanent') return 'Ongoing'
+  if (promo.schedule_type === 'recurring') {
+    const days = (promo.applicable_days || []).sort().map(d => DAY_LABELS[d]).join(', ')
+    return days ? `Every ${days}` : 'Recurring'
+  }
+  return `${new Date(promo.valid_from).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date(promo.valid_until).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+}
+
 export default function PromotionsPage() {
   const [promos, setPromos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -68,14 +84,17 @@ export default function PromotionsPage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                    {promo.discount_info}
+                    {discountBadge(promo)}
                   </div>
                 </div>
                 <div className="p-5">
                   <h3 className="font-serif text-xl font-bold text-gray-900 mb-2">{promo.title}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed mb-3">{promo.description}</p>
-                  <div className="text-xs text-gray-400">
-                    Valid: {formatDate(promo.valid_from)} &ndash; {formatDate(promo.valid_until)}
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <span>{scheduleText(promo)}</span>
+                    {promo.allows_voucher && (
+                      <span className="text-blue-600 font-medium">Stackable with vouchers</span>
+                    )}
                   </div>
                 </div>
               </div></StaggerItem>

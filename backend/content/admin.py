@@ -21,7 +21,7 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(Promotion)
 class PromotionAdmin(admin.ModelAdmin):
-    list_display = ('title', 'discount_info', 'valid_from', 'valid_until', 'is_active')
+    list_display = ('title', 'discount_type', 'discount_value', 'schedule_type', 'is_active')
     list_filter = ('is_active',)
     list_editable = ('is_active',)
     search_fields = ('title',)
