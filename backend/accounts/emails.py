@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -135,3 +136,52 @@ def send_booking_completed_email(user, booking):
             'frontend_url': settings.FRONTEND_URL,
         },
     )
+
+
+NOTIFICATION_TYPE_SUBJECTS = {
+    'new_booking': 'New Booking Received',
+    'booking_cancelled': 'Booking Cancelled',
+    'pending_payment_review': 'Payment Awaiting Review',
+    'new_review_pending': 'New Review Pending Approval',
+    'new_message': 'New Message',
+    'system': 'System Notification',
+    'booking_confirmed': 'Booking Confirmed',
+    'payment_received': 'Payment Received',
+    'booking_completed': 'Booking Completed',
+    'review_approved': 'Review Approved',
+}
+
+
+def _send_staff_notification_emails_sync(notification_type, title, message, link='', exclude_user=None):
+    from .models import User
+
+    staff_users = User.objects.filter(is_staff=True, is_active=True).exclude(email__isnull=True).exclude(email='')
+    if exclude_user:
+        staff_users = staff_users.exclude(pk=exclude_user.pk)
+
+    subject = NOTIFICATION_TYPE_SUBJECTS.get(notification_type, title)
+    dashboard_url = f"{settings.FRONTEND_URL}{link or '/admin-dashboard'}"
+    sent = 0
+    for staff in staff_users:
+        ctx = {
+            'staff': staff,
+            'title': title,
+            'message': message,
+            'dashboard_url': dashboard_url,
+            'frontend_url': settings.FRONTEND_URL,
+        }
+        if _send_email(subject=subject, to_email=staff.email, template_name='staff_notification', context=ctx):
+            sent += 1
+    logger.info(f'Staff notification email sent to {sent}/{staff_users.count()} staff for "{title}"')
+    return sent
+
+
+def send_staff_notification_emails(notification_type, title, message, link='', exclude_user=None):
+    thread = threading.Thread(
+        target=_send_staff_notification_emails_sync,
+        args=(notification_type, title, message, link),
+        kwargs={'exclude_user': exclude_user},
+        daemon=True,
+    )
+    thread.start()
+    return thread

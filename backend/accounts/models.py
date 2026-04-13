@@ -154,6 +154,11 @@ def notify_staff(notification_type, title, message, link='', exclude_user=None):
             link=link,
         ))
     Notification.objects.bulk_create(notifications)
+    try:
+        from .emails import send_staff_notification_emails
+        send_staff_notification_emails(notification_type, title, message, link, exclude_user=exclude_user)
+    except Exception:
+        pass
     return len(notifications)
 
 
