@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Check, CheckCheck, Loader2 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Bell, Check, CheckCheck, Trash2, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
+import useNotificationStore from '@/store/notificationStore'
 
 const typeIcons = {
   booking_confirmed: '✅',
@@ -22,6 +23,7 @@ const typeIcons = {
 export default function StaffNotificationsPage() {
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
+  const { decrementUnread, resetUnread } = useNotificationStore()
 
   useEffect(() => {
     api.get('/auth/staff/notifications/?limit=100')
@@ -34,6 +36,7 @@ export default function StaffNotificationsPage() {
     try {
       await api.patch(`/auth/staff/notifications/${id}/read/`)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+      decrementUnread()
     } catch {
       toast.error('Failed to mark as read')
     }
@@ -43,9 +46,22 @@ export default function StaffNotificationsPage() {
     try {
       await api.post('/auth/staff/notifications/read-all/')
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+      resetUnread()
       toast.success('All marked as read')
     } catch {
       toast.error('Failed to mark all as read')
+    }
+  }
+
+  const deleteNotification = async (id) => {
+    try {
+      const notif = notifications.find(n => n.id === id)
+      await api.delete(`/auth/staff/notifications/${id}/delete/`)
+      setNotifications(prev => prev.filter(n => n.id !== id))
+      if (notif && !notif.is_read) decrementUnread()
+      toast.success('Notification deleted')
+    } catch {
+      toast.error('Failed to delete notification')
     }
   }
 
@@ -89,47 +105,59 @@ export default function StaffNotificationsPage() {
       </div>
 
       <div className="space-y-2">
-        {notifications.map((notif, i) => (
-          <motion.div
-            key={notif.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.03 }}
-            className={`glass-card p-4 flex items-start gap-3 transition-colors ${
-              !notif.is_read ? 'border-l-4 border-slate-700 bg-slate-50/50' : ''
-            }`}
-          >
-            <span className="text-xl mt-0.5">{typeIcons[notif.notification_type] || '📢'}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  {notif.link ? (
-                    <Link href={notif.link} className="font-medium text-gray-800 hover:text-slate-600">
-                      {notif.title}
-                    </Link>
-                  ) : (
-                    <span className="font-medium text-gray-800">{notif.title}</span>
-                  )}
-                  <p className="text-sm text-gray-500 mt-0.5">{notif.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(notif.created_at).toLocaleDateString('en-US', {
-                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })}
-                  </p>
+        <AnimatePresence>
+          {notifications.map((notif, i) => (
+            <motion.div
+              key={notif.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ delay: i * 0.03 }}
+              className={`glass-card p-4 flex items-start gap-3 transition-colors ${
+                !notif.is_read ? 'border-l-4 border-slate-700 bg-slate-50/50' : ''
+              }`}
+            >
+              <span className="text-xl mt-0.5">{typeIcons[notif.notification_type] || '📢'}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    {notif.link ? (
+                      <Link href={notif.link} className="font-medium text-gray-800 hover:text-slate-600">
+                        {notif.title}
+                      </Link>
+                    ) : (
+                      <span className="font-medium text-gray-800">{notif.title}</span>
+                    )}
+                    <p className="text-sm text-gray-500 mt-0.5">{notif.message}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {new Date(notif.created_at).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {!notif.is_read && (
+                      <button
+                        onClick={() => markAsRead(notif.id)}
+                        className="text-slate-500 hover:text-slate-600 p-1"
+                        title="Mark as read"
+                      >
+                        <Check size={16} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteNotification(notif.id)}
+                      className="text-gray-400 hover:text-red-500 p-1"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
-                {!notif.is_read && (
-                  <button
-                    onClick={() => markAsRead(notif.id)}
-                    className="shrink-0 text-slate-500 hover:text-slate-600 p-1"
-                    title="Mark as read"
-                  >
-                    <Check size={16} />
-                  </button>
-                )}
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   )

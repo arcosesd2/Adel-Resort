@@ -8,6 +8,7 @@ import ChatWidget from '@/components/ChatWidget'
 import AuthValidator from '@/components/AuthValidator'
 import PageTransitionWrapper from '@/components/PageTransitionWrapper'
 import JsonLd from '@/components/JsonLd'
+import NotificationPopup from '@/components/NotificationPopup'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -64,6 +65,7 @@ export default function RootLayout({ children }) {
         </main>
         <Footer />
         <ChatWidget />
+        <NotificationPopup />
         <Toaster
           position="top-right"
           toastOptions={{

@@ -29,6 +29,7 @@ urlpatterns = [
     path('notifications/', views.notification_list, name='notification-list'),
     path('notifications/unread-count/', views.notification_unread_count, name='notification-unread-count'),
     path('notifications/<int:pk>/read/', views.notification_read, name='notification-read'),
+    path('notifications/<int:pk>/delete/', views.notification_delete, name='notification-delete'),
     path('notifications/read-all/', views.notification_read_all, name='notification-read-all'),
     path('notification-preferences/', views.notification_preferences, name='notification-preferences'),
 
@@ -36,6 +37,7 @@ urlpatterns = [
     path('staff/notifications/', views.staff_notification_list, name='staff-notification-list'),
     path('staff/notifications/unread-count/', views.staff_notification_unread_count, name='staff-notification-unread-count'),
     path('staff/notifications/<int:pk>/read/', views.staff_notification_read, name='staff-notification-read'),
+    path('staff/notifications/<int:pk>/delete/', views.staff_notification_delete, name='staff-notification-delete'),
     path('staff/notifications/read-all/', views.staff_notification_read_all, name='staff-notification-read-all'),
 
     # Superadmin: User management

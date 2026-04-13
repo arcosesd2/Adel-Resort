@@ -426,6 +426,17 @@ def notification_read_all(request):
     return Response({'detail': 'All notifications marked as read.'})
 
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def notification_delete(request, pk):
+    try:
+        notification = Notification.objects.get(pk=pk, user=request.user)
+    except Notification.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    notification.delete()
+    return Response({'detail': 'Notification deleted.'})
+
+
 # ─── Notification Preferences ─────────────────────────────────────────
 
 @api_view(['GET', 'PATCH'])
@@ -752,6 +763,19 @@ def staff_notification_read_all(request):
         return Response({'detail': 'Staff only.'}, status=status.HTTP_403_FORBIDDEN)
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return Response({'detail': 'All notifications marked as read.'})
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def staff_notification_delete(request, pk):
+    if not request.user.is_staff:
+        return Response({'detail': 'Staff only.'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        notification = Notification.objects.get(pk=pk, user=request.user)
+    except Notification.DoesNotExist:
+        return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    notification.delete()
+    return Response({'detail': 'Notification deleted.'})
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────

@@ -7,30 +7,26 @@ import Image from 'next/image'
 import { Menu, X, Bell, UserCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useAuthStore from '@/store/authStore'
+import useNotificationStore from '@/store/notificationStore'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
   const { isAuthenticated, isReady, logout, user } = useAuthStore()
+  const { unreadCount, startPolling, stopPolling } = useNotificationStore()
   const router = useRouter()
   const pathname = usePathname()
 
-  // Poll notification unread count
   useEffect(() => {
-    if (!isAuthenticated) return
-    const endpoint = user?.is_staff ? '/auth/staff/notifications/unread-count/' : '/auth/notifications/unread-count/'
-    const fetchCount = () => {
-      api.get(endpoint)
-        .then(res => setUnreadCount(res.data.count))
-        .catch(() => {})
+    if (isAuthenticated) {
+      startPolling()
+    } else {
+      stopPolling()
     }
-    fetchCount()
-    const interval = setInterval(fetchCount, 60000)
-    return () => clearInterval(interval)
-  }, [isAuthenticated, user?.is_staff])
+    return () => stopPolling()
+  }, [isAuthenticated])
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)

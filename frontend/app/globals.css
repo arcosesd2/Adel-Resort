@@ -108,6 +108,11 @@ body {
   }
 }
 
+@keyframes shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 /* Print styles */
 @media print {
   body > *:not(.print-receipt) {
