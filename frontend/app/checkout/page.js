@@ -354,7 +354,6 @@ function CheckoutContent() {
                     </button>
                   </div>
                 )}
-                )}
               </div>
               )}
 
