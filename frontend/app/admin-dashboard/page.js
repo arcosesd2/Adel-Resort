@@ -623,7 +623,7 @@ function AdminDashboardContent() {
 
             <div className="mt-4 flex gap-2">
               <button type="submit" disabled={creatingOnsite} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
-                {creatingOnsite ? 'Creating...' : 'Create Booking'}
+                {creatingOnsite ? 'Creating...' : isBackdateMode ? 'Record Past Booking' : 'Create Booking'}
               </button>
               <button type="button" onClick={() => setShowOnsiteForm(false)} className="btn-outline text-sm px-4 py-2">Cancel</button>
             </div>

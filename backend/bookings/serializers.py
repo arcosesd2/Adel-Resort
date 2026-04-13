@@ -199,18 +199,21 @@ class BookingCreateSerializer(BookingSerializer):
 class AdminBookingSerializer(serializers.ModelSerializer):
     guest_name = serializers.SerializerMethodField()
     guest_username = serializers.CharField(source='user.username', read_only=True)
+    guest_email = serializers.EmailField(source='user.email', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
     slots_summary = serializers.CharField(read_only=True)
 
     class Meta:
         model = Booking
         fields = (
-            'id', 'reference_code', 'guest_name', 'guest_username', 'room', 'room_name',
+            'id', 'reference_code', 'guest_name', 'guest_username', 'guest_email',
+            'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'status', 'special_requests', 'created_at', 'is_backdated',
         )
         read_only_fields = (
-            'id', 'reference_code', 'guest_name', 'guest_username', 'room', 'room_name',
+            'id', 'reference_code', 'guest_name', 'guest_username', 'guest_email',
+            'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'created_at', 'is_backdated',
         )

@@ -5,7 +5,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 
 from accounts.permissions import IsSuperAdmin
-from bookings.models import Booking
+from bookings.models import Booking, BookingStatus
 from .models import Review
 from .serializers import ReviewSerializer, CreateReviewSerializer
 
@@ -31,7 +31,7 @@ def create_review(request):
     if booking.user != request.user:
         return Response({'error': 'Not your booking.'}, status=status.HTTP_403_FORBIDDEN)
 
-    if booking.status != 'completed':
+    if booking.status != BookingStatus.COMPLETED:
         return Response({'error': 'Booking must be completed before reviewing.'}, status=status.HTTP_400_BAD_REQUEST)
 
     if hasattr(booking, 'review'):
