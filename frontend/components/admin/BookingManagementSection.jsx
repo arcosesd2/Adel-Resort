@@ -120,6 +120,11 @@ export default function BookingManagementSection() {
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge[b.status] || 'bg-gray-100 text-gray-500'}`}>
                         {b.status}
                       </span>
+                      {b.is_backdated && (
+                        <span className="inline-block ml-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                          Backdated
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-3 text-sm text-gray-500 text-right">
                       {new Date(b.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

@@ -49,6 +49,7 @@ function AdminDashboardContent() {
     room: '', guests: 1, slots: [], special_requests: '', manual_discount: '', manual_discount_type: 'fixed',
   })
   const [creatingOnsite, setCreatingOnsite] = useState(false)
+  const [isBackdateMode, setIsBackdateMode] = useState(false)
   const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
   const [bookingRefreshKey, setBookingRefreshKey] = useState(0)
   const [defaultCheckIn, setDefaultCheckIn] = useState(null)
@@ -240,13 +241,16 @@ function AdminDashboardContent() {
         slots: onsiteForm.slots,
         special_requests: onsiteForm.special_requests,
       }
+      if (isBackdateMode) payload.backdate = true
       if (onsiteVoucherCode.trim()) payload.voucher_code = onsiteVoucherCode.trim()
       if (onsiteForm.manual_discount) {
         payload.manual_discount = parseFloat(onsiteForm.manual_discount)
         payload.manual_discount_type = onsiteForm.manual_discount_type || 'fixed'
       }
       const { data } = await api.post('/bookings/onsite/', payload)
-      let msg = `Onsite booking created! #${data.id} - ${data.room} - ₱${data.total_price}`
+      let msg = isBackdateMode
+        ? `Backdated booking recorded! #${data.id} - ${data.room} - ₱${data.total_price} (COMPLETED)`
+        : `Onsite booking created! #${data.id} - ${data.room} - ₱${data.total_price}`
       if (data.manual_discount) {
         const discountLabel = data.manual_discount_type === 'percentage' ? `${onsiteForm.manual_discount}% (₱${data.manual_discount})` : `₱${data.manual_discount}`
         msg += ` (${discountLabel} discount)`
@@ -255,6 +259,7 @@ function AdminDashboardContent() {
       toast.success(msg)
       setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '', manual_discount: '', manual_discount_type: 'fixed' })
       setOnsiteVoucherCode('')
+      setIsBackdateMode(false)
       setShowOnsiteForm(false)
       setBookingRefreshKey(k => k + 1)
     } catch (err) {
@@ -575,16 +580,37 @@ function AdminDashboardContent() {
               </div>
             </div>
 
+            <div className="mt-4 flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isBackdateMode}
+                  onChange={e => {
+                    setIsBackdateMode(e.target.checked)
+                    setOnsiteForm(f => ({ ...f, slots: [] }))
+                  }}
+                  className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Backdate Booking</span>
+              </label>
+              {isBackdateMode && (
+                <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
+                  Recording a past stay — will be saved as COMPLETED
+                </span>
+              )}
+            </div>
+
             {selectedRoom && (
               <div className="mt-4">
                 <SlotPicker
-                  key={`${selectedRoom.id}-${defaultCheckIn ? 'init' : 'empty'}`}
+                  key={`${selectedRoom.id}-${defaultCheckIn ? 'init' : 'empty'}-${isBackdateMode ? 'bd' : 'normal'}`}
                   roomId={selectedRoom.id}
                   isDayOnly={selectedRoom.is_day_only}
                   bookingMode={selectedRoom.booking_mode}
                   onSlotsChange={(slots) => setOnsiteForm(f => ({ ...f, slots }))}
                   defaultCheckIn={defaultCheckIn}
                   defaultCheckOut={defaultCheckOut}
+                  allowPastDates={isBackdateMode}
                 />
               </div>
             )}

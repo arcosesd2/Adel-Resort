@@ -87,6 +87,7 @@ def onsite_booking(request):
     guests = data.get('guests', 1)
     slots = data.get('slots', [])
     special_requests = data.get('special_requests', '')
+    is_backdate = bool(data.get('backdate', False))
 
     if not guest_name or not room_id or not slots:
         return Response({'detail': 'Guest name, room, and slots are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -150,8 +151,19 @@ def onsite_booking(request):
     min_date = min(slot_dates)
     max_date = max(slot_dates)
 
+    if is_backdate:
+        from datetime import date as date_cls
+        if max_date >= date_cls.today().isoformat():
+            return Response(
+                {'detail': 'Backdated bookings must have all dates in the past.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    check_statuses = ['confirmed', 'pending']
+    if is_backdate:
+        check_statuses.append('completed')
     existing = Booking.objects.filter(
-        room=room, status__in=['confirmed', 'pending'],
+        room=room, status__in=check_statuses,
         check_in__lte=max_date, check_out__gte=min_date,
     )
     from collections import Counter
@@ -238,8 +250,10 @@ def onsite_booking(request):
         user=user, room=room,
         check_in=min_date, check_out=checkout_date,
         guests=guests, slots=slots,
-        total_price=total, status=BookingStatus.CONFIRMED,
+        total_price=total,
+        status=BookingStatus.COMPLETED if is_backdate else BookingStatus.CONFIRMED,
         special_requests=special_requests,
+        is_backdated=is_backdate,
     )
 
     if voucher:
@@ -273,8 +287,9 @@ def onsite_booking(request):
 
     try:
         from accounts.models import log_activity
+        booking_type = 'backdated onsite' if is_backdate else 'onsite'
         log_activity(request.user, 'booking',
-                     f'Created onsite booking #{booking.id} for "{guest_name}"',
+                     f'Created {booking_type} booking #{booking.id} for "{guest_name}"',
                      details=f'Room: {room.name}, Total: ₱{booking.total_price}')
     except Exception:
         pass

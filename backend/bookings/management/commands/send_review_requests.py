@@ -29,6 +29,7 @@ class Command(BaseCommand):
                 status=BookingStatus.COMPLETED,
                 check_out=target_date,
                 review__isnull=True,
+                is_backdated=False,
             )
         )
 

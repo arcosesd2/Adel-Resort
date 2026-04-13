@@ -77,7 +77,7 @@ function formatCheckOutDate(dateStr) {
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`
 }
 
-export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut }) {
+export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut, allowPastDates }) {
   const isOvernight = bookingMode === 'overnight' || bookingMode === '24hr'
   const [bookedSlots, setBookedSlots] = useState([])
   const [maxRooms, setMaxRooms] = useState(1)
@@ -131,6 +131,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
   }, [])
 
   const isSlotPast = useCallback((dateStr, slot) => {
+    if (allowPastDates) return false
     if (slot === 'overnight') {
       // Overnight check-in is at 2PM — past if date is before today, or today after 2PM
       if (dateStr < todayStr) return true
@@ -150,7 +151,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
       if (dateStr === yesterdayStr && curHour >= 8) return true
     }
     return false
-  }, [todayStr, yesterdayStr, curHour])
+  }, [todayStr, yesterdayStr, curHour, allowPastDates])
 
   // ═══════ OVERNIGHT / 24HR MODE ═══════
   const overnightSlotType = bookingMode === '24hr' ? '24hr' : 'overnight'
@@ -309,11 +310,11 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d)
       const dateStr = fmtDate(viewYear, viewMonth, d)
-      const fullyPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const fullyPast = allowPastDates ? false : date < new Date(now.getFullYear(), now.getMonth(), now.getDate())
       days.push({ day: d, dateStr, fullyPast })
     }
     return days
-  }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek])
+  }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek, allowPastDates])
 
   if (loading) {
     return (
