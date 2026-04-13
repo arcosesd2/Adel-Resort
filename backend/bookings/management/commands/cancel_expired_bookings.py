@@ -46,13 +46,21 @@ class Command(BaseCommand):
             ).update(status=PaymentStatus.FAILED)
 
             try:
-                from accounts.models import create_notification
+                from accounts.models import create_notification, notify_staff
+                # Notify the guest
                 create_notification(
                     booking.user,
                     'booking_cancelled',
                     'Booking Cancelled',
                     f'Your booking for {booking.room.name} ({booking.reference_code}) has been cancelled because payment was not verified within {PAYMENT_DEADLINE_MINUTES} minutes.',
                     f'/booking/{booking.id}',
+                )
+                # Notify all staff
+                notify_staff(
+                    'booking_cancelled',
+                    'Expired Booking Auto-Cancelled',
+                    f'Booking #{booking.id} ({booking.reference_code}) for {booking.room.name} by {booking.user.get_full_name() or booking.user.username} was auto-cancelled (unpaid after {PAYMENT_DEADLINE_MINUTES} min).',
+                    '/admin-dashboard/bookings',
                 )
             except Exception:
                 pass
