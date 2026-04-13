@@ -24,6 +24,7 @@ const typeColors = {
 export default function RoomCard({ room, initialFavorited = false }) {
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [favorited, setFavorited] = useState(initialFavorited)
+  const [amenitiesExpanded, setAmenitiesExpanded] = useState(false)
   const { isAuthenticated, user } = useAuthStore()
   const { id, name, room_type, room_type_display, day_price, night_price, is_day_only, booking_mode, capacity, size_sqm, primary_image, images, amenities } = room
   const isOvernight = booking_mode === 'overnight' || booking_mode === '24hr'
@@ -97,14 +98,27 @@ export default function RoomCard({ room, initialFavorited = false }) {
           </div>
 
           {amenities?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {amenities.slice(0, 4).map((a) => (
+            <div className="flex flex-wrap gap-1.5 mb-4 min-h-[26px]">
+              {(amenitiesExpanded ? amenities : amenities.slice(0, 4)).map((a) => (
                 <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
                   {a}
                 </span>
               ))}
-              {amenities.length > 4 && (
-                <span className="text-xs text-gray-400">+{amenities.length - 4} more</span>
+              {amenities.length > 4 && !amenitiesExpanded && (
+                <button
+                  onClick={() => setAmenitiesExpanded(true)}
+                  className="text-xs text-ocean-600 hover:text-ocean-800 hover:underline cursor-pointer"
+                >
+                  +{amenities.length - 4} more
+                </button>
+              )}
+              {amenitiesExpanded && amenities.length > 4 && (
+                <button
+                  onClick={() => setAmenitiesExpanded(false)}
+                  className="text-xs text-ocean-600 hover:text-ocean-800 hover:underline cursor-pointer"
+                >
+                  Show less
+                </button>
               )}
             </div>
           )}

@@ -28,7 +28,7 @@ class RoomSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'room_type', 'room_type_display', 'description',
             'day_price', 'night_price', 'is_day_only', 'booking_mode', 'capacity', 'max_rooms',
-            'size_sqm', 'amenities', 'is_active', 'images', 'primary_image', 'created_at',
+            'size_sqm', 'amenities', 'is_active', 'is_featured', 'images', 'primary_image', 'created_at',
         )
 
     def get_primary_image(self, obj):
@@ -52,7 +52,7 @@ class RoomListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'room_type', 'room_type_display',
             'day_price', 'night_price', 'is_day_only', 'booking_mode', 'booking_mode_display', 'capacity', 'max_rooms',
-            'primary_image', 'amenities', 'images',
+            'primary_image', 'amenities', 'is_featured', 'images',
         )
 
     def get_primary_image(self, obj):
@@ -75,7 +75,7 @@ class AdminRoomSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'room_type', 'room_type_display', 'description',
             'day_price', 'night_price', 'is_day_only', 'booking_mode', 'capacity', 'max_rooms',
-            'size_sqm', 'amenities', 'is_active', 'images', 'primary_image',
+            'size_sqm', 'amenities', 'is_active', 'is_featured', 'images', 'primary_image',
             'created_at', 'updated_at',
         )
         read_only_fields = ['created_at', 'updated_at']

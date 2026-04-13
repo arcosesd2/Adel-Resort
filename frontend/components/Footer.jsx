@@ -73,7 +73,7 @@ export default function Footer() {
                   { href: '/rooms?room_type=cottage', label: 'Cottages' },
                   { href: '/rooms?room_type=kubo', label: 'Kubo Rooms' },
                   { href: '/rooms?room_type=lavender_house', label: 'Lavender House' },
-                  { href: '/rooms?room_type=ac_karaoke', label: 'Karaoke Room' },
+                  { href: '/rooms?room_type=ac_karaoke', label: 'Air-Conditioned Room' },
                   { href: '/rooms?room_type=function_hall', label: 'Function Hall' },
                 ].map((link) => (
                   <li key={link.href}>

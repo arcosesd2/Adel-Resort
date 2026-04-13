@@ -12,6 +12,26 @@ from .filters import RoomFilter
 from bookings.models import Booking
 from accounts.permissions import IsSuperAdmin
 from accounts.models import log_activity
+from django.db.models import Avg, Count, Q
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def featured_rooms(request):
+    from content.models import SiteSettings
+    settings = SiteSettings.load()
+
+    if settings.featured_mode == 'manual':
+        qs = Room.objects.filter(is_active=True, is_featured=True).prefetch_related('images')
+    else:
+        qs = Room.objects.filter(is_active=True).prefetch_related('images').annotate(
+            avg_rating=Avg('reviews__rating', filter=Q(reviews__is_approved=True)),
+            review_count=Count('reviews', filter=Q(reviews__is_approved=True)),
+            booking_count=Count('bookings', filter=Q(bookings__status__in=['confirmed', 'completed'])),
+        ).order_by('-avg_rating', '-booking_count', '-review_count', 'day_price')
+
+    serializer = RoomListSerializer(qs[:6], many=True, context={'request': request})
+    return Response(serializer.data)
 
 
 class RoomListView(generics.ListAPIView):

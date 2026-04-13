@@ -80,9 +80,11 @@ class AdminPricingSerializer(serializers.ModelSerializer):
 
 
 class SiteSettingsSerializer(serializers.ModelSerializer):
+    featured_mode_display = serializers.CharField(source='get_featured_mode_display', read_only=True)
+
     class Meta:
         model = SiteSettings
-        fields = ['show_stats', 'show_testimonials', 'updated_at']
+        fields = ['show_stats', 'show_testimonials', 'featured_mode', 'featured_mode_display', 'updated_at']
 
 
 class NewsletterSubscribeSerializer(serializers.Serializer):

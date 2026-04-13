@@ -11,8 +11,8 @@ import { FadeInUp, StaggerContainer, StaggerItem, CountUp } from '@/components/m
 
 async function getFeaturedRooms() {
   try {
-    const { data } = await api.get('/rooms/?page_size=3')
-    return data.results || data
+    const { data } = await api.get('/rooms/featured/')
+    return data
   } catch {
     return []
   }
@@ -46,7 +46,7 @@ async function getSiteSettings() {
 }
 
 const features = [
-  { icon: Trophy, title: 'Multi-purpose Court', desc: 'Volleyball and basketball hard court for active fun with family and friends' },
+  { icon: Trophy, title: 'Multi-purpose Court', desc: 'Volleyball, basketball and pickleball outdoor court for active fun with family and friends' },
   { icon: TreePalm, title: "Children's Playground", desc: 'A safe and fun play area to keep the little ones entertained all day' },
   { icon: Music, title: 'Karaoke Units', desc: 'Multiple karaoke setups around the resort — sing your heart out!' },
   { icon: CarFront, title: 'Spacious Parking', desc: 'CCTV-monitored parking area so your vehicle stays safe while you relax' },

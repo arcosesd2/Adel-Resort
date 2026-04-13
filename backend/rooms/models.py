@@ -5,7 +5,7 @@ class RoomType(models.TextChoices):
     COTTAGE = 'cottage', 'Cottage'
     DOS_ANDANAS = 'dos_andanas', 'Dos Andanas'
     LAVENDER_HOUSE = 'lavender_house', 'Lavender House'
-    AC_KARAOKE = 'ac_karaoke', 'Air-Conditioned Karaoke Room'
+    AC_KARAOKE     = 'ac_karaoke',      'Air-Conditioned Room'
     KUBO = 'kubo', 'Kubo'
     FUNCTION_HALL = 'function_hall', 'Function Hall'
     TRAPAL_TABLE = 'trapal_table', 'Trapal Table'
@@ -30,6 +30,7 @@ class Room(models.Model):
     size_sqm = models.PositiveIntegerField(null=True, blank=True)
     amenities = models.JSONField(default=list)
     is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

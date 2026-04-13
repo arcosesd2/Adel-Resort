@@ -8,7 +8,7 @@ const ROOM_TYPES = [
   { value: 'cottage', label: 'Cottage' },
   { value: 'dos_andanas', label: 'Dos Andanas' },
   { value: 'lavender_house', label: 'Lavender House' },
-  { value: 'ac_karaoke', label: 'Karaoke Room' },
+  { value: 'ac_karaoke', label: 'Air-Conditioned Room' },
   { value: 'kubo', label: 'Kubo' },
   { value: 'function_hall', label: 'Function Hall' },
   { value: 'trapal_table', label: 'Trapal Table' },

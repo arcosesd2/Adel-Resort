@@ -98,7 +98,7 @@ export default function RoomsPage() {
             Rooms & Accommodations
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Choose from cottages, kubo rooms, fully furnished houses, karaoke rooms, and more.
+            Choose from cottages, kubo rooms, fully furnished houses, air-conditioned rooms, and more.
           </p>
         </FadeInUp>
 

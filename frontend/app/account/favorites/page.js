@@ -33,7 +33,7 @@ export default function FavoritesPage() {
     cottage: 'Cottage',
     dos_andanas: 'Dos Andanas',
     lavender_house: 'Lavender House',
-    ac_karaoke: 'AC Karaoke',
+    ac_karaoke: 'AC Room',
     kubo: 'Kubo',
     function_hall: 'Function Hall',
     trapal_table: 'Trapal Table',

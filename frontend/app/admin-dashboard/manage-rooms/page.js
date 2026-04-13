@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, ImageIcon, Tag, DollarSign, FileText, Users, Settings } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, ImageIcon, Tag, DollarSign, FileText, Users, Settings, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -13,7 +13,7 @@ const ROOM_TYPES = [
   { value: 'cottage', label: 'Cottage' },
   { value: 'dos_andanas', label: 'Dos Andanas' },
   { value: 'lavender_house', label: 'Lavender House' },
-  { value: 'ac_karaoke', label: 'Air-Conditioned Karaoke Room' },
+  { value: 'ac_karaoke', label: 'Air-Conditioned Room' },
   { value: 'kubo', label: 'Kubo' },
   { value: 'function_hall', label: 'Function Hall' },
   { value: 'trapal_table', label: 'Trapal Table' },
@@ -27,7 +27,7 @@ const BOOKING_MODES = [
 
 const emptyForm = {
   name: '', room_type: 'cottage', booking_mode: 'slot', description: '', day_price: '', night_price: '',
-  is_day_only: false, capacity: 2, max_rooms: 1, size_sqm: '', amenities: '', is_active: true,
+  is_day_only: false, capacity: 2, max_rooms: 1, size_sqm: '', amenities: '', is_active: true, is_featured: false,
 }
 
 export default function AdminManageRoomsPage() {
@@ -69,6 +69,7 @@ export default function AdminManageRoomsPage() {
       day_price: room.day_price, night_price: room.night_price || '',
       is_day_only: room.is_day_only, capacity: room.capacity, max_rooms: room.max_rooms,
       size_sqm: room.size_sqm || '', amenities: (room.amenities || []).join(', '), is_active: room.is_active,
+      is_featured: room.is_featured || false,
     })
     setShowForm(true)
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
@@ -253,6 +254,10 @@ export default function AdminManageRoomsPage() {
                     <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
                     Active (visible to public)
                   </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-ocean-600 focus:ring-ocean-500" checked={form.is_featured} onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))} />
+                    Featured on homepage
+                  </label>
                 </div>
               </div>
 
@@ -287,6 +292,11 @@ export default function AdminManageRoomsPage() {
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${room.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                         {room.is_active ? 'Active' : 'Inactive'}
                       </span>
+                      {room.is_featured && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700 flex items-center gap-1">
+                          <Star size={10} className="fill-yellow-500" /> Featured
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-gray-500 mb-2">
                       {room.room_type_display} &middot; {room.capacity} pax &middot; {room.max_rooms} unit(s)
