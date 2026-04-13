@@ -1,3 +1,16 @@
+const { execSync } = require('child_process');
+const pkg = require('./package.json');
+const [major, minor] = pkg.version.split('.');
+
+let commitCount = '0';
+try {
+  commitCount = execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
+} catch {
+  // Fallback if git is not available
+}
+
+const appVersion = `${major}.${minor}.${commitCount}`;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
@@ -39,6 +52,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_APP_VERSION: appVersion,
   },
   async headers() {
     return [
