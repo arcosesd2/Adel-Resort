@@ -8,7 +8,8 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
 const setAuthCookie = (token) => {
   if (typeof document === 'undefined') return
-  document.cookie = `access_token=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  document.cookie = `access_token=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`
 }
 
 const clearAuthCookie = () => {

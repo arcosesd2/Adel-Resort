@@ -56,6 +56,14 @@ class SubmitProofSerializer(serializers.Serializer):
             raise serializers.ValidationError('Only JPEG, PNG, or WebP images are allowed.')
         if value.size > 10 * 1024 * 1024:
             raise serializers.ValidationError('File size must be under 10MB.')
+        # Verify file is actually a valid image (not just a spoofed Content-Type)
+        try:
+            from PIL import Image
+            img = Image.open(value)
+            img.verify()
+            value.seek(0)
+        except Exception:
+            raise serializers.ValidationError('File is not a valid image.')
         return value
 
 

@@ -22,7 +22,8 @@ export default function StaffSecurityPage() {
     try {
       const { data } = await api.post('/auth/change-password/', pwForm)
       setTokens(data.access, data.refresh)
-      document.cookie = `access_token=${data.access}; path=/; max-age=3600; SameSite=Lax`
+      const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+      document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`
       setPwForm({ current_password: '', new_password: '', new_password2: '' })
       toast.success('Password changed successfully')
     } catch (err) {

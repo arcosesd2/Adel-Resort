@@ -38,7 +38,6 @@ function RegisterForm() {
     setLoading(true)
     try {
       const data = await register(form)
-      document.cookie = `access_token=${data.access}; path=/; max-age=3600; SameSite=Lax`
       toast.success('Account created! Welcome to Adel Beach Resort.')
       router.replace(redirect)
       router.refresh()

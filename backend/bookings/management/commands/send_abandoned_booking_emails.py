@@ -8,17 +8,17 @@ from django.utils import timezone
 
 from bookings.models import Booking, BookingStatus
 
-REMIND_AFTER_HOURS = 1
-# Must fire well before cancel_expired_bookings (24h) to be useful.
+REMIND_AFTER_MINUTES = 30
+# Fire at 30 min — well before the 60-min payment deadline cancellation.
 
 
 class Command(BaseCommand):
-    help = 'Email users with pending-payment bookings older than 1 hour to finish checkout.'
+    help = 'Email users with pending-payment bookings older than 30 minutes to finish checkout.'
 
     def handle(self, *args, **options):
-        cutoff = timezone.now() - timedelta(hours=REMIND_AFTER_HOURS)
-        # Window: created between 2h and 1h ago — so we only remind once per booking
-        window_start = timezone.now() - timedelta(hours=REMIND_AFTER_HOURS + 1)
+        cutoff = timezone.now() - timedelta(minutes=REMIND_AFTER_MINUTES)
+        # Window: created between 60 and 30 min ago — so we only remind once per booking
+        window_start = timezone.now() - timedelta(minutes=REMIND_AFTER_MINUTES + 30)
 
         bookings = (
             Booking.objects

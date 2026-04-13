@@ -111,6 +111,29 @@ class HeroConfigSerializer(serializers.ModelSerializer):
         fields = ['video', 'poster', 'video_url', 'poster_url', 'updated_at']
         extra_kwargs = {'video': {'required': False}, 'poster': {'required': False}}
 
+    def validate_video(self, value):
+        if value:
+            allowed_types = ['video/mp4', 'video/webm']
+            if value.content_type not in allowed_types:
+                raise serializers.ValidationError('Only MP4 and WebM videos are allowed.')
+            if not value.name.lower().endswith(('.mp4', '.webm')):
+                raise serializers.ValidationError('Video file must have a .mp4 or .webm extension.')
+        return value
+
+    def validate_poster(self, value):
+        if value:
+            allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+            if value.content_type not in allowed_types:
+                raise serializers.ValidationError('Only JPEG, PNG, or WebP images are allowed.')
+            try:
+                from PIL import Image
+                img = Image.open(value)
+                img.verify()
+                value.seek(0)
+            except Exception:
+                raise serializers.ValidationError('File is not a valid image.')
+        return value
+
     def get_video_url(self, obj):
         if obj.video:
             request = self.context.get('request')

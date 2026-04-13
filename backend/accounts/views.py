@@ -208,6 +208,14 @@ def upload_avatar(request):
         return Response({'avatar': 'Only JPEG, PNG, and WebP images are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
     if avatar.size > 5 * 1024 * 1024:
         return Response({'avatar': 'Image must be under 5MB.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Verify the file is actually a valid image
+    try:
+        from PIL import Image
+        img = Image.open(avatar)
+        img.verify()
+        avatar.seek(0)
+    except Exception:
+        return Response({'avatar': 'File is not a valid image.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Delete old avatar if exists
     if user.avatar:
@@ -249,6 +257,7 @@ def change_password(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([PasswordResetRateThrottle])
 def send_verification_email_view(request):
     user = request.user
     if not user.email:
@@ -396,7 +405,10 @@ def notification_list(request):
     unread_only = request.query_params.get('unread_only')
     if unread_only == 'true':
         qs = qs.filter(is_read=False)
-    page_size = min(int(request.query_params.get('limit', 50)), 100)
+    try:
+        page_size = min(int(request.query_params.get('limit', 50)), 100)
+    except (ValueError, TypeError):
+        page_size = 50
     return Response(NotificationSerializer(qs[:page_size], many=True).data)
 
 
@@ -592,7 +604,7 @@ def authorize_device(request):
         user_agent=request.META.get('HTTP_USER_AGENT', ''),
         device_info=device_info, success=True,
     )
-    log_activity(user, 'device', f'Authorized device: {device_name or fingerprint[:12]}', ip_address=get_client_ip(request))
+    log_activity(user, 'auth', f'Authorized device: {device_name or fingerprint[:12]}', ip_address=get_client_ip(request))
 
     refresh = RefreshToken.for_user(user)
     return Response({
@@ -617,7 +629,7 @@ def reset_user_devices(request, pk):
 
     count, _ = RegisteredDevice.objects.filter(user=user).delete()
     _blacklist_all_tokens(user)
-    log_activity(request.user, 'device', f'Reset {count} device(s) for "{user.username}"', ip_address=get_client_ip(request))
+    log_activity(request.user, 'auth', f'Reset {count} device(s) for "{user.username}"', ip_address=get_client_ip(request))
     return Response({'detail': f'Reset {count} device(s). {user.username} can now authorize a new device on next login.'})
 
 
@@ -729,7 +741,10 @@ def staff_notification_list(request):
     unread_only = request.query_params.get('unread_only')
     if unread_only == 'true':
         qs = qs.filter(is_read=False)
-    page_size = min(int(request.query_params.get('limit', 50)), 100)
+    try:
+        page_size = min(int(request.query_params.get('limit', 50)), 100)
+    except (ValueError, TypeError):
+        page_size = 50
     return Response(NotificationSerializer(qs[:page_size], many=True).data)
 
 

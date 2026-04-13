@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from .models import Booking
 from payments.models import Payment
 
@@ -13,7 +13,7 @@ class PaymentInline(admin.StackedInline):
     @admin.display(description='Proof of Payment')
     def proof_of_payment_preview(self, obj):
         if obj.proof_of_payment:
-            return mark_safe(f'<img src="{obj.proof_of_payment.url}" style="max-height:400px; max-width:100%;" />')
+            return format_html('<img src="{}" style="max-height:400px; max-width:100%;" />', obj.proof_of_payment.url)
         return '-'
 
 

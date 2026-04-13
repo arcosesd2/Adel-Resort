@@ -20,7 +20,7 @@ class Booking(models.Model):
     status = models.CharField(max_length=20, choices=BookingStatus.choices, default=BookingStatus.PENDING)
     reference_code = models.CharField(max_length=20, unique=True, blank=True)
 
-    special_requests = models.TextField(blank=True)
+    special_requests = models.TextField(blank=True, max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     approved_at = models.DateTimeField(null=True, blank=True)

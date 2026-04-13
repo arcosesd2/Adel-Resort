@@ -1,6 +1,6 @@
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog
+from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notification, ActivityLog, NotificationPreference
 
 
 @admin.register(User)
@@ -71,6 +71,13 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ('user', 'notification_type', 'title', 'is_read', 'created_at')
     list_filter = ('notification_type', 'is_read')
     search_fields = ('user__username', 'title')
+
+
+@admin.register(NotificationPreference)
+class NotificationPreferenceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'receive_events', 'receive_promotions', 'receive_booking_updates', 'updated_at')
+    list_filter = ('receive_events', 'receive_promotions')
+    search_fields = ('user__username',)
 
 
 @admin.register(ActivityLog)

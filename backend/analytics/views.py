@@ -37,6 +37,10 @@ def track_page_view(request):
 @permission_classes([AllowAny])
 @throttle_classes([AnalyticsRateThrottle])
 def public_stats(request):
+    from django.core.cache import cache
+    cached = cache.get('public_stats')
+    if cached:
+        return Response(cached)
     total_guests = (
         Booking.objects
         .filter(status__in=['confirmed', 'completed'])
@@ -54,12 +58,14 @@ def public_stats(request):
 
     avg_rating = Review.objects.filter(is_approved=True).aggregate(avg=Avg('rating'))['avg']
 
-    return Response({
+    data = {
         'total_guests': total_guests,
         'total_rooms': total_rooms,
         'years_of_service': round(years, 1),
         'average_rating': round(avg_rating, 1) if avg_rating else None,
-    })
+    }
+    cache.set('public_stats', data, 600)  # Cache for 10 minutes
+    return Response(data)
 
 
 @api_view(['GET'])
@@ -310,12 +316,26 @@ def export_revenue_csv(request):
     writer = csv.writer(response)
     writer.writerow(['Date', 'Booking Ref', 'Guest', 'Room', 'Amount', 'Payment Type'])
 
+    for p in qs:
+        guest_name = f'{p.booking.user.first_name} {p.booking.user.last_name}'.strip() or p.booking.user.username
+        writer.writerow([
+            p.created_at.strftime('%Y-%m-%d'),
+            p.booking.reference_code,
+            guest_name,
+            p.booking.room.name,
+            p.amount,
+            p.payment_type,
+        ])
+
     return response
 
 
 @api_view(['POST'])
 @permission_classes([IsSuperAdmin])
 def debug_reset(request):
+    from django.conf import settings as django_settings
+    if not django_settings.DEBUG:
+        return Response({'detail': 'Debug reset is only available in debug mode.'}, status=status.HTTP_403_FORBIDDEN)
     reset_pin = os.environ.get('ANALYTICS_DEBUG_PIN', '')
     if not reset_pin:
         return Response({'detail': 'Debug reset is disabled.'}, status=status.HTTP_403_FORBIDDEN)
@@ -403,7 +423,7 @@ def debug_reset(request):
 
     try:
         from accounts.models import log_activity
-        log_activity(request.user, 'debug_reset', f'Debug reset performed: {", ".join(categories)}')
+        log_activity(request.user, 'settings', f'Debug reset performed: {", ".join(categories)}')
     except Exception:
         pass
 
@@ -417,14 +437,11 @@ _BACKUP_PIN = os.environ.get('ANALYTICS_DEBUG_PIN', '')
 def _validate_pin(request):
     if not _BACKUP_PIN:
         return False
-    if request.method == 'GET':
-        pin = request.query_params.get('pin', '')
-    else:
-        pin = request.data.get('pin', '')
+    pin = request.data.get('pin', '') or request.query_params.get('pin', '')
     return bool(pin) and pin == _BACKUP_PIN
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsSuperAdmin])
 def backup_list(request):
     if not _validate_pin(request):
@@ -475,7 +492,7 @@ def backup_create(request):
         stat = os.stat(filepath)
         try:
             from accounts.models import log_activity
-            log_activity(request.user, 'backup_create', f'Manual backup created: {filename}')
+            log_activity(request.user, 'settings', f'Manual backup created: {filename}')
         except Exception:
             pass
         return Response({
@@ -525,6 +542,7 @@ def backup_restore(request):
     safety_timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
     safety_filename = f'adel_resort_pre_restore_{safety_timestamp}.sql.gz'
     safety_filepath = os.path.join(BACKUP_DIR, safety_filename)
+    upload_path = None
 
     try:
         result = subprocess.run(
@@ -560,7 +578,7 @@ def backup_restore(request):
 
         try:
             from accounts.models import log_activity
-            log_activity(request.user, 'backup_restore', f'Database restored from {backup_file.name}. Safety backup: {safety_filename}')
+            log_activity(request.user, 'settings', f'Database restored from {backup_file.name}. Safety backup: {safety_filename}')
         except Exception:
             pass
 
@@ -569,7 +587,7 @@ def backup_restore(request):
             'safety_backup': safety_filename,
         })
     except Exception as e:
-        if os.path.isfile(upload_path):
+        if upload_path and os.path.isfile(upload_path):
             os.remove(upload_path)
         return Response({'detail': f'Restore failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -631,7 +649,7 @@ def backup_quick_restore(request):
 
         try:
             from accounts.models import log_activity
-            log_activity(request.user, 'backup_quick_restore', f'Quick restore from {latest_file}. Safety backup: {safety_filename}')
+            log_activity(request.user, 'settings', f'Quick restore from {latest_file}. Safety backup: {safety_filename}')
         except Exception:
             pass
 

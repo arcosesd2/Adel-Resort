@@ -38,6 +38,8 @@ class BookingSerializer(serializers.ModelSerializer):
         return None
 
     def get_payment_deadline(self, obj):
+        if obj.status != 'pending':
+            return None
         deadline = obj.created_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
         return deadline.isoformat()
 
@@ -65,7 +67,7 @@ class BookingSerializer(serializers.ModelSerializer):
         if not isinstance(slots, list) or len(slots) == 0:
             raise serializers.ValidationError({'slots': 'At least one slot is required.'})
 
-        valid_slot_types = {'day', 'night', 'overnight'}
+        valid_slot_types = {'day', 'night', 'overnight', '24hr'}
         seen = set()
         for entry in slots:
             if not isinstance(entry, dict):
@@ -75,7 +77,7 @@ class BookingSerializer(serializers.ModelSerializer):
             if not d or not s:
                 raise serializers.ValidationError({'slots': 'Each slot must have date and slot fields.'})
             if s not in valid_slot_types:
-                raise serializers.ValidationError({'slots': f'Invalid slot type: {s}. Must be day, night, or overnight.'})
+                raise serializers.ValidationError({'slots': f'Invalid slot type: {s}. Must be day, night, overnight, or 24hr.'})
             try:
                 date.fromisoformat(d)
             except (ValueError, TypeError):
@@ -121,6 +123,13 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'This room fits max {room.capacity} persons.'
             )
+
+        # Prevent past-date bookings for regular users
+        if slots and not self.context.get('allow_past_dates'):
+            today_str = date.today().isoformat()
+            past_slots = [s for s in slots if s['date'] < today_str]
+            if past_slots:
+                raise serializers.ValidationError('Booking dates must be today or in the future.')
 
         # Conflict check: per-slot overlap
         if slots and room:
@@ -188,12 +197,6 @@ class BookingSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class BookingCreateSerializer(BookingSerializer):
-    class Meta(BookingSerializer.Meta):
-        fields = (
-            'id', 'reference_code', 'room', 'check_in', 'check_out', 'guests',
-            'slots', 'special_requests', 'total_price', 'status', 'created_at',
-        )
 
 
 class AdminBookingSerializer(serializers.ModelSerializer):

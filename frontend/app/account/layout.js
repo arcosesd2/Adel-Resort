@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { User, Shield, CalendarDays, Star, Heart, Bell, Mail } from 'lucide-react'
 import { motion } from 'framer-motion'
+import useAuthStore from '@/store/authStore'
 
 const sidebarLinks = [
   { href: '/account', label: 'Profile', icon: User },
@@ -17,11 +19,21 @@ const sidebarLinks = [
 
 export default function AccountLayout({ children }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { isAuthenticated, isReady } = useAuthStore()
+
+  useEffect(() => {
+    if (isReady && !isAuthenticated) {
+      router.replace('/auth/login')
+    }
+  }, [isReady, isAuthenticated, router])
 
   const isActive = (href) => {
     if (href === '/account') return pathname === '/account'
     return pathname.startsWith(href)
   }
+
+  if (!isReady || !isAuthenticated) return null
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-ocean-50 to-white pt-24 pb-12">

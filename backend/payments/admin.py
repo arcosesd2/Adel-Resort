@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from django.utils import timezone
 from .models import Payment, PaymentStatus, GCashConfig
 from bookings.models import BookingStatus
@@ -38,9 +38,9 @@ class PaymentAdmin(admin.ModelAdmin):
     @admin.display(description='Proof of Payment')
     def proof_of_payment_preview(self, obj):
         if obj.proof_of_payment:
-            return mark_safe(
-                f'<a href="{obj.proof_of_payment.url}" target="_blank">'
-                f'<img src="{obj.proof_of_payment.url}" style="max-height:400px; max-width:100%;" /></a>'
+            return format_html(
+                '<a href="{}" target="_blank"><img src="{}" style="max-height:400px; max-width:100%;" /></a>',
+                obj.proof_of_payment.url, obj.proof_of_payment.url,
             )
         return '-'
 
@@ -86,5 +86,5 @@ class GCashConfigAdmin(admin.ModelAdmin):
     @admin.display(description='QR Code Preview')
     def qr_code_preview(self, obj):
         if obj.qr_code:
-            return mark_safe(f'<img src="{obj.qr_code.url}" style="max-height:300px;" />')
+            return format_html('<img src="{}" style="max-height:300px;" />', obj.qr_code.url)
         return '-'

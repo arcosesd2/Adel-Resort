@@ -18,8 +18,7 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
     api.get('/payments/gcash-config/')
       .then(({ data }) => setConfig(data))
       .catch(() => {
-        // Fallback to hardcoded values if API fails
-        setConfig({ gcash_number: '0916 315 2117', account_name: 'Ralph Arcos', qr_code_url: '/gcash-qr.png' })
+        toast.error('Could not load GCash payment details. Please refresh the page.')
       })
   }, [])
 

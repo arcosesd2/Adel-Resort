@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings, NewsletterSubscriber
 
 
@@ -70,7 +70,7 @@ class HeroConfigAdmin(admin.ModelAdmin):
     @admin.display(description='Poster Preview')
     def poster_preview(self, obj):
         if obj.poster:
-            return mark_safe(f'<img src="{obj.poster.url}" style="max-height:200px;" />')
+            return format_html('<img src="{}" style="max-height:200px;" />', obj.poster.url)
         return '-'
 
     class Media:

@@ -49,8 +49,8 @@ class PromotionListView(ListAPIView):
         return Promotion.objects.filter(
             is_active=True,
         ).filter(
-            models.Q(schedule_type='permanent')
-            | models.Q(schedule_type='recurring')
+            db_models.Q(schedule_type='permanent')
+            | db_models.Q(schedule_type='recurring')
             | db_models.Q(schedule_type='duration', valid_from__lte=today, valid_until__gte=today)
         )
 
@@ -339,6 +339,11 @@ def newsletter_confirm(request):
     except NewsletterSubscriber.DoesNotExist:
         return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_404_NOT_FOUND)
 
+    # Expire confirmation tokens after 48 hours
+    from datetime import timedelta
+    if not sub.is_confirmed and sub.created_at + timedelta(hours=48) < timezone.now():
+        return Response({'detail': 'Confirmation link has expired. Please subscribe again.'}, status=status.HTTP_400_BAD_REQUEST)
+
     if not sub.is_confirmed:
         sub.is_confirmed = True
         sub.is_active = True
@@ -386,8 +391,13 @@ def admin_subscriber_delete(request, pk):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class BroadcastRateThrottle(AnonRateThrottle):
+    rate = '3/hour'
+
+
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
+@throttle_classes([BroadcastRateThrottle])
 def admin_event_broadcast(request, pk):
     try:
         event = Event.objects.get(pk=pk)
@@ -404,6 +414,7 @@ def admin_event_broadcast(request, pk):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
+@throttle_classes([BroadcastRateThrottle])
 def admin_promotion_broadcast(request, pk):
     try:
         promo = Promotion.objects.get(pk=pk)

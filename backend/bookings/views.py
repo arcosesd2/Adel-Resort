@@ -48,11 +48,26 @@ class BookingDetailView(generics.RetrieveDestroyAPIView):
         booking = self.get_object()
         if booking.status == BookingStatus.CONFIRMED:
             return Response(
-                {'detail': 'Cannot cancel a confirmed booking with payment. Contact support.'},
+                {'detail': 'Cannot cancel a confirmed booking. Contact support.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         booking.status = BookingStatus.CANCELLED
         booking.save()
+
+        # Reverse voucher usage if any
+        try:
+            from vouchers.models import VoucherUsage
+            from django.db import transaction
+            usage = VoucherUsage.objects.select_related('voucher').filter(booking=booking).first()
+            if usage:
+                with transaction.atomic():
+                    voucher = usage.voucher
+                    voucher.times_used = F('times_used') - 1
+                    voucher.save(update_fields=['times_used'])
+                    usage.delete()
+        except Exception:
+            pass
+
         try:
             from accounts.models import notify_staff, create_notification
             # Notify all staff
@@ -355,6 +370,20 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                         )
 
                 elif new_status == BookingStatus.CANCELLED:
+                    # Reverse voucher usage if any
+                    try:
+                        from vouchers.models import VoucherUsage
+                        from django.db import transaction
+                        usage = VoucherUsage.objects.select_related('voucher').filter(booking=booking).first()
+                        if usage:
+                            with transaction.atomic():
+                                v = usage.voucher
+                                v.times_used = F('times_used') - 1
+                                v.save(update_fields=['times_used'])
+                                usage.delete()
+                    except Exception:
+                        pass
+
                     create_notification(
                         booking.user, 'booking_cancelled',
                         'Booking Cancelled',
@@ -367,9 +396,9 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                     notify_staff(
                         'booking_cancelled',
                         'Booking Cancelled by Admin',
-                        f'{request.user.get_full_name() or request.user.username} cancelled booking #{booking.id} for {booking.room.name} ({booking.user.get_full_name() or booking.user.username}).',
+                        f'{self.request.user.get_full_name() or self.request.user.username} cancelled booking #{booking.id} for {booking.room.name} ({booking.user.get_full_name() or booking.user.username}).',
                         '/admin-dashboard/bookings',
-                        exclude_user=request.user,
+                        exclude_user=self.request.user,
                     )
                 elif new_status == BookingStatus.COMPLETED:
                     create_notification(

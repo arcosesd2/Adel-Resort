@@ -58,49 +58,6 @@ export function StaggerItem({ children, className = '' }) {
   )
 }
 
-// Scale on hover / tap
-export function ScaleOnHover({ children, className = '', scale = 1.03 }) {
-  return (
-    <motion.div
-      whileHover={{ scale }}
-      whileTap={{ scale: 0.97 }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-// Slide in from left
-export function SlideInLeft({ children, className = '', delay = 0 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -40 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.6, delay, ease: 'easeOut' }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-// Slide in from right
-export function SlideInRight({ children, className = '', delay = 0 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 40 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.6, delay, ease: 'easeOut' }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
 // Animated count-up number
 export function CountUp({ end, duration = 2, prefix = '', suffix = '', decimals = 0 }) {
   const ref = useRef(null)

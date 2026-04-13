@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { format, parseISO, formatDistanceToNow } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Shield, CalendarDays, Tag, X, AlertTriangle } from 'lucide-react'
 import { FadeInUp } from '@/components/motions'
 import toast from 'react-hot-toast'

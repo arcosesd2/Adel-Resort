@@ -2,8 +2,6 @@ import { create } from 'zustand'
 import api from '@/lib/api'
 import useAuthStore from '@/store/authStore'
 
-let _lastKnownCount = 0
-
 function requestBrowserPermission() {
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission()
@@ -33,7 +31,7 @@ function showBrowserNotification(title, body, link) {
   if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') return
   try {
     const notif = new Notification(title, { body, icon: '/logo.jpeg', badge: '/logo.jpeg' })
-    if (link) {
+    if (link && typeof link === 'string' && link.startsWith('/')) {
       notif.onclick = () => {
         window.focus()
         window.location.href = link

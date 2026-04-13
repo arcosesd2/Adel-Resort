@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DollarSign } from 'lucide-react'
 import { FadeInUp } from '@/components/motions'
 import api from '@/lib/api'
@@ -76,8 +76,8 @@ export default function PricingPage() {
                   </thead>
                   <tbody>
                     {Object.entries(grouped).map(([roomType, items]) => (
-                      <>
-                        <tr key={`header-${roomType}`}>
+                      <React.Fragment key={roomType}>
+                        <tr>
                           <td colSpan={4} className="bg-ocean-600 px-6 py-3">
                             <h2 className="font-serif text-lg font-bold text-white">{roomType}</h2>
                           </td>
@@ -94,7 +94,7 @@ export default function PricingPage() {
                             <td className="px-6 py-4 text-sm text-gray-500">{item.notes}</td>
                           </tr>
                         ))}
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

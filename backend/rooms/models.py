@@ -1,4 +1,6 @@
+from decimal import Decimal
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 class RoomType(models.TextChoices):
@@ -22,8 +24,8 @@ class Room(models.Model):
     room_type = models.CharField(max_length=25, choices=RoomType.choices, default=RoomType.COTTAGE)
     booking_mode = models.CharField(max_length=15, choices=BookingMode.choices, default=BookingMode.SLOT)
     description = models.TextField()
-    day_price = models.DecimalField(max_digits=10, decimal_places=2)
-    night_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    day_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    night_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, validators=[MinValueValidator(Decimal('0.01'))])
     is_day_only = models.BooleanField(default=False)
     capacity = models.PositiveIntegerField(default=2)
     max_rooms = models.PositiveIntegerField(default=1, help_text='Number of physical units available for this room type')

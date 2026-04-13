@@ -80,7 +80,8 @@ function LoginForm() {
   const setAuthTokens = (data) => {
     localStorage.setItem('access_token', data.access)
     localStorage.setItem('refresh_token', data.refresh)
-    document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+    document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`
     useAuthStore.setState({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
   }
 

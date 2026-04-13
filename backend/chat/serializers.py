@@ -51,6 +51,11 @@ class StartConversationSerializer(serializers.Serializer):
     subject = serializers.CharField(max_length=200)
     message = serializers.CharField(max_length=2000)
 
+    def validate_subject(self, value):
+        import re
+        cleaned = re.sub(r'<[^>]+>', '', value)
+        return cleaned.strip()
+
     def validate_message(self, value):
         import re
         cleaned = re.sub(r'<[^>]+>', '', value)

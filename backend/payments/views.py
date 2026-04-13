@@ -31,14 +31,18 @@ def submit_proof_of_payment(request):
     except Booking.DoesNotExist:
         return Response({'detail': 'Booking not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    if booking.status == BookingStatus.CONFIRMED:
+    if booking.status == BookingStatus.CONFIRMED and hasattr(booking, 'payment'):
         return Response({'detail': 'Booking already confirmed.'}, status=status.HTTP_400_BAD_REQUEST)
 
     if booking.status == BookingStatus.CANCELLED:
         return Response({'detail': 'Booking has been cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
 
     if hasattr(booking, 'payment'):
-        return Response({'detail': 'Payment proof already submitted.'}, status=status.HTTP_400_BAD_REQUEST)
+        if booking.payment.status == 'failed':
+            # Allow resubmission: delete the rejected payment so a new one can be created
+            booking.payment.delete()
+        else:
+            return Response({'detail': 'Payment proof already submitted.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Check payment deadline (1 hour after booking creation)
     deadline = booking.created_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
@@ -92,6 +96,7 @@ def submit_proof_of_payment(request):
             booking_dates = [slot['date'] for slot in booking.slots] if booking.slots else [booking.check_in]
             if not voucher.is_active or get_booking_voucher_validity_status(voucher, booking_dates) != 'valid':
                 return Response({'detail': 'Voucher is not valid.'}, status=status.HTTP_400_BAD_REQUEST)
+            # Re-check times_used AFTER select_for_update() to prevent race condition
             if voucher.max_uses is not None and voucher.times_used >= voucher.max_uses:
                 return Response({'detail': 'Voucher has reached its maximum uses.'}, status=status.HTTP_400_BAD_REQUEST)
             if voucher.min_booking_amount and amount < voucher.min_booking_amount:
@@ -103,7 +108,7 @@ def submit_proof_of_payment(request):
             else:
                 discount_amount = min(voucher.discount_value, amount)
 
-            amount = amount - discount_amount
+            amount = max(amount - discount_amount, Decimal('0'))
 
             voucher.times_used = F('times_used') + 1
             voucher.save(update_fields=['times_used'])

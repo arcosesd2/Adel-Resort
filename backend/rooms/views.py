@@ -1,10 +1,15 @@
 from django.db import models as db_models
 from rest_framework import generics, status
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes, throttle_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+
+class AnalyticsRateThrottle(ScopedRateThrottle):
+    scope = 'analytics'
+
 
 from .models import Room, RoomImage
 from .serializers import RoomSerializer, RoomListSerializer, RoomImageSerializer, AdminRoomSerializer
@@ -137,12 +142,20 @@ def upload_room_images(request, pk):
         return Response({'detail': 'No images provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
     allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+    from PIL import Image
     for f in files:
         if f.content_type not in allowed_types:
             return Response({'detail': f'Invalid file type: {f.name}. Only JPEG, PNG, and WebP allowed.'},
                             status=status.HTTP_400_BAD_REQUEST)
         if f.size > 10 * 1024 * 1024:
             return Response({'detail': f'File too large: {f.name}. Max 10MB per image.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            img = Image.open(f)
+            img.verify()
+            f.seek(0)
+        except Exception:
+            return Response({'detail': f'File is not a valid image: {f.name}.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
     # Auto-assign order starting from the current max
@@ -231,6 +244,7 @@ def room_image_detail(request, pk, image_pk):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([AnalyticsRateThrottle])
 def all_rooms_availability(request):
     rooms = Room.objects.filter(is_active=True).prefetch_related('images')
     result = []

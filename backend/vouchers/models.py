@@ -1,5 +1,7 @@
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Voucher(models.Model):
@@ -10,7 +12,7 @@ class Voucher(models.Model):
 
     code = models.CharField(max_length=50, unique=True)
     discount_type = models.CharField(max_length=10, choices=DISCOUNT_TYPE_CHOICES)
-    discount_value = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
     max_uses = models.PositiveIntegerField(null=True, blank=True, help_text='Leave blank for unlimited uses')

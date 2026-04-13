@@ -154,7 +154,8 @@ def _is_promotion_applicable(promo, booking_dates, room_type):
         return False
     if promo.room_types and room_type not in promo.room_types:
         return False
-    today = date.today()
+    from django.utils import timezone as tz
+    today = tz.localdate()
     if promo.schedule_type == 'duration':
         if promo.valid_from and today < promo.valid_from:
             return False

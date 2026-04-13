@@ -61,7 +61,7 @@ class UserManagementSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'first_name', 'last_name', 'phone', 'email',
                   'is_active', 'is_staff', 'is_superadmin', 'date_joined', 'password',
                   'device_count', 'login_count', 'last_login')
-        read_only_fields = ('id', 'date_joined', 'device_count', 'login_count', 'last_login')
+        read_only_fields = ('id', 'date_joined', 'device_count', 'login_count', 'last_login', 'is_superadmin')
 
     def get_device_count(self, obj):
         return obj.registered_devices.filter(is_active=True).count()

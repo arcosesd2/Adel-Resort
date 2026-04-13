@@ -34,7 +34,7 @@ export default function BackupsPage() {
   const fetchBackups = async () => {
     setLoading(true)
     try {
-      const { data } = await api.get('/analytics/backups/', { params: { pin } })
+      const { data } = await api.post('/analytics/backups/', { pin })
       setBackups(data)
     } catch (err) {
       const msg = err.response?.data?.detail || err.response?.statusText || 'Failed to load backups'
