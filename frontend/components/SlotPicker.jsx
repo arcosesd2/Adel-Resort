@@ -131,7 +131,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
   }, [])
 
   const isSlotPast = useCallback((dateStr, slot) => {
-    if (allowPastDates) return false
+    if (allowPastDates) return dateStr >= todayStr
     if (slot === 'overnight') {
       // Overnight check-in is at 2PM — past if date is before today, or today after 2PM
       if (dateStr < todayStr) return true
@@ -310,7 +310,8 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(viewYear, viewMonth, d)
       const dateStr = fmtDate(viewYear, viewMonth, d)
-      const fullyPast = allowPastDates ? false : date < new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const fullyPast = allowPastDates ? date >= today : date < today
       days.push({ day: d, dateStr, fullyPast })
     }
     return days
