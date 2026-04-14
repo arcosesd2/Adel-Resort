@@ -372,9 +372,9 @@ function CheckoutContent() {
               <p className="font-medium mb-1">Cancellation Policy</p>
               <p>Confirmed bookings cannot be cancelled directly through the website. To cancel a confirmed booking, please contact us:</p>
               <ul className="list-disc ml-4 mt-1">
-                <li>Email: <a href="mailto:arnelarcos@adel-resort.ph" className="underline font-medium">arnelarcos@adel-resort.ph</a></li>
-                <li>Phone: <a href="tel:+639685361395" className="underline font-medium">09685361395</a></li>
-                <li><a href="/dashboard" className="underline font-medium">In-app chat</a></li>
+                <li>Email: <span className="underline">arnelarcos@adel-resort.ph</span></li>
+                <li>Phone: <span className="underline">09685361395</span></li>
+                <li><span className="underline">In-app chat</span></li>
               </ul>
             </div>
           </FadeInUp>
