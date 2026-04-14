@@ -1,22 +1,28 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Last chance: {{ promotion.title }}</h2>
-<p>This promotion is ending soon. Don't miss out!</p>
+<h2>Last Chance: {{ promotion.title }} &#9200;</h2>
+<p>This promotion is ending soon — don't miss out!</p>
 
-<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
-  <div style="font-size: 22px; font-weight: 700; color: #92400e; margin-bottom: 8px;">{{ promotion.discount_info }}</div>
-  <div style="color: #78350f;">Valid until {{ promotion.valid_until|date:"F j, Y" }}</div>
+<div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 28px; margin: 20px 0; text-align: center; border: 1px solid #fcd34d;">
+  <div style="font-size: 24px; font-weight: 700; color: #92400e; margin-bottom: 8px;">{{ promotion.discount_info }}</div>
+  <div style="color: #78350f; font-size: 14px; font-weight: 600;">Ends {{ promotion.valid_until|date:"F j, Y" }}</div>
 </div>
 
 <p>{{ promotion.description|linebreaksbr }}</p>
 
-<p style="text-align: center;">
-  <a href="{{ frontend_url }}/rooms" class="btn">Book Now</a>
+<p style="text-align: center; margin: 24px 0;">
+  <a href="{{ frontend_url }}/rooms" class="btn">Book Before It's Gone</a>
 </p>
+{% endblock %}
 
-<p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
-  You're receiving this because you subscribed to updates from Adel Beach Resort.
-  <a href="{{ unsubscribe_url }}" style="color: #64748b;">Unsubscribe</a>.
-</p>
+{% block footer_extra %}
+<div style="margin: 12px 0;">
+  <a href="{{ unsubscribe_url }}" style="font-size: 12px; color: #94a3b8; text-decoration: underline;">Unsubscribe from newsletter</a>
+</div>
+{% endblock %}
+
+{% block footer_note %}
+This is an automated message. Please do not reply directly to this email.<br>
+You're receiving this because you subscribed to updates from Adel Beach Resort.
 {% endblock %}

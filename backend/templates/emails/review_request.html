@@ -1,25 +1,33 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>How was your stay, {{ user.first_name }}?</h2>
-<p>It's been a couple of days since you checked out of <strong>{{ booking.room.name }}</strong>. We hope you enjoyed your time with us at Adel Beach Resort!</p>
+<h2>How Was Your Stay, {{ user.first_name }}? &#11088;</h2>
+<p>It's been a couple of days since you checked out of <strong>{{ booking.room.name }}</strong>. We hope you had an unforgettable time at Adel Beach Resort!</p>
 
-<p>Your honest feedback helps future guests decide and helps us keep improving. It only takes a minute.</p>
+<p>Your honest feedback helps future guests discover us and helps our team keep improving. It only takes a minute.</p>
 
-<p style="text-align: center; font-size: 24px; letter-spacing: 8px; color: #f59e0b;">
-  ★ ★ ★ ★ ★
-</p>
+<div style="text-align: center; padding: 16px 0;">
+  <span style="font-size: 32px; letter-spacing: 12px; color: #f59e0b;">&#11088;&#11088;&#11088;&#11088;&#11088;</span>
+</div>
 
-<p style="text-align: center;">
+<p style="text-align: center; margin: 20px 0;">
   <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">Leave a Review</a>
 </p>
 
-<div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 20px 0; font-size: 14px;">
-  <div class="info-label">Your stay</div>
-  <div class="info-value">{{ booking.room.name }} — {{ booking.check_in|date:"M j" }} to {{ booking.check_out|date:"M j, Y" }}</div>
-  <div class="info-label" style="margin-top: 8px;">Reference</div>
-  <div class="info-value">{{ booking.reference_code }}</div>
+<div class="info-box" style="margin-top: 24px;">
+  <div class="info-row">
+    <div class="info-label">&#127968; Your Stay</div>
+    <div class="info-value">{{ booking.room.name }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">&#128197; Dates</div>
+    <div class="info-value">{{ booking.check_in|date:"M j" }} — {{ booking.check_out|date:"M j, Y" }}</div>
+  </div>
+  <div class="info-row">
+    <div class="info-label">&#128196; Reference</div>
+    <div class="info-value">{{ booking.reference_code }}</div>
+  </div>
 </div>
 
-<p>Thank you, and we hope to welcome you back soon!</p>
+<p>Thank you, and we hope to welcome you back soon! &#127796;</p>
 {% endblock %}

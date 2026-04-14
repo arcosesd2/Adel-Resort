@@ -5,10 +5,18 @@
 <p>Hi {{ staff.first_name }},</p>
 <p>{{ message }}</p>
 
-<p style="text-align: center;">
+<p style="text-align: center; margin: 24px 0;">
   <a href="{{ dashboard_url }}" class="btn">View in Dashboard</a>
 </p>
-<p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
-  You're receiving this because you are a staff member of Adel Beach Resort.
+
+<hr class="divider">
+
+<p style="font-size: 12px; color: #94a3b8;">
+  &#128188; You're receiving this because you are a staff member of Adel Beach Resort. Manage your notification preferences in the dashboard.
 </p>
+{% endblock %}
+
+{% block footer_note %}
+This is an automated staff notification. Please do not reply directly to this email.<br>
+Use the admin dashboard for any actions required.
 {% endblock %}

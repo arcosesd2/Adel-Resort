@@ -1,18 +1,25 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Welcome, {{ user.first_name }}!</h2>
-<p>Thank you for creating an account at Adel Beach Resort. We're excited to have you!</p>
+<h2>Welcome to Paradise, {{ user.first_name }}! &#127796;</h2>
+<p>Thank you for creating an account at Adel Beach Resort. We're thrilled to have you join our community of beach lovers!</p>
+
 <p>With your account, you can:</p>
 <ul>
-  <li>Browse and book our beautiful rooms & cottages</li>
-  <li>Track your bookings and payments</li>
-  <li>Save your favorite rooms</li>
-  <li>Leave reviews on your stays</li>
+  <li>&#127968; Browse and book our beautiful rooms & cottages</li>
+  <li>&#128203; Track your bookings and payments</li>
+  <li>&#10084;&#65039; Save your favorite rooms</li>
+  <li>&#11088; Leave reviews on your stays</li>
 </ul>
+
+<div class="callout">
+  <strong>Tip:</strong> Complete your profile to get personalized recommendations and faster bookings.
+</div>
+
 <p style="text-align: center;">
   <a href="{{ frontend_url }}/rooms" class="btn">Explore Our Rooms</a>
 </p>
-<p>If you have any questions, feel free to reach out to us through our website chat.</p>
-<p>See you at the beach!</p>
+
+<p style="color: #64748b; font-size: 14px;">If you have any questions, feel free to reach out through our website.</p>
+<p>See you at the beach! &#127754;</p>
 {% endblock %}

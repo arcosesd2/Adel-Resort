@@ -1,34 +1,34 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Thank You for Staying With Us!</h2>
+<h2>Thank You for Staying With Us! &#127796;</h2>
 <p>Hi {{ user.first_name }},</p>
-<p>We hope you had a wonderful stay at Adel Beach Resort.</p>
+<p>We hope you had an amazing time at Adel Beach Resort. Your comfort and happiness mean everything to us.</p>
 
-<div style="background: #f0fdf4; border-radius: 12px; padding: 20px; margin: 20px 0;">
+<div class="info-box success">
   <div class="info-row">
-    <div class="info-label">Reference</div>
+    <div class="info-label">&#128196; Reference</div>
     <div class="info-value">{{ booking.reference_code }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Room</div>
+    <div class="info-label">&#127968; Room</div>
     <div class="info-value">{{ booking.room.name }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Check-in</div>
+    <div class="info-label">&#128197; Check-in</div>
     <div class="info-value">{{ booking.check_in }}</div>
   </div>
-  <div class="info-row" style="border-bottom: none;">
-    <div class="info-label">Check-out</div>
+  <div class="info-row">
+    <div class="info-label">&#128197; Check-out</div>
     <div class="info-value">{{ booking.check_out }}</div>
   </div>
 </div>
 
-<p>Your feedback means a lot to us! If you enjoyed your stay, we'd love for you to leave a review.</p>
+<p>Your feedback means the world to us! If you enjoyed your stay, we'd love for you to share your experience.</p>
 
-<p style="text-align: center;">
+<p style="text-align: center; margin: 24px 0;">
   <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">Leave a Review</a>
 </p>
 
-<p>We hope to see you again soon!</p>
+<p>We hope to welcome you back soon! &#127754;</p>
 {% endblock %}

@@ -1,17 +1,26 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>You're on the list!</h2>
+<h2>You're on the List! &#127881;</h2>
 <p>Thanks for subscribing to the Adel Beach Resort newsletter. You'll be the first to hear about:</p>
 <ul>
-  <li>Upcoming events at the resort</li>
-  <li>Seasonal promotions and discounts</li>
-  <li>New rooms and cottages</li>
+  <li>&#127878; Upcoming events at the resort</li>
+  <li>&#128176; Seasonal promotions and discounts</li>
+  <li>&#127968; New rooms and cottages</li>
 </ul>
-<p style="text-align: center;">
+
+<p style="text-align: center; margin: 24px 0;">
   <a href="{{ frontend_url }}/rooms" class="btn">Browse Our Rooms</a>
 </p>
-<p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
-  Not interested anymore? <a href="{{ unsubscribe_url }}" style="color: #64748b;">Unsubscribe here</a>.
-</p>
+{% endblock %}
+
+{% block footer_extra %}
+<div style="margin: 12px 0;">
+  <a href="{{ unsubscribe_url }}" style="font-size: 12px; color: #94a3b8; text-decoration: underline;">Unsubscribe from newsletter</a>
+</div>
+{% endblock %}
+
+{% block footer_note %}
+This is an automated message. Please do not reply directly to this email.<br>
+You subscribed to updates from Adel Beach Resort.
 {% endblock %}

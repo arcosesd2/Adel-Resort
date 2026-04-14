@@ -1,17 +1,25 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Confirm your subscription</h2>
+<h2>Confirm Your Subscription &#128233;</h2>
 <p>Thanks for signing up for the Adel Beach Resort newsletter!</p>
-<p>To start receiving updates about events, promotions, and new accommodations, please confirm your email address by clicking the button below:</p>
-<p style="text-align: center;">
+<p>To start receiving updates about events, promotions, and new accommodations, please confirm your email address:</p>
+
+<p style="text-align: center; margin: 28px 0;">
   <a href="{{ confirm_url }}" class="btn">Confirm Subscription</a>
 </p>
-<p style="font-size: 13px; color: #64748b;">
-  If the button doesn't work, copy and paste this link into your browser:<br>
-  <span style="word-break: break-all;">{{ confirm_url }}</span>
-</p>
-<p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
+
+<div class="callout">
+  <strong>Button not working?</strong> Copy and paste this link into your browser:<br>
+  <span style="word-break: break-all; font-size: 12px; color: #0284c7;">{{ confirm_url }}</span>
+</div>
+
+<p style="font-size: 12px; color: #94a3b8; margin-top: 24px;">
   If you didn't ask to subscribe, you can safely ignore this email — no further messages will be sent.
 </p>
+{% endblock %}
+
+{% block footer_note %}
+This is an automated message. Please do not reply directly to this email.<br>
+You're receiving this because someone used this address to subscribe to our newsletter.
 {% endblock %}

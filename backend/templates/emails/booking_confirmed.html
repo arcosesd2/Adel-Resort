@@ -1,35 +1,40 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Booking Confirmed!</h2>
+<h2>Booking Confirmed! &#127881;</h2>
 <p>Hi {{ user.first_name }},</p>
-<p>Great news! Your booking has been confirmed.</p>
+<p>Great news — your reservation at Adel Beach Resort has been confirmed. We can't wait to welcome you!</p>
 
-<div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 20px 0;">
+<div class="info-box">
   <div class="info-row">
-    <div class="info-label">Room</div>
+    <div class="info-label">&#127968; Room</div>
     <div class="info-value">{{ booking.room.name }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Check-in</div>
+    <div class="info-label">&#128197; Check-in</div>
     <div class="info-value">{{ booking.check_in }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Check-out</div>
+    <div class="info-label">&#128197; Check-out</div>
     <div class="info-value">{{ booking.check_out }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Guests</div>
+    <div class="info-label">&#128101; Guests</div>
     <div class="info-value">{{ booking.guests }}</div>
   </div>
-  <div class="info-row" style="border-bottom: none;">
-    <div class="info-label">Total</div>
-    <div class="info-value" style="color: #0284c7; font-size: 18px;">PHP {{ booking.total_price }}</div>
+  <div class="info-row">
+    <div class="info-label">&#128176; Total</div>
+    <div class="info-value" style="color: #0284c7; font-size: 18px; font-weight: 700;">&#8369;{{ booking.total_price }}</div>
   </div>
 </div>
 
-<p style="text-align: center;">
+<p style="text-align: center; margin: 24px 0;">
   <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">View Booking Details</a>
 </p>
-<p>We look forward to welcoming you!</p>
+
+<div class="callout">
+  <strong>What's next?</strong> You'll receive a check-in reminder the day before your stay. Don't forget to bring a valid ID!
+</div>
+
+<p>We look forward to welcoming you! &#127754;</p>
 {% endblock %}

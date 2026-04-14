@@ -1,15 +1,31 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>{{ event.title }}</h2>
-<p class="info-label">Event date: <span class="info-value">{{ event.date|date:"F j, Y" }}</span></p>
+<h2>{{ event.title }} &#127878;</h2>
+
+<div class="info-box">
+  <div class="info-row">
+    <div class="info-label">&#128197; Event Date</div>
+    <div class="info-value">{{ event.date|date:"F j, Y" }}</div>
+  </div>
+</div>
+
 <p>{{ event.description|linebreaksbr }}</p>
-<p style="text-align: center;">
+
+<p style="text-align: center; margin: 24px 0;">
   <a href="{{ frontend_url }}" class="btn">View Details</a>
 </p>
-<p>We'd love to see you there!</p>
-<p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
-  You're receiving this because you subscribed to updates from Adel Beach Resort.
-  <a href="{{ unsubscribe_url }}" style="color: #64748b;">Unsubscribe</a>.
-</p>
+
+<p>We'd love to see you there! &#127796;</p>
+{% endblock %}
+
+{% block footer_extra %}
+<div style="margin: 12px 0;">
+  <a href="{{ unsubscribe_url }}" style="font-size: 12px; color: #94a3b8; text-decoration: underline;">Unsubscribe from newsletter</a>
+</div>
+{% endblock %}
+
+{% block footer_note %}
+This is an automated message. Please do not reply directly to this email.<br>
+You're receiving this because you subscribed to updates from Adel Beach Resort.
 {% endblock %}

@@ -4,35 +4,205 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f9ff; }
-    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-    .card { background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-    .header { text-align: center; margin-bottom: 30px; }
-    .header h1 { color: #0c4a6e; font-size: 24px; margin: 0; }
-    .header p { color: #64748b; font-size: 14px; margin-top: 4px; }
-    .content { color: #334155; font-size: 16px; line-height: 1.6; }
-    .content h2 { color: #0c4a6e; font-size: 20px; }
-    .btn { display: inline-block; background: #0284c7; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 20px 0; }
-    .btn:hover { background: #0369a1; }
-    .footer { text-align: center; margin-top: 30px; color: #94a3b8; font-size: 13px; }
-    .info-row { padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-    .info-label { color: #64748b; font-size: 13px; }
-    .info-value { color: #1e293b; font-weight: 600; }
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f7ff; -webkit-font-smoothing: antialiased; }
+    .outer-wrap { max-width: 640px; margin: 0 auto; padding: 32px 16px; }
+
+    /* ── Header ── */
+    .header-band {
+      background: linear-gradient(135deg, #0c4a6e 0%, #0284c7 50%, #38bdf8 100%);
+      border-radius: 16px 16px 0 0;
+      padding: 36px 32px 48px;
+      text-align: center;
+      position: relative;
+    }
+    .header-band h1 { margin: 0; font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px; }
+    .header-band .tagline { margin: 6px 0 0; font-size: 13px; color: rgba(255,255,255,0.8); letter-spacing: 1.5px; text-transform: uppercase; }
+    .header-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+
+    /* Wave divider */
+    .wave-divider {
+      display: block;
+      margin-top: -1px;
+      line-height: 0;
+    }
+    .wave-divider svg { display: block; width: 100%; height: auto; }
+
+    /* ── Card body ── */
+    .card-body {
+      background: #ffffff;
+      padding: 36px 32px 32px;
+      border-left: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+    }
+    .content { color: #334155; font-size: 15px; line-height: 1.7; }
+    .content h2 { color: #0c4a6e; font-size: 22px; margin: 0 0 16px; font-weight: 700; }
+    .content h3 { color: #0c4a6e; font-size: 16px; margin: 20px 0 10px; font-weight: 600; }
+    .content p { margin: 0 0 14px; }
+    .content ul { margin: 8px 0 16px; padding-left: 20px; }
+    .content li { margin-bottom: 6px; }
+    .content a { color: #0284c7; }
+
+    /* ── Primary button ── */
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 15px;
+      margin: 8px 0;
+      box-shadow: 0 4px 14px rgba(2,132,199,0.35);
+      letter-spacing: 0.3px;
+    }
+    .btn-secondary {
+      display: inline-block;
+      background: transparent;
+      color: #0284c7 !important;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 14px;
+      border: 2px solid #0284c7;
+      margin: 8px 0;
+    }
+
+    /* ── Info box (booking details, etc.) ── */
+    .info-box {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+      border: 1px solid #bae6fd;
+    }
+    .info-box.warn {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border-color: #fcd34d;
+    }
+    .info-box.danger {
+      background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+      border-color: #fca5a5;
+    }
+    .info-box.success {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border-color: #86efac;
+    }
+    .info-row { padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #64748b; font-size: 13px; font-weight: 500; }
+    .info-value { color: #1e293b; font-weight: 600; font-size: 14px; text-align: right; }
+
+    /* ── Highlight callout ── */
+    .callout {
+      border-left: 4px solid #0284c7;
+      background: #f0f9ff;
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin: 18px 0;
+      font-size: 14px;
+      color: #0c4a6e;
+    }
+    .callout.warn {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+
+    /* ── Footer ── */
+    .footer-band {
+      background: #f8fafc;
+      border-radius: 0 0 16px 16px;
+      padding: 24px 32px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+      border-top: none;
+    }
+    .footer-contact { font-size: 13px; color: #64748b; margin: 0 0 12px; line-height: 1.6; }
+    .footer-contact a { color: #0284c7; text-decoration: none; }
+    .footer-social { margin: 12px 0; }
+    .footer-social a {
+      display: inline-block;
+      width: 32px; height: 32px; line-height: 32px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #475569;
+      text-decoration: none;
+      font-size: 14px;
+      margin: 0 4px;
+    }
+    .footer-legal { font-size: 11px; color: #94a3b8; margin-top: 14px; line-height: 1.6; }
+    .footer-legal a { color: #94a3b8; text-decoration: underline; }
+    .no-reply {
+      display: inline-block;
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin-top: 12px;
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    /* ── Responsive ── */
+    @media only screen and (max-width: 480px) {
+      .outer-wrap { padding: 16px 8px; }
+      .header-band { padding: 28px 20px 40px; }
+      .card-body { padding: 24px 20px 20px; }
+      .footer-band { padding: 20px 16px; }
+      .info-row { flex-direction: column; align-items: flex-start; }
+      .info-value { text-align: left; margin-top: 2px; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <div class="header">
-        <h1>Adel Beach Resort</h1>
-        <p>Your tropical getaway</p>
-      </div>
+  <div class="outer-wrap">
+    <!-- Header -->
+    <div class="header-band">
+      <span class="header-icon">&#127796;</span>
+      <h1>Adel Beach Resort</h1>
+      <div class="tagline">Your Tropical Paradise</div>
+    </div>
+
+    <!-- Wave Divider -->
+    <div class="wave-divider">
+      <svg viewBox="0 0 640 36" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0 0h640v12c-60 12-140 24-220 24S220 16 140 12C80 9 30 16 0 20z" fill="#38bdf8"/>
+        <path d="M0 12c60-8 120 4 200 8s180-8 260-12 140 8 180 12v16H0z" fill="#ffffff"/>
+      </svg>
+    </div>
+
+    <!-- Body -->
+    <div class="card-body">
       <div class="content">
         {% block content %}{% endblock %}
       </div>
     </div>
-    <div class="footer">
-      <p>&copy; {{ year|default:"2026" }} Adel Beach Resort. All rights reserved.</p>
+
+    <!-- Footer -->
+    <div class="footer-band">
+      <div class="footer-contact">
+        &#128222; <a href="tel:09685361395">0968 536 1395</a> &nbsp;&middot;&nbsp;
+        &#127760; <a href="https://adel-resort.ph">adel-resort.ph</a>
+      </div>
+
+      {% block footer_extra %}{% endblock %}
+
+      <div class="footer-legal">
+        &copy; {{ year|default:"2026" }} Adel Beach Resort &middot; All rights reserved.<br>
+        {% block footer_note %}
+        This is an automated message. Please do not reply directly to this email.<br>
+        For inquiries, visit our website or contact us by phone.
+        {% endblock %}
+      </div>
+
+      <div class="no-reply">
+        &#128232; This mailbox is not monitored. Please do not reply to this email.
+      </div>
     </div>
   </div>
 </body>

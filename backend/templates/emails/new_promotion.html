@@ -1,18 +1,34 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>{{ promotion.title }}</h2>
-<p style="font-size: 18px; color: #0284c7; font-weight: 600;">{{ promotion.discount_info }}</p>
-<p>{{ promotion.description|linebreaksbr }}</p>
-<div class="info-row">
-  <span class="info-label">Valid:</span>
-  <span class="info-value">{{ promotion.valid_from|date:"M j, Y" }} — {{ promotion.valid_until|date:"M j, Y" }}</span>
+<h2>{{ promotion.title }} &#128293;</h2>
+
+<div style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
+  <div style="font-size: 24px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">{{ promotion.discount_info }}</div>
+  <div style="color: rgba(255,255,255,0.85); font-size: 13px;">Limited time offer</div>
 </div>
-<p style="text-align: center;">
+
+<p>{{ promotion.description|linebreaksbr }}</p>
+
+<div class="info-box">
+  <div class="info-row">
+    <div class="info-label">&#128197; Valid Period</div>
+    <div class="info-value">{{ promotion.valid_from|date:"M j, Y" }} — {{ promotion.valid_until|date:"M j, Y" }}</div>
+  </div>
+</div>
+
+<p style="text-align: center; margin: 24px 0;">
   <a href="{{ frontend_url }}/rooms" class="btn">Book Now</a>
 </p>
-<p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
-  You're receiving this because you subscribed to updates from Adel Beach Resort.
-  <a href="{{ unsubscribe_url }}" style="color: #64748b;">Unsubscribe</a>.
-</p>
+{% endblock %}
+
+{% block footer_extra %}
+<div style="margin: 12px 0;">
+  <a href="{{ unsubscribe_url }}" style="font-size: 12px; color: #94a3b8; text-decoration: underline;">Unsubscribe from newsletter</a>
+</div>
+{% endblock %}
+
+{% block footer_note %}
+This is an automated message. Please do not reply directly to this email.<br>
+You're receiving this because you subscribed to updates from Adel Beach Resort.
 {% endblock %}

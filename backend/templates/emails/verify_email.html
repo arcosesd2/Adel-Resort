@@ -1,13 +1,20 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Verify Your Email</h2>
+<h2>Verify Your Email &#9989;</h2>
 <p>Hi {{ user.first_name }},</p>
-<p>Please click the button below to verify your email address.</p>
-<p style="text-align: center;">
-  <a href="{{ verify_url }}" class="btn">Verify Email</a>
+<p>You're almost there! Please confirm your email address by clicking the button below.</p>
+
+<p style="text-align: center; margin: 28px 0;">
+  <a href="{{ verify_url }}" class="btn">Verify My Email</a>
 </p>
-<p style="font-size: 14px; color: #64748b;">
-  If you didn't request this, you can safely ignore this email. This link will expire in 3 days.
+
+<div class="callout">
+  <strong>Link not working?</strong> Copy and paste this URL into your browser:<br>
+  <span style="word-break: break-all; font-size: 12px; color: #0284c7;">{{ verify_url }}</span>
+</div>
+
+<p style="font-size: 13px; color: #94a3b8;">
+  If you didn't create an account at Adel Beach Resort, you can safely ignore this email. This link expires in 3 days.
 </p>
 {% endblock %}

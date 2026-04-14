@@ -1,35 +1,35 @@
 {% extends "emails/base_email.html" %}
 
 {% block content %}
-<h2>Finish your booking, {{ user.first_name }}</h2>
+<h2>Finish Your Booking, {{ user.first_name }} &#128276;</h2>
 <p>We noticed you started a booking at Adel Beach Resort but haven't completed payment yet. Your room is on hold — but only for a little longer.</p>
 
-<div style="background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0;">
-  <strong>Heads up:</strong> Unpaid bookings are automatically cancelled after 24 hours.
+<div class="callout warn">
+  <strong>&#9888;&#65039; Heads up:</strong> Unpaid bookings are automatically cancelled after 24 hours.
 </div>
 
-<div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0;">
+<div class="info-box warn">
   <div class="info-row">
-    <div class="info-label">Reference</div>
+    <div class="info-label">&#128196; Reference</div>
     <div class="info-value">{{ booking.reference_code }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Room</div>
+    <div class="info-label">&#127968; Room</div>
     <div class="info-value">{{ booking.room.name }}</div>
   </div>
   <div class="info-row">
-    <div class="info-label">Check-in</div>
+    <div class="info-label">&#128197; Check-in</div>
     <div class="info-value">{{ booking.check_in|date:"M j, Y" }}</div>
   </div>
-  <div class="info-row" style="border-bottom: none;">
-    <div class="info-label">Total</div>
-    <div class="info-value">₱{{ booking.total_price }}</div>
+  <div class="info-row">
+    <div class="info-label">&#128176; Total</div>
+    <div class="info-value" style="font-size: 18px; font-weight: 700;">&#8369;{{ booking.total_price }}</div>
   </div>
 </div>
 
-<p style="text-align: center;">
-  <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">Complete Payment</a>
+<p style="text-align: center; margin: 24px 0;">
+  <a href="{{ frontend_url }}/booking/{{ booking.id }}" class="btn">Complete Payment Now</a>
 </p>
 
-<p>Need help? Reply to this email or chat with us on the website.</p>
+<p style="color: #64748b; font-size: 14px;">Need help? Visit our website or contact us by phone.</p>
 {% endblock %}
