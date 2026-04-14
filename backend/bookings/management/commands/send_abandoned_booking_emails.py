@@ -50,7 +50,7 @@ class Command(BaseCommand):
             try:
                 html_body = render_to_string('emails/abandoned_booking.html', context)
                 msg = EmailMultiAlternatives(
-                    subject=f'Complete your booking — {booking.room.name}',
+                    subject=f'🌴 Complete your booking — {booking.room.name}',
                     body=html_body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[user.email],

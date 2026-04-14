@@ -42,7 +42,7 @@ class Command(BaseCommand):
             try:
                 html_body = render_to_string('emails/checkin_reminder.html', context)
                 msg = EmailMultiAlternatives(
-                    subject=f'See you tomorrow — {booking.room.name}',
+                    subject=f'🌴 See you tomorrow — {booking.room.name}',
                     body=html_body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[user.email],

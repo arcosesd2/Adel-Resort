@@ -33,7 +33,7 @@ def send_welcome_email(user):
     if not user.email:
         return False
     return _send_email(
-        subject='Welcome to Adel Beach Resort!',
+        subject='🌴 Welcome to Adel Beach Resort!',
         to_email=user.email,
         template_name='welcome',
         context={
@@ -50,7 +50,7 @@ def send_verification_email(user):
     token = email_verification_token.make_token(user)
     verify_url = f"{settings.FRONTEND_URL}/account/verify-email?uid={uid}&token={token}"
     return _send_email(
-        subject='Verify your email — Adel Beach Resort',
+        subject='🌴 Verify your email — Adel Beach Resort',
         to_email=user.email,
         template_name='verify_email',
         context={
@@ -68,7 +68,7 @@ def send_password_reset_email(user):
     token = default_token_generator.make_token(user)
     reset_url = f"{settings.FRONTEND_URL}/auth/reset-password?uid={uid}&token={token}"
     return _send_email(
-        subject='Reset your password — Adel Beach Resort',
+        subject='🌴 Reset your password — Adel Beach Resort',
         to_email=user.email,
         template_name='password_reset',
         context={
@@ -82,7 +82,7 @@ def send_booking_confirmation_email(user, booking):
     if not user.email:
         return False
     return _send_email(
-        subject=f'Booking Confirmed — {booking.room.name}',
+        subject=f'🌴 Booking Confirmed — {booking.room.name}',
         to_email=user.email,
         template_name='booking_confirmed',
         context={
@@ -97,7 +97,7 @@ def send_payment_received_email(user, booking):
     if not user.email:
         return False
     return _send_email(
-        subject='Payment Received — Adel Beach Resort',
+        subject='🌴 Payment Received — Adel Beach Resort',
         to_email=user.email,
         template_name='payment_received',
         context={
@@ -112,7 +112,7 @@ def send_booking_cancelled_email(user, booking):
     if not user.email:
         return False
     return _send_email(
-        subject=f'Booking Cancelled — {booking.reference_code}',
+        subject=f'🌴 Booking Cancelled — {booking.reference_code}',
         to_email=user.email,
         template_name='booking_cancelled',
         context={
@@ -127,7 +127,7 @@ def send_booking_completed_email(user, booking):
     if not user.email:
         return False
     return _send_email(
-        subject=f'Thank you for staying with us — {booking.reference_code}',
+        subject=f'🌴 Thank you for staying with us — {booking.reference_code}',
         to_email=user.email,
         template_name='booking_completed',
         context={
@@ -139,16 +139,16 @@ def send_booking_completed_email(user, booking):
 
 
 NOTIFICATION_TYPE_SUBJECTS = {
-    'new_booking': 'New Booking Received',
-    'booking_cancelled': 'Booking Cancelled',
-    'pending_payment_review': 'Payment Awaiting Review',
-    'new_review_pending': 'New Review Pending Approval',
-    'new_message': 'New Message',
-    'system': 'System Notification',
-    'booking_confirmed': 'Booking Confirmed',
-    'payment_received': 'Payment Received',
-    'booking_completed': 'Booking Completed',
-    'review_approved': 'Review Approved',
+    'new_booking': '🌴 New Booking Received',
+    'booking_cancelled': '🌴 Booking Cancelled',
+    'pending_payment_review': '🌴 Payment Awaiting Review',
+    'new_review_pending': '🌴 New Review Pending Approval',
+    'new_message': '🌴 New Message',
+    'system': '🌴 System Notification',
+    'booking_confirmed': '🌴 Booking Confirmed',
+    'payment_received': '🌴 Payment Received',
+    'booking_completed': '🌴 Booking Completed',
+    'review_approved': '🌴 Review Approved',
 }
 
 

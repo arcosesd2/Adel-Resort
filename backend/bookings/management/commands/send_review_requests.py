@@ -51,7 +51,7 @@ class Command(BaseCommand):
             try:
                 html_body = render_to_string('emails/review_request.html', context)
                 msg = EmailMultiAlternatives(
-                    subject='How was your stay? Share your experience',
+                    subject='🌴 How was your stay? Share your experience',
                     body=html_body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[user.email],

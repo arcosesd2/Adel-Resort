@@ -100,7 +100,7 @@ def _send_broadcast_sync(subject, template_name, base_context, preference_field)
 
 
 def send_event_announcement(event, async_=True):
-    subject = f'New Event at Adel Beach Resort: {event.title}'
+    subject = f'🌴 New Event at Adel Beach Resort: {event.title}'
     base_context = {'event': event, 'frontend_url': settings.FRONTEND_URL}
     if async_:
         _run_in_background(_send_broadcast_sync, subject, 'new_event', base_context, 'receive_events')
@@ -109,7 +109,7 @@ def send_event_announcement(event, async_=True):
 
 
 def send_promotion_announcement(promotion, async_=True):
-    subject = f'New Promotion: {promotion.title}'
+    subject = f'🌴 New Promotion: {promotion.title}'
     base_context = {'promotion': promotion, 'frontend_url': settings.FRONTEND_URL}
     if async_:
         _run_in_background(_send_broadcast_sync, subject, 'new_promotion', base_context, 'receive_promotions')
@@ -118,7 +118,7 @@ def send_promotion_announcement(promotion, async_=True):
 
 
 def send_promotion_expiring(promotion, async_=True):
-    subject = f'Last Chance: {promotion.title} ends soon'
+    subject = f'🌴 Last Chance: {promotion.title} ends soon'
     base_context = {'promotion': promotion, 'frontend_url': settings.FRONTEND_URL}
     if async_:
         _run_in_background(_send_broadcast_sync, subject, 'promotion_expiring', base_context, 'receive_promotions')
@@ -135,7 +135,7 @@ def send_subscription_confirmation(subscriber):
     }
     connection = get_connection()
     return _render_and_send(
-        subject='Please confirm your subscription — Adel Beach Resort',
+        subject='🌴 Please confirm your subscription — Adel Beach Resort',
         template_name='newsletter_confirm',
         context=context,
         to_email=subscriber.email,
@@ -150,7 +150,7 @@ def send_newsletter_welcome(subscriber):
     }
     connection = get_connection()
     return _render_and_send(
-        subject='Welcome to the Adel Beach Resort newsletter',
+        subject='🌴 Welcome to the Adel Beach Resort newsletter',
         template_name='newsletter_welcome',
         context=context,
         to_email=subscriber.email,
