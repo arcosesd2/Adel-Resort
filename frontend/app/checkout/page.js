@@ -364,11 +364,17 @@ function CheckoutContent() {
             </div>
           </FadeInUp>
 
+          
+
           {/* Cancellation Policy Notice */}
           <FadeInUp delay={0.15}>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
               <p className="font-medium mb-1">Cancellation Policy</p>
-              <p>Confirmed bookings cancelled less than 3 days before check-in are non-refundable. <a href="/refund-policy" target="_blank" className="underline font-medium">View full policy</a></p>
+              <p>Confirmed bookings cannot be cancelled directly through the website. To cancel a confirmed booking, please contact us via{' '}
+                <a href="mailto:arnelarcos@adel-resort.ph" className="underline font-medium">email</a>,{' '}
+                <a href="tel:+639685361395" className="underline font-medium">phone</a>, or{' '}
+                <a href="/dashboard" className="underline font-medium">in-app chat</a>.
+              </p>
             </div>
           </FadeInUp>
 

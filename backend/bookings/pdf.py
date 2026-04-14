@@ -23,7 +23,7 @@ def generate_booking_receipt_pdf(booking):
 
     # Header
     elements.append(Paragraph('Adel Beach Resort', title_style))
-    elements.append(Paragraph('Lawigan, Surigao Del Sur | 09685361395 | adelbeachresortph@gmail.com', subtitle_style))
+    elements.append(Paragraph('Lawigan, Surigao Del Sur | 09685361395 | arnelarcos@adel-resort.ph', subtitle_style))
     elements.append(Spacer(1, 8*mm))
 
     # Receipt title

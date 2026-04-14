@@ -84,7 +84,7 @@ export default function PrivacyPage() {
           <h2>10. Contact</h2>
           <p>
             For privacy-related concerns, please contact us at{' '}
-            <a href="mailto:adelbeachresortph@gmail.com">adelbeachresortph@gmail.com</a> or call 09685361395.
+            <a href="mailto:arnelarcos@adel-resort.ph">arnelarcos@adel-resort.ph</a> or call 09685361395.
           </p>
         </div>
       </div>
