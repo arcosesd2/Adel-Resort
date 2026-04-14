@@ -3,7 +3,8 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Eye, EyeOff, Waves } from 'lucide-react'
+import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
@@ -67,9 +68,8 @@ function RegisterForm() {
         className="w-full max-w-md relative z-10"
       >
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 font-serif font-bold text-2xl text-ocean-700 mb-2">
-            <Waves className="w-7 h-7" />
-            Adel Beach Resort
+          <div className="flex flex-col items-center mb-2">
+            <Image src="/logo.png" alt="Adel Beach Resort" width={100} height={100} className="object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 font-serif">Create Account</h1>
           <p className="text-gray-500 mt-2">Join us and start planning your dream escape</p>

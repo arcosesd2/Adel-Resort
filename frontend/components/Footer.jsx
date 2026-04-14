@@ -28,7 +28,7 @@ export default function Footer() {
             {/* Brand */}
             <StaggerItem className="md:col-span-1">
               <Link href="/" className="flex items-center gap-2 font-serif font-bold text-xl mb-3">
-                <Image src="/logo.jpeg" alt="Adel Beach Resort" width={32} height={32} className="rounded-full" />
+                <Image src="/logo.png" alt="Adel Beach Resort" width={40} height={40} className="object-contain" />
                 Adel Beach Resort
               </Link>
               <p className="text-ocean-200 text-sm leading-relaxed">

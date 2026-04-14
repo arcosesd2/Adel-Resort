@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -36,9 +37,7 @@ export default function ForgotPasswordPage() {
           {!sent ? (
             <>
               <div className="text-center mb-6">
-                <div className="w-14 h-14 bg-ocean-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Mail className="text-ocean-600" size={24} />
-                </div>
+                <Image src="/logo.png" alt="Adel Beach Resort" width={80} height={80} className="object-contain mx-auto mb-3" />
                 <h1 className="text-2xl font-serif font-bold text-ocean-800">Forgot Password?</h1>
                 <p className="text-gray-500 text-sm mt-1">
                   Enter your email and we&apos;ll send you a reset link.

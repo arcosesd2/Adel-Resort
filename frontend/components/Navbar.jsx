@@ -65,8 +65,8 @@ export default function Navbar() {
           <Link href="/" className={`flex items-center gap-2 font-serif font-bold text-xl ${
             transparent ? 'text-white' : 'text-ocean-700'
           }`}>
-            <Image src="/logo.jpeg" alt="Adel Beach Resort" width={36} height={36} className="rounded-full" />
-            Adel Beach Resort
+            <Image src="/logo.png" alt="Adel Beach Resort" width={44} height={44} className="object-contain" />
+            <span className="hidden sm:inline">Adel Beach Resort</span>
           </Link>
 
           {/* Desktop Nav */}

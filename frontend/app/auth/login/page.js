@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Eye, EyeOff, Waves, Monitor, ShieldCheck, AlertTriangle } from 'lucide-react'
+import Image from 'next/image'
+import { Eye, EyeOff, Monitor, ShieldCheck, AlertTriangle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
@@ -132,9 +133,8 @@ function LoginForm() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
       <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-2 font-serif font-bold text-2xl text-ocean-700 mb-2">
-          <Waves className="w-7 h-7" />
-          Adel Beach Resort
+        <div className="flex flex-col items-center mb-2">
+          <Image src="/logo.png" alt="Adel Beach Resort" width={100} height={100} className="object-contain" />
         </div>
         <h1 className="text-3xl font-bold text-gray-900 font-serif">Welcome Back</h1>
         <p className="text-gray-500 mt-2">Sign in to manage your bookings</p>

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
 import Link from 'next/link'
 
@@ -12,6 +13,7 @@ export default function AboutPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
+          <Image src="/logo.png" alt="Adel Beach Resort" width={140} height={140} className="object-contain mx-auto mb-4" />
           <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">About Us</p>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Adel Beach Resort

@@ -22,6 +22,10 @@ export const metadata = {
   },
   description: 'Book cottages, rooms, and event spaces at Adel Beach Resort in Lawigan, Surigao Del Sur. Day tours and overnight stays available.',
   keywords: 'Adel Beach Resort, Lawigan, Surigao Del Sur, beach resort, cottages, kubo, function hall, day tour, night tour',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
