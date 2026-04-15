@@ -134,6 +134,8 @@ def login(request):
         user=user, username=username, fingerprint=fingerprint, ip_address=ip,
         user_agent=ua, device_info=device_info, success=True,
     )
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
     if user.is_staff or user.is_superadmin:
         log_activity(user, 'auth', 'Logged in', ip_address=ip)
     refresh = RefreshToken.for_user(user)

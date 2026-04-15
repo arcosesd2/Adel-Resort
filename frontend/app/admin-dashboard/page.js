@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, Trash2 } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -308,18 +308,6 @@ function AdminDashboardContent() {
 
   const toggleGuestExpand = (userId) => {
     setExpandedGuests(prev => ({ ...prev, [userId]: !prev[userId] }))
-  }
-
-  const clearMyPageViews = async () => {
-    const visitorId = localStorage.getItem('visitor_id')
-    if (!visitorId) { toast.error('No visitor ID found.'); return }
-    try {
-      const { data: res } = await api.delete(`/analytics/clear-my-views/?visitor_id=${visitorId}`)
-      toast.success(`Cleared ${res.deleted} page view(s).`)
-      const { data: fresh } = await api.get('/analytics/dashboard/')
-      fresh.active_visitors_count = (fresh.unique_visitors_list || []).length
-      setData(fresh)
-    } catch { toast.error('Failed to clear views.') }
   }
 
   if (loading || !data) {
@@ -827,25 +815,19 @@ function AdminDashboardContent() {
       </div>}
 
       {/* Unique Visitors — superadmin only */}
-      {user?.is_superadmin && <UniqueVisitorsSection data={data} onClearMyViews={clearMyPageViews} />}
+      {user?.is_superadmin && <UniqueVisitorsSection data={data} />}
 
       {/* Page Views Table — superadmin only */}
       {user?.is_superadmin && <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <button
-            onClick={() => setPageViewsOpen(!pageViewsOpen)}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
-              <Eye size={20} /> Page Views by Path
-            </h2>
-            {pageViewsOpen ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
-          </button>
-          <button onClick={clearMyPageViews}
-            className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
-            <Trash2 size={14} /> Clear My Views
-          </button>
-        </div>
+        <button
+          onClick={() => setPageViewsOpen(!pageViewsOpen)}
+          className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        >
+          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
+            <Eye size={20} /> Page Views by Path
+          </h2>
+          {pageViewsOpen ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
+        </button>
         {pageViewsOpen && (
           <div className="overflow-x-auto">
             <table className="w-full">
