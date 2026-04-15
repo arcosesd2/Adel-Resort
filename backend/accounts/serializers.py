@@ -96,10 +96,11 @@ class RegisteredDeviceSerializer(serializers.ModelSerializer):
 
 class LoginAttemptSerializer(serializers.ModelSerializer):
     user_username = serializers.CharField(source='user.username', read_only=True, default='')
+    user_is_staff = serializers.BooleanField(source='user.is_staff', read_only=True, default=False)
 
     class Meta:
         model = LoginAttempt
-        fields = ('id', 'user', 'user_username', 'username', 'fingerprint', 'ip_address', 'user_agent', 'device_info', 'success', 'failure_reason', 'created_at')
+        fields = ('id', 'user', 'user_username', 'username', 'fingerprint', 'ip_address', 'user_agent', 'device_info', 'success', 'failure_reason', 'created_at', 'user_is_staff')
         read_only_fields = fields
 
 
