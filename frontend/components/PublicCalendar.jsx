@@ -231,7 +231,7 @@ export default function PublicCalendar() {
       <div className="rounded-xl border border-gray-200 bg-white">
         <div className="flex">
           {/* Sticky room name column */}
-          <div className="w-[180px] min-w-[180px] flex-shrink-0 z-20">
+          <div className="w-[220px] min-w-[220px] flex-shrink-0 z-20">
             {/* Header spacer row 1 */}
             <div className="bg-gray-100 border-r border-b border-gray-200 px-3 font-semibold text-sm text-gray-700" style={{ height: '34px', display: 'flex', alignItems: 'center' }}>
               Room
@@ -257,12 +257,12 @@ export default function PublicCalendar() {
                 {group.rooms.map(room => (
                   <div
                     key={room.room_id}
-                    className="bg-white border-r border-b border-gray-100 px-3 text-sm text-gray-700 truncate flex items-center"
+                    className="bg-white border-r border-b border-gray-100 px-3 text-sm text-gray-700 flex items-center"
                     title={`${room.room_name} (${room.max_rooms} unit${room.max_rooms !== 1 ? 's' : ''})`}
                     style={{ height: '40px' }}
                   >
-                    <div className="truncate">
-                      <span className="font-medium">{room.room_name}</span>
+                    <div>
+                      <span className="font-medium whitespace-nowrap">{room.room_name}</span>
                       {room.max_rooms > 1 && (
                         <span className="text-xs text-gray-400 ml-1">x{room.max_rooms}</span>
                       )}
@@ -347,6 +347,22 @@ export default function PublicCalendar() {
                             const dayBooked = getBooked(room.room_id, dateStr, 'day')
                             const nightBooked = isDayOnly ? 0 : getBooked(room.room_id, dateStr, 'night')
 
+                            // Day-only rooms span both sub-columns (no grey Night cell)
+                            if (isDayOnly) {
+                              return (
+                                <div
+                                  key={d.day}
+                                  className={`flex items-center justify-center text-[10px] font-bold transition-colors ${
+                                    d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
+                                  } ${cellBg(dayBooked, max)} ${!cellBg(dayBooked, max) ? 'text-gray-400' : ''}`}
+                                  style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px`, borderRight: '2px solid #e5e7eb' }}
+                                  title={`${room.room_name} — Day: ${dayBooked}/${max} booked`}
+                                >
+                                  {dayBooked > 0 ? `${dayBooked}/${max}` : ''}
+                                </div>
+                              )
+                            }
+
                             return (
                               <div
                                 key={d.day}
@@ -364,21 +380,14 @@ export default function PublicCalendar() {
                                   {dayBooked > 0 ? `${dayBooked}/${max}` : ''}
                                 </div>
                                 {/* Night cell */}
-                                {isDayOnly ? (
-                                  <div
-                                    className="flex-1 bg-gray-100"
-                                    title="Day only"
-                                  />
-                                ) : (
-                                  <div
-                                    className={`flex-1 flex items-center justify-center text-[10px] font-bold transition-colors ${
-                                      d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
-                                    } ${cellBg(nightBooked, max)} ${!cellBg(nightBooked, max) ? 'text-gray-400' : ''}`}
-                                    title={`${room.room_name} — Night: ${nightBooked}/${max} booked`}
-                                  >
-                                    {nightBooked > 0 ? `${nightBooked}/${max}` : ''}
-                                  </div>
-                                )}
+                                <div
+                                  className={`flex-1 flex items-center justify-center text-[10px] font-bold transition-colors ${
+                                    d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
+                                  } ${cellBg(nightBooked, max)} ${!cellBg(nightBooked, max) ? 'text-gray-400' : ''}`}
+                                  title={`${room.room_name} — Night: ${nightBooked}/${max} booked`}
+                                >
+                                  {nightBooked > 0 ? `${nightBooked}/${max}` : ''}
+                                </div>
                               </div>
                             )
                           }
