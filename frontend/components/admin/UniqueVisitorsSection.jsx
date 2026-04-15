@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Users, ChevronDown, ChevronRight } from 'lucide-react'
+import { Users, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 
-export default function UniqueVisitorsSection({ data }) {
+export default function UniqueVisitorsSection({ data, onClearMyViews }) {
   const [open, setOpen] = useState(false)
   const [expandedVisitors, setExpandedVisitors] = useState({})
 
@@ -16,15 +16,23 @@ export default function UniqueVisitorsSection({ data }) {
 
   return (
     <div className="card overflow-hidden mb-10">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full px-6 py-4 border-b border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors"
-      >
-        <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
-          <Users size={20} /> Unique Visitors
-        </h2>
-        {open ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
-      </button>
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
+          <h2 className="text-lg font-semibold text-ocean-800 flex items-center gap-2">
+            <Users size={20} /> Unique Visitors
+          </h2>
+          {open ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
+        </button>
+        {onClearMyViews && (
+          <button onClick={onClearMyViews}
+            className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors">
+            <Trash2 size={14} /> Clear My Views
+          </button>
+        )}
+      </div>
 
       {open && (
         <div className="overflow-x-auto">

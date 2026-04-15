@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from .models import PageView
 from .serializers import TrackPageViewSerializer
+from accounts.permissions import IsSuperAdmin
 from bookings.models import Booking
 from payments.models import Payment
 from rooms.models import Room
@@ -325,3 +326,13 @@ def export_revenue_csv(request):
         ])
 
     return response
+
+
+@api_view(['DELETE'])
+@permission_classes([IsSuperAdmin])
+def clear_my_page_views(request):
+    visitor_id = request.query_params.get('visitor_id')
+    if not visitor_id:
+        return Response({'detail': 'visitor_id required'}, status=status.HTTP_400_BAD_REQUEST)
+    deleted, _ = PageView.objects.filter(visitor_id=visitor_id).delete()
+    return Response({'deleted': deleted})
