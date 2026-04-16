@@ -510,6 +510,11 @@ def user_detail(request, pk):
                     {'detail': 'Superadmin status cannot be revoked.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        if 'is_admin' in request.data and not request.user.is_superadmin:
+            return Response(
+                {'detail': 'Only superadmin may change is_admin.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = UserManagementSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -525,6 +530,11 @@ def user_detail(request, pk):
         if user.is_superadmin:
             return Response({'detail': 'Superadmin accounts cannot be deleted.'},
                             status=status.HTTP_400_BAD_REQUEST)
+        if hasattr(user, 'employee'):
+            return Response(
+                {'detail': 'User has payroll records; deactivate instead.'},
+                status=status.HTTP_409_CONFLICT,
+            )
         log_activity(request.user, 'user', f'Deleted user "{user.username}"',
                      ip_address=get_client_ip(request))
         user.delete()

@@ -38,8 +38,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'last_name', 'phone', 'email',
-                  'email_verified', 'avatar_url', 'date_joined', 'is_staff', 'is_superadmin')
-        read_only_fields = ('id', 'username', 'date_joined', 'is_staff', 'is_superadmin', 'email_verified', 'avatar_url')
+                  'email_verified', 'avatar_url', 'date_joined', 'is_staff', 'is_admin', 'is_superadmin')
+        read_only_fields = ('id', 'username', 'date_joined', 'is_staff', 'is_admin', 'is_superadmin', 'email_verified', 'avatar_url')
 
     def get_avatar_url(self, obj):
         if obj.avatar:
@@ -59,7 +59,7 @@ class UserManagementSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'last_name', 'phone', 'email',
-                  'is_active', 'is_staff', 'is_superadmin', 'date_joined', 'password',
+                  'is_active', 'is_staff', 'is_admin', 'is_superadmin', 'date_joined', 'password',
                   'device_count', 'login_count', 'last_login')
         read_only_fields = ('id', 'date_joined', 'device_count', 'login_count', 'last_login', 'is_superadmin')
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, Briefcase, Banknote, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -393,6 +393,26 @@ function AdminDashboardContent() {
               <Link href="/admin-dashboard/activity-log" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
                 <ClipboardList size={20} className="text-gray-500 group-hover:text-ocean-600" />
                 <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Activity Log</span>
+              </Link>
+            </>
+          )}
+          {(user?.is_admin || user?.is_superadmin) && (
+            <>
+              <Link href="/admin-dashboard/employees" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Briefcase size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Employees</span>
+              </Link>
+              <Link href="/admin-dashboard/payroll" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <DollarSign size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Payroll</span>
+              </Link>
+              <Link href="/admin-dashboard/payslips" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <FileText size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Payslips</span>
+              </Link>
+              <Link href="/admin-dashboard/loans" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Banknote size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Loans</span>
               </Link>
             </>
           )}

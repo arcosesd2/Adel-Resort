@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
-const emptyForm = { username: '', first_name: '', last_name: '', phone: '', password: '', is_staff: false, is_superadmin: false }
+const emptyForm = { username: '', first_name: '', last_name: '', phone: '', password: '', is_staff: false, is_admin: false, is_superadmin: false }
 
 export default function UsersPage() {
   const { user } = useAuthStore()
@@ -46,7 +46,7 @@ export default function UsersPage() {
   }
 
   const openEdit = (u) => {
-    setForm({ username: u.username, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '', password: '', is_staff: u.is_staff, is_superadmin: u.is_superadmin })
+    setForm({ username: u.username, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '', password: '', is_staff: u.is_staff, is_admin: !!u.is_admin, is_superadmin: u.is_superadmin })
     setEditId(u.id)
     setModal('edit')
   }
@@ -103,6 +103,7 @@ export default function UsersPage() {
 
   const roleBadge = (u) => {
     if (u.is_superadmin) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Superadmin</span>
+    if (u.is_admin) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Admin</span>
     if (u.is_staff) return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Staff</span>
     return <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Customer</span>
   }
@@ -257,11 +258,16 @@ export default function UsersPage() {
                 <input type="password" value={form.password} required={modal === 'create'} minLength={8}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className="input-field" />
               </div>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={form.is_staff}
                     onChange={e => setForm(f => ({ ...f, is_staff: e.target.checked }))} />
                   Staff
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={form.is_admin}
+                    onChange={e => setForm(f => ({ ...f, is_admin: e.target.checked, is_staff: e.target.checked || f.is_staff }))} />
+                  Admin <span className="text-xs text-gray-400">(payroll access)</span>
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={form.is_superadmin}

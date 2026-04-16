@@ -240,6 +240,16 @@ export default function DashboardPage() {
           {user && (
             <p className="text-gray-500 mt-1">Welcome back, {user.first_name}!</p>
           )}
+          {user?.is_staff && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Link href="/dashboard/payslips" className="text-sm px-3 py-1.5 rounded-lg border border-ocean-200 bg-ocean-50 text-ocean-700 hover:bg-ocean-100">
+                My Payslips →
+              </Link>
+              <Link href="/dashboard/loans" className="text-sm px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100">
+                My Loans →
+              </Link>
+            </div>
+          )}
         </FadeInUp>
 
         {/* Tabs */}

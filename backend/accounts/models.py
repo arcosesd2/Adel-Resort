@@ -35,6 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     is_superadmin = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
 
@@ -57,6 +58,11 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'.strip()
+
+    def save(self, *args, **kwargs):
+        if self.is_admin or self.is_superadmin:
+            self.is_staff = True
+        super().save(*args, **kwargs)
 
 
 class RegisteredDevice(models.Model):
@@ -177,6 +183,8 @@ class ActivityLog(models.Model):
         VOUCHER = 'voucher', 'Voucher'
         SETTINGS = 'settings', 'Settings'
         AUTH = 'auth', 'Authentication'
+        PAYROLL = 'payroll', 'Payroll'
+        LOAN = 'loan', 'Loan'
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='activity_logs')
     category = models.CharField(max_length=20, choices=ActionCategory.choices)

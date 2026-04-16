@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/vouchers/', include('vouchers.urls')),
     path('api/chat/', include('chat.urls')),
     path('api/reviews/', include('reviews.urls')),
+    path('api/hr/', include('hr.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
