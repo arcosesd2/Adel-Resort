@@ -132,26 +132,8 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
 
   const isSlotPast = useCallback((dateStr, slot) => {
     if (allowPastDates) return dateStr >= todayStr
-    if (slot === 'overnight') {
-      // Overnight check-in is at 2PM — past if date is before today, or today after 2PM
-      if (dateStr < todayStr) return true
-      if (dateStr === todayStr && curHour >= 14) return true
-      return false
-    }
-    if (slot === '24hr') {
-      // 24hr check-in — past if date is before today, or today is past current hour
-      if (dateStr < todayStr) return true
-      return false
-    }
-    if (slot === 'day') {
-      if (dateStr < todayStr) return true
-      if (dateStr === todayStr && curHour >= 17) return true
-    } else {
-      if (dateStr < yesterdayStr) return true
-      if (dateStr === yesterdayStr && curHour >= 8) return true
-    }
-    return false
-  }, [todayStr, yesterdayStr, curHour, allowPastDates])
+    return dateStr < todayStr
+  }, [todayStr, allowPastDates])
 
   // ═══════ OVERNIGHT / 24HR MODE ═══════
   const overnightSlotType = bookingMode === '24hr' ? '24hr' : 'overnight'
