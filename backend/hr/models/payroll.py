@@ -154,6 +154,7 @@ class Payslip(models.Model):
     gross_basic = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     overtime_pay = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     holiday_pay = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    rest_day_pay = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     night_diff = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     allowances_taxable = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     allowances_non_taxable = models.DecimalField(max_digits=12, decimal_places=2, default=0)

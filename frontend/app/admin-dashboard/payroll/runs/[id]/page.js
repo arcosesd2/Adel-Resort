@@ -90,26 +90,34 @@ export default function PayrollRunDetail() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-left text-gray-600">
               <tr>
-                <th className="px-4 py-2">No.</th><th className="px-4 py-2">Employee</th>
-                <th className="px-4 py-2 text-right">Gross</th>
-                <th className="px-4 py-2 text-right">SSS</th><th className="px-4 py-2 text-right">PH</th>
-                <th className="px-4 py-2 text-right">HDMF</th><th className="px-4 py-2 text-right">WTax</th>
-                <th className="px-4 py-2 text-right">Loan</th><th className="px-4 py-2 text-right">Net</th>
-                <th className="px-4 py-2"></th>
-              </tr>
+                 <th className="px-4 py-2">No.</th><th className="px-4 py-2">Employee</th>
+                 <th className="px-4 py-2 text-right">Gross</th>
+                 <th className="px-4 py-2 text-right">OT</th><th className="px-4 py-2 text-right">Holiday</th>
+                 <th className="px-4 py-2 text-right">RestDay</th><th className="px-4 py-2 text-right">Night</th>
+                 <th className="px-4 py-2 text-right">SSS</th><th className="px-4 py-2 text-right">PH</th>
+                 <th className="px-4 py-2 text-right">HDMF</th><th className="px-4 py-2 text-right">WTax</th>
+                 <th className="px-4 py-2 text-right">Loan</th><th className="px-4 py-2 text-right">Other</th>
+                 <th className="px-4 py-2 text-right">Net</th>
+                 <th className="px-4 py-2"></th>
+               </tr>
             </thead>
             <tbody>
-              {payslips.length === 0 && <tr><td colSpan={10} className="text-center py-8 text-gray-400">No payslips.</td></tr>}
+              {payslips.length === 0 && <tr><td colSpan={15} className="text-center py-8 text-gray-400">No payslips.</td></tr>}
               {payslips.map(p => (
                 <tr key={p.id} className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-2 font-mono text-xs">{p.payslip_number}</td>
                   <td className="px-4 py-2">{p.employee_name} <span className="text-gray-400 text-xs">{p.employee_code}</span></td>
                   <td className="px-4 py-2 text-right">₱{Number(p.gross_earnings).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right">{Number(p.overtime_pay) > 0 ? `₱${Number(p.overtime_pay).toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '-'}</td>
+                  <td className="px-4 py-2 text-right">{Number(p.holiday_pay) > 0 ? `₱${Number(p.holiday_pay).toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '-'}</td>
+                  <td className="px-4 py-2 text-right">{Number(p.rest_day_pay) > 0 ? `₱${Number(p.rest_day_pay).toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '-'}</td>
+                  <td className="px-4 py-2 text-right">{Number(p.night_diff) > 0 ? `₱${Number(p.night_diff).toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '-'}</td>
                   <td className="px-4 py-2 text-right">{Number(p.sss_ee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-2 text-right">{Number(p.philhealth_ee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-2 text-right">{Number(p.pagibig_ee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-2 text-right">{Number(p.withholding_tax).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-2 text-right">{Number(p.loan_deduction_total).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right">{Number(p.other_deductions) > 0 ? `₱${Number(p.other_deductions).toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '-'}</td>
                   <td className="px-4 py-2 text-right font-semibold text-ocean-700">₱{Number(p.net_pay).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
                   <td className="px-4 py-2 text-right">
                     <button onClick={() => downloadPdf(p.id, p.payslip_number)} className="text-ocean-600 hover:underline flex items-center gap-1 ml-auto"><FileDown size={14} /> PDF</button>

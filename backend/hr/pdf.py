@@ -93,6 +93,7 @@ def generate_payslip_pdf(payslip):
     earnings = [li for li in line_items if li.category == 'earning']
     deductions = [li for li in line_items if li.category == 'deduction']
     employer_lines = [li for li in line_items if li.category == 'employer_contribution']
+    info_lines = [li for li in line_items if li.category == 'info']
 
     elements.append(Paragraph('Earnings', section_style))
     earnings_data = [['Code', 'Description', 'Amount']]
@@ -139,6 +140,23 @@ def generate_payslip_pdf(payslip):
     ]))
     elements.append(deductions_table)
     elements.append(Spacer(1, 5 * mm))
+
+    if info_lines:
+        elements.append(Paragraph('Attendance Summary', section_style))
+        info_data = [['', '']]
+        for li in info_lines:
+            info_data.append([li.code, li.label])
+        info_table = Table(info_data, colWidths=[90, 310])
+        info_table.setStyle(TableStyle([
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f0f9ff')),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#e5e7eb')),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        elements.append(info_table)
+        elements.append(Spacer(1, 5 * mm))
 
     net_data = [['NET PAY', _fmt_php(payslip.net_pay)]]
     net_table = Table(net_data, colWidths=[380, 120])

@@ -15,6 +15,8 @@ from hr.services import pagibig as pi_svc
 from hr.services import bir as bir_svc
 from hr.services import loan_engine
 from hr.services import thirteenth_month as t13
+from hr.services import attendance_engine
+from hr.services import leave_engine
 
 
 CENTS = Decimal('0.01')
@@ -119,6 +121,42 @@ def generate_payroll_run(period, actor, employee_ids=None):
         if gross_basic <= 0:
             continue
 
+        attendance = attendance_engine.aggregate_for_period(employee, period)
+        leave = leave_engine.get_leave_for_period(employee, period)
+
+        days_worked = Decimal('0')
+        overtime_pay = Decimal('0')
+        holiday_pay = Decimal('0')
+        rest_day_pay = Decimal('0')
+        night_diff = Decimal('0')
+        other_deductions = Decimal('0')
+        attendance_meta = {}
+
+        if attendance['has_attendance_data']:
+            attendance_gross = _q(
+                (attendance['days_worked'] + leave['paid_leave_days'])
+                * comp.computed_daily_rate()
+            )
+            gross_basic = min(attendance_gross, gross_basic)
+            days_worked = _q(attendance['days_worked'] + leave['paid_leave_days'])
+            overtime_pay = attendance['overtime_pay']
+            holiday_pay = attendance['holiday_pay']
+            rest_day_pay = attendance['rest_day_pay']
+            night_diff = attendance['night_diff_pay']
+            other_deductions = _q(
+                attendance['late_deduction']
+                + attendance['undertime_deduction']
+            )
+            attendance_meta = {
+                'attendance_days': str(attendance['days_worked']),
+                'paid_leave_days': str(leave['paid_leave_days']),
+                'unpaid_leave_days': str(leave['unpaid_leave_days']),
+                'overtime_hours': str(attendance['total_overtime_hours']),
+                'night_diff_hours': str(attendance['total_night_diff_hours']),
+                'late_deduction': str(attendance['late_deduction']),
+                'undertime_deduction': str(attendance['undertime_deduction']),
+            }
+
         sss_full = sss_svc.compute(comp.monthly_basic_salary, on_date=pay_date,
                                    msc_override=comp.sss_msc_override)
         ph_full = ph_svc.compute(comp.monthly_basic_salary, on_date=pay_date)
@@ -151,7 +189,7 @@ def generate_payroll_run(period, actor, employee_ids=None):
             pi_ee = _q(pi_full['employee'])
             pi_er = _q(pi_full['employer'])
 
-        gross_earnings = gross_basic
+        gross_earnings = _q(gross_basic + overtime_pay + holiday_pay + rest_day_pay + night_diff)
         statutory_total = sss_ee + ph_ee + pi_ee
         taxable = max(Decimal('0'), gross_earnings - statutory_total)
         wtax = bir_svc.compute(taxable, bir_period, on_date=pay_date)
@@ -159,22 +197,27 @@ def generate_payroll_run(period, actor, employee_ids=None):
         loan_deductions = loan_engine.collect_auto_deductions(employee, period)
         loan_total = sum((amt for _l, amt in loan_deductions), Decimal('0.00'))
 
-        total_deductions = _q(statutory_total + wtax + loan_total)
+        total_deductions = _q(statutory_total + wtax + loan_total + other_deductions)
         net_pay = _q(gross_earnings - total_deductions)
 
         payslip = Payslip.objects.create(
             run=run,
             employee=employee,
             compensation_snapshot=comp,
-            days_worked=Decimal('0'),
+            days_worked=days_worked,
             gross_basic=gross_basic,
+            overtime_pay=overtime_pay,
+            holiday_pay=holiday_pay,
+            rest_day_pay=rest_day_pay,
+            night_diff=night_diff,
             gross_earnings=gross_earnings,
             sss_ee=sss_ee, philhealth_ee=ph_ee, pagibig_ee=pi_ee,
             withholding_tax=wtax, loan_deduction_total=_q(loan_total),
-            other_deductions=Decimal('0'),
+            other_deductions=other_deductions,
             total_deductions=total_deductions, net_pay=net_pay,
             sss_er=sss_er, philhealth_er=ph_er, pagibig_er=pi_er,
             ec_contribution=sss_ec,
+            meta=attendance_meta,
         )
 
         # Line items
@@ -182,6 +225,28 @@ def generate_payroll_run(period, actor, employee_ids=None):
             payslip=payslip, category=PayslipLineItem.Category.EARNING,
             code='BASIC', label='Basic Pay', amount=gross_basic,
         )
+        if overtime_pay > 0:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.EARNING,
+                code='OVERTIME', label=f'Overtime Pay ({attendance_meta.get("overtime_hours", "0")}h)',
+                amount=overtime_pay,
+            )
+        if holiday_pay > 0:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.EARNING,
+                code='HOLIDAY_PAY', label='Holiday Pay', amount=holiday_pay,
+            )
+        if rest_day_pay > 0:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.EARNING,
+                code='REST_DAY_PAY', label='Rest Day Pay', amount=rest_day_pay,
+            )
+        if night_diff > 0:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.EARNING,
+                code='NIGHT_DIFF', label=f'Night Differential ({attendance_meta.get("night_diff_hours", "0")}h)',
+                amount=night_diff,
+            )
         PayslipLineItem.objects.create(
             payslip=payslip, category=PayslipLineItem.Category.DEDUCTION,
             code='SSS_EE', label='SSS (Employee Share)', amount=sss_ee,
@@ -198,6 +263,18 @@ def generate_payroll_run(period, actor, employee_ids=None):
             payslip=payslip, category=PayslipLineItem.Category.DEDUCTION,
             code='WTAX', label='Withholding Tax', amount=wtax,
         )
+        if attendance['has_attendance_data'] and attendance['late_deduction'] > 0:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.DEDUCTION,
+                code='LATE', label=f'Late Deduction ({attendance_meta.get("late_deduction", "0")})',
+                amount=attendance['late_deduction'],
+            )
+        if attendance['has_attendance_data'] and attendance['undertime_deduction'] > 0:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.DEDUCTION,
+                code='UNDERTIME', label=f'Undertime Deduction ({attendance_meta.get("undertime_deduction", "0")})',
+                amount=attendance['undertime_deduction'],
+            )
         for loan, amt in loan_deductions:
             PayslipLineItem.objects.create(
                 payslip=payslip, category=PayslipLineItem.Category.DEDUCTION,
@@ -220,6 +297,16 @@ def generate_payroll_run(period, actor, employee_ids=None):
             payslip=payslip, category=PayslipLineItem.Category.EMPLOYER_CONTRIBUTION,
             code='EC', label='SSS Employees Compensation', amount=sss_ec,
         )
+        if attendance['has_attendance_data']:
+            PayslipLineItem.objects.create(
+                payslip=payslip, category=PayslipLineItem.Category.INFO,
+                code='DAYS_WORKED', label=f'Days Worked: {days_worked}', amount=Decimal('0'),
+            )
+            if leave['unpaid_leave_days'] > 0:
+                PayslipLineItem.objects.create(
+                    payslip=payslip, category=PayslipLineItem.Category.INFO,
+                    code='UNPAID_LEAVE', label=f'Unpaid Leave: {leave["unpaid_leave_days"]} day(s)', amount=Decimal('0'),
+                )
 
     log_activity(actor, 'payroll', f'Generated draft payroll run #{run.id} for {period}')
     return run

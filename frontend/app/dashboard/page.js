@@ -242,6 +242,12 @@ export default function DashboardPage() {
           )}
           {user?.is_staff && (
             <div className="flex flex-wrap gap-2 mt-4">
+              <Link href="/dashboard/attendance" className="text-sm px-3 py-1.5 rounded-lg border border-ocean-200 bg-ocean-50 text-ocean-700 hover:bg-ocean-100">
+                My Attendance →
+              </Link>
+              <Link href="/dashboard/leave" className="text-sm px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                My Leave →
+              </Link>
               <Link href="/dashboard/payslips" className="text-sm px-3 py-1.5 rounded-lg border border-ocean-200 bg-ocean-50 text-ocean-700 hover:bg-ocean-100">
                 My Payslips →
               </Link>

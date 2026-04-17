@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, Briefcase, Banknote, FileText } from 'lucide-react'
+import { Eye, Users, UserCheck, DollarSign, ShoppingCart, Clock, CreditCard, MessageCircle, Send, CheckCircle, ChevronDown, ChevronRight, Activity, Shield, Fingerprint, ScrollText, Smartphone, Film, Settings, Star, ImageIcon, ClipboardList, Newspaper, Calendar, Percent, BedDouble, FileDown, Mail, CalendarCheck, Tag, Home, CalendarPlus, Plus, Briefcase, Banknote, FileText, Timer, Palmtree } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
@@ -413,6 +413,26 @@ function AdminDashboardContent() {
               <Link href="/admin-dashboard/loans" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
                 <Banknote size={20} className="text-gray-500 group-hover:text-ocean-600" />
                 <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Loans</span>
+              </Link>
+              <Link href="/admin-dashboard/pay-rates" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Percent size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Pay Rates</span>
+              </Link>
+              <Link href="/admin-dashboard/holidays" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Calendar size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Holidays</span>
+              </Link>
+              <Link href="/admin-dashboard/shifts" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Clock size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Shifts</span>
+              </Link>
+              <Link href="/admin-dashboard/attendance" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Timer size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Attendance</span>
+              </Link>
+              <Link href="/admin-dashboard/leave" className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group">
+                <Palmtree size={20} className="text-gray-500 group-hover:text-ocean-600" />
+                <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Leave</span>
               </Link>
             </>
           )}

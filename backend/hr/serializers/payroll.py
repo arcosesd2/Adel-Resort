@@ -34,7 +34,7 @@ class PayslipSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'payslip_number', 'run', 'employee', 'employee_code', 'employee_name',
             'compensation_snapshot', 'period',
-            'days_worked', 'gross_basic', 'overtime_pay', 'holiday_pay', 'night_diff',
+            'days_worked', 'gross_basic', 'overtime_pay', 'holiday_pay', 'rest_day_pay', 'night_diff',
             'allowances_taxable', 'allowances_non_taxable', 'gross_earnings',
             'sss_ee', 'philhealth_ee', 'pagibig_ee', 'withholding_tax',
             'loan_deduction_total', 'other_deductions', 'total_deductions', 'net_pay',

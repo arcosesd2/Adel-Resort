@@ -5,6 +5,11 @@ from .models import (
     SSSBracket, PhilHealthRate, PagIbigRate, BIRTaxBracket,
     PayrollPeriod, PayrollRun, Payslip, PayslipLineItem,
     Loan, LoanPayment,
+    PayRateConfig,
+    Holiday,
+    Shift, ShiftAssignment,
+    AttendanceRecord,
+    LeaveType, LeaveBalance, LeaveRequest,
 )
 
 
@@ -79,3 +84,55 @@ class LoanAdmin(admin.ModelAdmin):
 class LoanPaymentAdmin(admin.ModelAdmin):
     list_display = ('id', 'loan', 'amount', 'source', 'payment_date', 'payslip')
     list_filter = ('source',)
+
+
+@admin.register(PayRateConfig)
+class PayRateConfigAdmin(admin.ModelAdmin):
+    list_display = ('effective_from', 'ot_ordinary_pct', 'regular_holiday_rate_pct', 'night_diff_ordinary_pct', 'created_at')
+    list_filter = ('effective_from',)
+
+
+@admin.register(Holiday)
+class HolidayAdmin(admin.ModelAdmin):
+    list_display = ('date', 'name', 'holiday_type', 'is_recurring')
+    list_filter = ('holiday_type', 'is_recurring')
+    search_fields = ('name',)
+
+
+@admin.register(Shift)
+class ShiftAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'start_time', 'end_time', 'break_minutes', 'grace_period_minutes', 'is_active')
+    list_filter = ('is_active', 'is_night_shift')
+
+
+@admin.register(ShiftAssignment)
+class ShiftAssignmentAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'shift', 'effective_date', 'end_date')
+    list_filter = ('shift',)
+    search_fields = ('employee__employee_code',)
+
+
+@admin.register(AttendanceRecord)
+class AttendanceRecordAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'date', 'time_in', 'time_out', 'hours_worked', 'overtime_hours', 'is_late', 'is_approved', 'source')
+    list_filter = ('date', 'is_approved', 'is_holiday', 'source')
+    search_fields = ('employee__employee_code',)
+
+
+@admin.register(LeaveType)
+class LeaveTypeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'is_paid', 'default_credits', 'carry_over_max', 'is_active')
+    list_filter = ('is_paid', 'is_active')
+
+
+@admin.register(LeaveBalance)
+class LeaveBalanceAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'leave_type', 'year', 'total_credits', 'used', 'remaining')
+    list_filter = ('year', 'leave_type')
+
+
+@admin.register(LeaveRequest)
+class LeaveRequestAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'leave_type', 'start_date', 'end_date', 'half_day', 'status', 'reviewed_by')
+    list_filter = ('status', 'leave_type', 'half_day')
+    search_fields = ('employee__employee_code',)
