@@ -88,7 +88,7 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SiteSettings
-        fields = ['show_stats', 'show_testimonials', 'featured_mode', 'featured_mode_display', 'updated_at']
+        fields = ['show_stats', 'show_testimonials', 'featured_mode', 'featured_mode_display', 'weekend_walkin_only', 'updated_at']
 
 
 class NewsletterSubscribeSerializer(serializers.Serializer):

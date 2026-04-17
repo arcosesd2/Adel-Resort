@@ -108,6 +108,7 @@ class SiteSettings(models.Model):
     show_stats = models.BooleanField(default=True)
     show_testimonials = models.BooleanField(default=True)
     featured_mode = models.CharField(max_length=10, choices=[('auto', 'Automatic'), ('manual', 'Manual')], default='auto')
+    weekend_walkin_only = models.BooleanField(default=False, help_text='Disable online booking on weekends for cottages, trapal tables, and dos andanas')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

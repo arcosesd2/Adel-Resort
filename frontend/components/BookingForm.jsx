@@ -23,6 +23,8 @@ function clearDraft(roomId) {
   try { sessionStorage.removeItem(`booking_draft_${roomId}`) } catch {}
 }
 
+const WEEKEND_RESTRICTED_TYPES = ['cottage', 'trapal_table', 'dos_andanas', 'ac_karaoke']
+
 export default function BookingForm({ room }) {
   const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
@@ -34,6 +36,13 @@ export default function BookingForm({ room }) {
   const rangeRef = useRef({ checkIn: null, checkOut: null })
   const [savedCheckIn, setSavedCheckIn] = useState(null)
   const [savedCheckOut, setSavedCheckOut] = useState(null)
+  const [weekendWalkinOnly, setWeekendWalkinOnly] = useState(false)
+
+  useEffect(() => {
+    api.get('/content/settings/')
+      .then(({ data }) => setWeekendWalkinOnly(!!data.weekend_walkin_only))
+      .catch(() => {})
+  }, [])
 
   const handleRangeChange = useCallback((checkIn, checkOut) => {
     rangeRef.current = { checkIn, checkOut }
@@ -140,6 +149,16 @@ export default function BookingForm({ room }) {
         </div>
       )}
 
+      {/* Weekend walk-in notice */}
+      {weekendWalkinOnly && WEEKEND_RESTRICTED_TYPES.includes(room.room_type) && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-2">
+          <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-amber-800">
+            Cottages can only be booked via walk-in during the weekends.
+          </p>
+        </div>
+      )}
+
       {/* Slot Picker */}
       <SlotPicker
         roomId={room.id}
@@ -149,6 +168,7 @@ export default function BookingForm({ room }) {
         onRangeChange={handleRangeChange}
         defaultCheckIn={savedCheckIn}
         defaultCheckOut={savedCheckOut}
+        weekendDisabled={weekendWalkinOnly && WEEKEND_RESTRICTED_TYPES.includes(room.room_type)}
       />
 
       {/* Persons */}

@@ -110,7 +110,7 @@ export default function SiteSettingsPage() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between py-3">
+          <div className="flex items-center justify-between py-3 border-b border-gray-100">
             <div>
               <h3 className="font-semibold text-gray-900">Testimonials Section</h3>
               <p className="text-sm text-gray-500">Show guest reviews section on the homepage</p>
@@ -124,6 +124,24 @@ export default function SiteSettingsPage() {
             >
               <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
                 settings?.show_testimonials ? 'translate-x-6' : ''
+              }`} />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between py-3">
+            <div>
+              <h3 className="font-semibold text-gray-900">Weekend Walk-in Only</h3>
+              <p className="text-sm text-gray-500">Disable online booking on weekends for Cottages, Karaoke, Trapal Table, and Dos Andanas. Customers will see a message that these can only be booked via walk-in.</p>
+            </div>
+            <button
+              onClick={() => handleToggle('weekend_walkin_only')}
+              disabled={saving}
+              className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
+                settings?.weekend_walkin_only ? 'bg-ocean-600' : 'bg-gray-300'
+              }`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                settings?.weekend_walkin_only ? 'translate-x-6' : ''
               }`} />
             </button>
           </div>

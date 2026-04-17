@@ -77,7 +77,7 @@ function formatCheckOutDate(dateStr) {
   return `${MONTHS[d.getMonth()].slice(0, 3)} ${d.getDate()}`
 }
 
-export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut, allowPastDates }) {
+export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChange, onRangeChange, defaultCheckIn, defaultCheckOut, allowPastDates, weekendDisabled }) {
   const isOvernight = bookingMode === 'overnight' || bookingMode === '24hr'
   const [bookedSlots, setBookedSlots] = useState([])
   const [maxRooms, setMaxRooms] = useState(1)
@@ -134,8 +134,12 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
     if (allowPastDates) return dateStr >= todayStr
     if (dateStr < todayStr) return true
     if (dateStr === todayStr && slot === 'day' && curHour >= 17) return true
+    if (weekendDisabled) {
+      const d = new Date(dateStr + 'T00:00:00')
+      if (d.getDay() === 0 || d.getDay() === 6) return true
+    }
     return false
-  }, [todayStr, curHour, allowPastDates])
+  }, [todayStr, curHour, allowPastDates, weekendDisabled])
 
   // ═══════ OVERNIGHT / 24HR MODE ═══════
   const overnightSlotType = bookingMode === '24hr' ? '24hr' : 'overnight'
