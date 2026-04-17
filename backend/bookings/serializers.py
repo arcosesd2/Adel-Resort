@@ -131,12 +131,11 @@ class BookingSerializer(serializers.ModelSerializer):
             if past_slots:
                 raise serializers.ValidationError('Booking dates must be today or in the future.')
 
-        # Weekend walk-in restriction for certain room types
+        # Weekend walk-in restriction for cottages and trapal tables
         if slots and room and not self.context.get('allow_past_dates'):
             from content.models import SiteSettings
             settings = SiteSettings.load()
-            restricted_types = {'cottage', 'trapal_table', 'dos_andanas', 'ac_karaoke'}
-            if settings.weekend_walkin_only and room.room_type in restricted_types:
+            if settings.weekend_walkin_only and room.is_weekend_walkin_restricted:
                 for s in slots:
                     d = date.fromisoformat(s['date'])
                     if d.weekday() >= 5:

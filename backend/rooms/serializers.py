@@ -22,6 +22,7 @@ class RoomSerializer(serializers.ModelSerializer):
     images = RoomImageSerializer(many=True, read_only=True)
     room_type_display = serializers.CharField(source='get_room_type_display', read_only=True)
     primary_image = serializers.SerializerMethodField()
+    is_weekend_walkin_restricted = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Room
@@ -29,6 +30,7 @@ class RoomSerializer(serializers.ModelSerializer):
             'id', 'name', 'room_type', 'room_type_display', 'description',
             'day_price', 'night_price', 'is_day_only', 'booking_mode', 'capacity', 'max_rooms',
             'size_sqm', 'amenities', 'is_active', 'is_featured', 'images', 'primary_image', 'created_at',
+            'is_weekend_walkin_restricted',
         )
 
     def get_primary_image(self, obj):

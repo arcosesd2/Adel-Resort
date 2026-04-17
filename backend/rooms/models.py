@@ -7,7 +7,7 @@ class RoomType(models.TextChoices):
     COTTAGE = 'cottage', 'Cottage'
     DOS_ANDANAS = 'dos_andanas', 'Dos Andanas'
     LAVENDER_HOUSE = 'lavender_house', 'Lavender House'
-    AC_KARAOKE     = 'ac_karaoke',      'Air-Conditioned Room'
+    AC_KARAOKE     = 'ac_karaoke',      'Air-Conditioned'
     KUBO = 'kubo', 'Kubo'
     FUNCTION_HALL = 'function_hall', 'Function Hall'
     TRAPAL_TABLE = 'trapal_table', 'Trapal Table'
@@ -41,6 +41,14 @@ class Room(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.get_room_type_display()})'
+
+    @property
+    def is_weekend_walkin_restricted(self):
+        if self.room_type in ('cottage', 'trapal_table'):
+            return True
+        if self.room_type == 'dos_andanas' and 'Room' not in self.name:
+            return True
+        return False
 
 
 class RoomImage(models.Model):

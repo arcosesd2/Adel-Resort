@@ -23,8 +23,6 @@ function clearDraft(roomId) {
   try { sessionStorage.removeItem(`booking_draft_${roomId}`) } catch {}
 }
 
-const WEEKEND_RESTRICTED_TYPES = ['cottage', 'trapal_table', 'dos_andanas', 'ac_karaoke']
-
 export default function BookingForm({ room }) {
   const { isAuthenticated, user } = useAuthStore()
   const router = useRouter()
@@ -150,7 +148,7 @@ export default function BookingForm({ room }) {
       )}
 
       {/* Weekend walk-in notice */}
-      {weekendWalkinOnly && WEEKEND_RESTRICTED_TYPES.includes(room.room_type) && (
+      {weekendWalkinOnly && room.is_weekend_walkin_restricted && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-2">
           <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
           <p className="text-sm text-amber-800">
@@ -168,7 +166,7 @@ export default function BookingForm({ room }) {
         onRangeChange={handleRangeChange}
         defaultCheckIn={savedCheckIn}
         defaultCheckOut={savedCheckOut}
-        weekendDisabled={weekendWalkinOnly && WEEKEND_RESTRICTED_TYPES.includes(room.room_type)}
+        weekendDisabled={weekendWalkinOnly && room.is_weekend_walkin_restricted}
       />
 
       {/* Persons */}
