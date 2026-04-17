@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from accounts.models import log_activity
-from accounts.permissions import IsAdminOrSuperAdmin
+from accounts.permissions import IsAdminOrSuperAdmin, IsSuperAdmin
 
 from hr.models import SSSBracket, PhilHealthRate, PagIbigRate, BIRTaxBracket
 from hr.serializers import (
@@ -50,7 +50,7 @@ def sss_list(request):
     return _crud_list(request, SSSBracket, SSSBracketSerializer)
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAdminOrSuperAdmin])
 def sss_detail(request, pk):
     return _crud_detail(request, SSSBracket, SSSBracketSerializer, pk)
@@ -62,7 +62,7 @@ def philhealth_list(request):
     return _crud_list(request, PhilHealthRate, PhilHealthRateSerializer)
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAdminOrSuperAdmin])
 def philhealth_detail(request, pk):
     return _crud_detail(request, PhilHealthRate, PhilHealthRateSerializer, pk)
@@ -74,7 +74,7 @@ def pagibig_list(request):
     return _crud_list(request, PagIbigRate, PagIbigRateSerializer)
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAdminOrSuperAdmin])
 def pagibig_detail(request, pk):
     return _crud_detail(request, PagIbigRate, PagIbigRateSerializer, pk)
@@ -86,14 +86,14 @@ def bir_list(request):
     return _crud_list(request, BIRTaxBracket, BIRTaxBracketSerializer)
 
 
-@api_view(['GET', 'PATCH', 'DELETE'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAdminOrSuperAdmin])
 def bir_detail(request, pk):
     return _crud_detail(request, BIRTaxBracket, BIRTaxBracketSerializer, pk)
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminOrSuperAdmin])
+@permission_classes([IsSuperAdmin])
 def seed_tables(request):
     call_command('seed_contribution_tables')
     log_activity(request.user, 'payroll', 'Re-seeded contribution tables')

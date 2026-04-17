@@ -2,7 +2,8 @@ from decimal import Decimal
 from datetime import date
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.response import Response
 from bookings.models import Booking
 from content.models import Promotion
@@ -94,7 +95,7 @@ def validate_voucher(request):
 
 
 @api_view(['GET', 'POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def voucher_list_create(request):
     if request.method == 'GET':
         vouchers = Voucher.objects.all()
@@ -115,7 +116,7 @@ def voucher_list_create(request):
 
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def voucher_toggle(request, pk):
     try:
         voucher = Voucher.objects.get(pk=pk)
@@ -133,7 +134,7 @@ def voucher_toggle(request, pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def voucher_delete(request, pk):
     try:
         voucher = Voucher.objects.get(pk=pk)

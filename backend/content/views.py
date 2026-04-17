@@ -5,7 +5,8 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
+from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.response import Response
 from .models import News, Event, Promotion, Pricing, HeroConfig, SiteSettings, NewsletterSubscriber
 from .serializers import (
@@ -92,7 +93,7 @@ def hero_config(request):
 
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def hero_config_update(request):
     config = HeroConfig.load()
@@ -116,14 +117,14 @@ def hero_config_update(request):
 # ───── Admin News CRUD ─────
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_news_list(request):
     news = News.objects.all()
     return Response(AdminNewsSerializer(news, many=True, context={'request': request}).data)
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def admin_news_create(request):
     serializer = AdminNewsSerializer(data=request.data, context={'request': request})
@@ -135,7 +136,7 @@ def admin_news_create(request):
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def admin_news_detail(request, pk):
     try:
@@ -163,14 +164,14 @@ def admin_news_detail(request, pk):
 # ───── Admin Events CRUD ─────
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_events_list(request):
     events = Event.objects.all()
     return Response(AdminEventSerializer(events, many=True, context={'request': request}).data)
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def admin_events_create(request):
     serializer = AdminEventSerializer(data=request.data, context={'request': request})
@@ -182,7 +183,7 @@ def admin_events_create(request):
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def admin_events_detail(request, pk):
     try:
@@ -210,14 +211,14 @@ def admin_events_detail(request, pk):
 # ───── Admin Promotions CRUD ─────
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_promotions_list(request):
     promotions = Promotion.objects.all()
     return Response(AdminPromotionSerializer(promotions, many=True, context={'request': request}).data)
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def admin_promotions_create(request):
     serializer = AdminPromotionSerializer(data=request.data, context={'request': request})
@@ -229,7 +230,7 @@ def admin_promotions_create(request):
 
 
 @api_view(['GET', 'PATCH', 'DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def admin_promotions_detail(request, pk):
     try:
@@ -372,14 +373,14 @@ def newsletter_unsubscribe(request):
 # ───── Admin Newsletter & Broadcast ─────
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_subscribers_list(request):
     subs = NewsletterSubscriber.objects.all()
     return Response(NewsletterSubscriberSerializer(subs, many=True).data)
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_subscriber_delete(request, pk):
     try:
         sub = NewsletterSubscriber.objects.get(pk=pk)
@@ -396,7 +397,7 @@ class BroadcastRateThrottle(AnonRateThrottle):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @throttle_classes([BroadcastRateThrottle])
 def admin_event_broadcast(request, pk):
     try:
@@ -413,7 +414,7 @@ def admin_event_broadcast(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @throttle_classes([BroadcastRateThrottle])
 def admin_promotion_broadcast(request, pk):
     try:

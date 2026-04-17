@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from hr.models import Employee, CompensationProfile
@@ -12,6 +14,14 @@ class CompensationProfileSerializer(serializers.ModelSerializer):
             'daily_rate', 'hourly_rate', 'created_by', 'created_at',
         )
         read_only_fields = ('id', 'employee', 'created_by', 'created_at')
+        extra_kwargs = {'monthly_basic_salary': {'required': True}}
+
+    def validate_monthly_basic_salary(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Must be greater than zero.')
+        if value > Decimal('10000000'):
+            raise serializers.ValidationError('Cannot exceed PHP 10,000,000.')
+        return value
 
     def validate(self, attrs):
         sched = attrs.get('pay_schedule')
@@ -68,3 +78,10 @@ class EmployeeWriteSerializer(serializers.ModelSerializer):
             'hire_date', 'termination_date', 'employment_status', 'position', 'department',
             'is_active',
         )
+
+    def validate_user(self, value):
+        if self.instance is not None:
+            raise serializers.ValidationError('Cannot change user after creation.')
+        if hasattr(value, 'employee'):
+            raise serializers.ValidationError('This user already has an employee profile.')
+        return value

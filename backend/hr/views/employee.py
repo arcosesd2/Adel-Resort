@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -32,13 +33,15 @@ def employee_list(request):
         search = request.query_params.get('search')
         if search:
             qs = qs.filter(
-                user__first_name__icontains=search,
-            ) | qs.filter(
-                user__last_name__icontains=search,
-            ) | qs.filter(
-                employee_code__icontains=search,
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search) |
+                Q(employee_code__icontains=search)
             )
-        return Response(EmployeeSerializer(qs, many=True).data)
+        try:
+            limit = min(int(request.query_params.get('limit', 200)), 500)
+        except (ValueError, TypeError):
+            limit = 200
+        return Response(EmployeeSerializer(qs[:limit], many=True).data)
 
     serializer = EmployeeWriteSerializer(data=request.data)
     if serializer.is_valid():

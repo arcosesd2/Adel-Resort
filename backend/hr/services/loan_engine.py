@@ -57,14 +57,15 @@ def apply_payroll_loan_payments(payslip, actor):
 
 
 def reverse_payroll_loan_payments(run):
-    """Called from payroll_engine.void_run(). Delete LoanPayment rows linked to
-    payslips of this run; revert PAID_OFF loans back to ACTIVE if their balance
-    is restored above zero."""
+    """Called from payroll_engine.void_run(). Soft-delete LoanPayment rows linked
+    to payslips of this run; revert PAID_OFF loans back to ACTIVE if their
+    balance is restored above zero."""
     affected_loan_ids = set()
     for payslip in run.payslips.all():
-        for lp in payslip.loan_payments.filter(source=Loan.Source.PAYROLL_DEDUCTION):
+        for lp in payslip.loan_payments.filter(source=Loan.Source.PAYROLL_DEDUCTION, is_voided=False):
             affected_loan_ids.add(lp.loan_id)
-            lp.delete()
+            lp.is_voided = True
+            lp.save(update_fields=['is_voided'])
     for loan in Loan.objects.filter(pk__in=affected_loan_ids):
         if loan.status == Loan.Status.PAID_OFF and loan.remaining_balance > 0:
             loan.status = Loan.Status.ACTIVE

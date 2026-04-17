@@ -53,7 +53,7 @@ class Loan(models.Model):
 
     @property
     def total_paid(self):
-        return (self.payments.aggregate(total=Sum('amount'))['total'] or Decimal('0')).quantize(Decimal('0.01'))
+        return (self.payments.filter(is_voided=False).aggregate(total=Sum('amount'))['total'] or Decimal('0')).quantize(Decimal('0.01'))
 
     @property
     def remaining_balance(self):
@@ -85,6 +85,7 @@ class LoanPayment(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='loan_payments_recorded',
     )
+    is_voided = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

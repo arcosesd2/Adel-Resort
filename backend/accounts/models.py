@@ -60,8 +60,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f'{self.first_name} {self.last_name}'.strip()
 
     def save(self, *args, **kwargs):
-        if self.is_admin or self.is_superadmin:
-            self.is_staff = True
+        self.is_staff = bool(self.is_admin or self.is_superadmin or self.is_superuser)
         super().save(*args, **kwargs)
 
 

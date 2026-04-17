@@ -535,6 +535,18 @@ def user_detail(request, pk):
                 {'detail': 'User has payroll records; deactivate instead.'},
                 status=status.HTTP_409_CONFLICT,
             )
+        has_hr_records = (
+            user.payroll_runs_created.exists()
+            or user.payroll_runs_finalized.exists()
+            or user.loans_created.exists()
+            or user.loan_payments_recorded.exists()
+            or user.compensation_profiles_created.exists()
+        )
+        if has_hr_records:
+            return Response(
+                {'detail': 'User has HR/payroll audit records; deactivate instead.'},
+                status=status.HTTP_409_CONFLICT,
+            )
         log_activity(request.user, 'user', f'Deleted user "{user.username}"',
                      ip_address=get_client_ip(request))
         user.delete()

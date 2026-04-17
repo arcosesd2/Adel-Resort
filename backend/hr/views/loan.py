@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -24,7 +25,11 @@ def loan_list(request):
         ad = request.query_params.get('auto_deduct')
         if ad is not None:
             qs = qs.filter(auto_deduct=ad.lower() == 'true')
-        return Response(LoanSerializer(qs, many=True).data)
+        try:
+            limit = min(int(request.query_params.get('limit', 200)), 500)
+        except (ValueError, TypeError):
+            limit = 200
+        return Response(LoanSerializer(qs[:limit], many=True).data)
 
     serializer = LoanWriteSerializer(data=request.data)
     if serializer.is_valid():
@@ -48,7 +53,8 @@ def loan_detail(request, pk):
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
     if request.method == 'GET':
         return Response(LoanSerializer(loan).data)
-    # PATCH — limited fields when ACTIVE
+    if loan.status != Loan.Status.ACTIVE:
+        return Response({'detail': 'Only active loans can be modified.'}, status=status.HTTP_400_BAD_REQUEST)
     allowed = {'installment_amount', 'auto_deduct', 'purpose', 'interest_rate_percent', 'interest_method', 'term_periods'}
     data = {k: v for k, v in request.data.items() if k in allowed}
     if not data:
@@ -67,7 +73,9 @@ def loan_cancel(request, pk):
         loan = Loan.objects.get(pk=pk)
     except Loan.DoesNotExist:
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
-    if loan.payments.exists():
+    if loan.status != Loan.Status.ACTIVE:
+        return Response({'detail': 'Only active loans can be cancelled.'}, status=status.HTTP_400_BAD_REQUEST)
+    if loan.payments.filter(is_voided=False).exists():
         return Response({'detail': 'Cannot cancel: payments exist. Use default instead.'},
                         status=status.HTTP_409_CONFLICT)
     loan.status = Loan.Status.CANCELLED
@@ -83,6 +91,8 @@ def loan_default(request, pk):
         loan = Loan.objects.get(pk=pk)
     except Loan.DoesNotExist:
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+    if loan.status != Loan.Status.ACTIVE:
+        return Response({'detail': 'Only active loans can be marked as defaulted.'}, status=status.HTTP_400_BAD_REQUEST)
     loan.status = Loan.Status.DEFAULTED
     loan.save(update_fields=['status', 'updated_at'])
     log_activity(request.user, 'loan', f'Marked loan #{loan.id} DEFAULTED')
@@ -100,18 +110,16 @@ def loan_payments(request, pk):
     if request.method == 'GET':
         return Response(LoanPaymentSerializer(loan.payments.all(), many=True).data)
 
-    data = dict(request.data)
-    data['loan'] = loan.id
-    serializer = LoanPaymentSerializer(data=data)
-    if serializer.is_valid():
-        payment = serializer.save(recorded_by=request.user)
-        log_activity(request.user, 'loan',
-                     f'Recorded {payment.source} payment of PHP {payment.amount} on loan #{loan.id}')
-        # If balance is now zero, transition to PAID_OFF.
-        if loan.remaining_balance <= 0:
-            from django.utils import timezone as _tz
-            loan.status = Loan.Status.PAID_OFF
-            loan.paid_off_at = _tz.now()
-            loan.save(update_fields=['status', 'paid_off_at', 'updated_at'])
-        return Response(LoanPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    with transaction.atomic():
+        loan = Loan.objects.select_for_update().get(pk=pk)
+        serializer = LoanPaymentSerializer(data=request.data)
+        if serializer.is_valid():
+            payment = serializer.save(loan=loan, recorded_by=request.user)
+            log_activity(request.user, 'loan',
+                         f'Recorded {payment.source} payment of PHP {payment.amount} on loan #{loan.id}')
+            if loan.remaining_balance <= 0:
+                loan.status = Loan.Status.PAID_OFF
+                loan.paid_off_at = timezone.now()
+                loan.save(update_fields=['status', 'paid_off_at', 'updated_at'])
+            return Response(LoanPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

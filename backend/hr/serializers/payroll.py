@@ -65,22 +65,34 @@ class PayrollRunSerializer(serializers.ModelSerializer):
 class SSSBracketSerializer(serializers.ModelSerializer):
     class Meta:
         model = SSSBracket
-        fields = '__all__'
+        fields = (
+            'id', 'range_from', 'range_to', 'msc',
+            'ee_contribution', 'er_contribution', 'ec_contribution', 'effective_from',
+        )
 
 
 class PhilHealthRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhilHealthRate
-        fields = '__all__'
+        fields = (
+            'id', 'effective_from', 'premium_rate_percent',
+            'salary_floor', 'salary_ceiling', 'employee_share_percent',
+        )
 
 
 class PagIbigRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PagIbigRate
-        fields = '__all__'
+        fields = (
+            'id', 'effective_from', 'ee_rate_low_percent', 'ee_rate_high_percent',
+            'er_rate_percent', 'msc_ceiling', 'low_high_threshold',
+        )
 
 
 class BIRTaxBracketSerializer(serializers.ModelSerializer):
     class Meta:
         model = BIRTaxBracket
-        fields = '__all__'
+        fields = (
+            'id', 'effective_from', 'period', 'range_from', 'range_to',
+            'base_tax', 'rate_on_excess_percent', 'excess_over',
+        )

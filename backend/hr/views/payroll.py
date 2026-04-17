@@ -19,7 +19,10 @@ def period_list(request):
     qs = PayrollPeriod.objects.all()
     year = request.query_params.get('year')
     if year:
-        qs = qs.filter(year=int(year))
+        try:
+            qs = qs.filter(year=int(year))
+        except (ValueError, TypeError):
+            pass
     schedule = request.query_params.get('schedule')
     if schedule == 'SEMI_MONTHLY':
         qs = qs.filter(half__in=[PayrollPeriod.Half.FIRST_HALF, PayrollPeriod.Half.SECOND_HALF])
@@ -36,7 +39,10 @@ def period_list(request):
 @api_view(['POST'])
 @permission_classes([IsAdminOrSuperAdmin])
 def period_ensure(request):
-    year = int(request.data.get('year'))
+    try:
+        year = int(request.data.get('year'))
+    except (TypeError, ValueError):
+        return Response({'detail': 'Valid year is required.'}, status=status.HTTP_400_BAD_REQUEST)
     PayrollPeriod.ensure_for_year(year)
     # Also ensure weekly periods for any cutoff_day in active comp profiles.
     from hr.models import CompensationProfile
@@ -56,8 +62,13 @@ def period_ensure(request):
 @api_view(['POST'])
 @permission_classes([IsAdminOrSuperAdmin])
 def period_ensure_weekly(request):
-    year = int(request.data.get('year'))
-    cutoff_day = int(request.data.get('cutoff_day'))
+    try:
+        year = int(request.data.get('year'))
+        cutoff_day = int(request.data.get('cutoff_day'))
+    except (TypeError, ValueError):
+        return Response({'detail': 'Valid year and cutoff_day are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not (1 <= cutoff_day <= 7):
+        return Response({'detail': 'cutoff_day must be 1-7.'}, status=status.HTTP_400_BAD_REQUEST)
     PayrollPeriod.ensure_weekly_periods(year, cutoff_day)
     qs = PayrollPeriod.objects.filter(year=year, half=PayrollPeriod.Half.WEEK, cutoff_day=cutoff_day)
     return Response(PayrollPeriodSerializer(qs, many=True).data)
@@ -74,7 +85,11 @@ def run_list(request):
         st = request.query_params.get('status')
         if st:
             qs = qs.filter(status=st)
-        return Response(PayrollRunSerializer(qs, many=True).data)
+        try:
+            limit = min(int(request.query_params.get('limit', 200)), 500)
+        except (ValueError, TypeError):
+            limit = 200
+        return Response(PayrollRunSerializer(qs[:limit], many=True).data)
 
     period_id = request.data.get('period_id')
     employee_ids = request.data.get('employee_ids') or None
@@ -149,7 +164,10 @@ def run_payslips(request, pk):
 @api_view(['POST'])
 @permission_classes([IsAdminOrSuperAdmin])
 def run_thirteenth_month(request):
-    year = int(request.data.get('year'))
+    try:
+        year = int(request.data.get('year'))
+    except (TypeError, ValueError):
+        return Response({'detail': 'Valid year is required.'}, status=status.HTTP_400_BAD_REQUEST)
     employee_ids = request.data.get('employee_ids') or None
     try:
         run = payroll_engine.generate_thirteenth_month(year, request.user, employee_ids)
@@ -171,7 +189,11 @@ def payslip_list(request):
     period = request.query_params.get('period')
     if period:
         qs = qs.filter(run__period_id=period)
-    return Response(PayslipSerializer(qs, many=True).data)
+    try:
+        limit = min(int(request.query_params.get('limit', 200)), 500)
+    except (ValueError, TypeError):
+        limit = 200
+    return Response(PayslipSerializer(qs[:limit], many=True).data)
 
 
 @api_view(['GET'])

@@ -11,8 +11,14 @@ class LoanPaymentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'loan', 'amount', 'payment_date', 'source',
             'payslip', 'reference', 'notes', 'recorded_by', 'created_at',
+            'is_voided',
         )
-        read_only_fields = ('id', 'recorded_by', 'created_at')
+        read_only_fields = ('id', 'loan', 'payslip', 'recorded_by', 'created_at', 'is_voided')
+
+    def validate_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Must be greater than zero.')
+        return value
 
 
 class LoanSerializer(serializers.ModelSerializer):
@@ -57,10 +63,24 @@ class LoanWriteSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
-        if attrs.get('principal', Decimal('0')) <= 0:
+        principal = attrs.get('principal', Decimal('0'))
+        if principal <= 0:
             raise serializers.ValidationError({'principal': 'Must be greater than zero.'})
-        if attrs.get('installment_amount', Decimal('0')) <= 0:
+        if principal > Decimal('10000000'):
+            raise serializers.ValidationError({'principal': 'Cannot exceed PHP 10,000,000.'})
+        installment = attrs.get('installment_amount', Decimal('0'))
+        if installment <= 0:
             raise serializers.ValidationError({'installment_amount': 'Must be greater than zero.'})
-        if attrs.get('term_periods', 0) <= 0:
+        if installment > principal:
+            raise serializers.ValidationError({'installment_amount': 'Cannot exceed principal.'})
+        term = attrs.get('term_periods', 0)
+        if term <= 0:
             raise serializers.ValidationError({'term_periods': 'Must be greater than zero.'})
+        if term > 360:
+            raise serializers.ValidationError({'term_periods': 'Cannot exceed 360 periods.'})
+        rate = attrs.get('interest_rate_percent', Decimal('0'))
+        if rate < 0:
+            raise serializers.ValidationError({'interest_rate_percent': 'Cannot be negative.'})
+        if rate > Decimal('36'):
+            raise serializers.ValidationError({'interest_rate_percent': 'Cannot exceed 36%.'})
         return attrs

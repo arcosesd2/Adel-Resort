@@ -3,7 +3,8 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes, parser_classes, throttle_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.throttling import ScopedRateThrottle
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
+from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -128,7 +129,7 @@ def room_availability(request, pk):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 @parser_classes([MultiPartParser, FormParser])
 def upload_room_images(request, pk):
     """Upload multiple images to a room. Auto-assigns order numbers."""
@@ -184,7 +185,7 @@ def upload_room_images(request, pk):
 
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def reorder_room_images(request, pk):
     """Reorder room images. Expects {"order": [{"id": 1, "order": 0}, ...]}"""
     try:
@@ -210,7 +211,7 @@ def reorder_room_images(request, pk):
 
 
 @api_view(['PATCH', 'DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def room_image_detail(request, pk, image_pk):
     """Update or delete a single room image."""
     try:

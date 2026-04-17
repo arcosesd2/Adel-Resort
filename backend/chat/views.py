@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.response import Response
 from django.utils.dateparse import parse_datetime
 
@@ -150,7 +151,7 @@ def poll_messages(request, pk):
 # ── Admin endpoints ──
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_conversations(request):
     status_filter = request.query_params.get('status')
     conversations = Conversation.objects.all()
@@ -161,7 +162,7 @@ def admin_conversations(request):
 
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def resolve_conversation(request, pk):
     try:
         conversation = Conversation.objects.get(pk=pk)

@@ -5,13 +5,22 @@ from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notifica
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(write_only=True, min_length=10)
     password2 = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=False, allow_blank=True)
 
     class Meta:
         model = User
         fields = ('username', 'first_name', 'last_name', 'phone', 'email', 'password', 'password2')
+
+    def validate_password(self, value):
+        from django.contrib.auth.password_validation import validate_password as dj_validate
+        from django.core.exceptions import ValidationError as DjValidationError
+        try:
+            dj_validate(value)
+        except DjValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
+        return value
 
     def validate(self, data):
         if data['password'] != data['password2']:

@@ -1,5 +1,6 @@
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
+from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
@@ -66,7 +67,7 @@ def public_stats(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_dashboard(request):
     # Page view analytics
     page_views = (
@@ -258,7 +259,7 @@ def admin_dashboard(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def export_bookings_csv(request):
     import csv
     from django.http import HttpResponse
@@ -291,7 +292,7 @@ def export_bookings_csv(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def export_revenue_csv(request):
     import csv
     from django.http import HttpResponse

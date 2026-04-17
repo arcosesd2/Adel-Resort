@@ -2,7 +2,7 @@ from datetime import timedelta
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.db.models import F
@@ -11,7 +11,7 @@ from django.utils import timezone
 from bookings.models import Booking, BookingStatus
 from .models import Payment, PaymentStatus, PaymentType, GCashConfig
 from .serializers import SubmitProofSerializer, GCashConfigSerializer, AdminPaymentSerializer
-from accounts.permissions import IsSuperAdmin
+from accounts.permissions import IsSuperAdmin, IsAdminOrSuperAdmin
 from vouchers.utils import get_booking_voucher_validity_status
 
 PAYMENT_DEADLINE_MINUTES = 60
@@ -178,7 +178,7 @@ def gcash_config_update(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_payment_list(request):
     """List all payments for staff/superadmin. Filter by ?status=pending|succeeded|failed|refunded"""
     qs = Payment.objects.select_related(
@@ -194,7 +194,7 @@ def admin_payment_list(request):
 
 
 @api_view(['PATCH'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def admin_payment_update(request, pk):
     """Update payment status (succeeded/failed/refunded) and sync booking status."""
     try:

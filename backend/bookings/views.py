@@ -2,12 +2,13 @@ from decimal import Decimal
 
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
 from django.utils import timezone
+from accounts.permissions import IsAdminOrSuperAdmin
 from rooms.models import Room
 from vouchers.utils import get_booking_voucher_validity_status
 from .models import Booking, BookingStatus
@@ -91,7 +92,7 @@ class BookingDetailView(generics.RetrieveDestroyAPIView):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminOrSuperAdmin])
 def onsite_booking(request):
     """Create a booking for a walk-in guest. Staff-only."""
     data = request.data
@@ -314,7 +315,7 @@ def onsite_booking(request):
 
 class AdminBookingListView(generics.ListAPIView):
     serializer_class = AdminBookingSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrSuperAdmin]
 
     def get_queryset(self):
         qs = Booking.objects.select_related('user', 'room').all()
@@ -326,7 +327,7 @@ class AdminBookingListView(generics.ListAPIView):
 
 class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AdminBookingSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrSuperAdmin]
     queryset = Booking.objects.select_related('user', 'room').all()
 
     def perform_update(self, serializer):

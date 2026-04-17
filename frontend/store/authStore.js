@@ -4,7 +4,7 @@ import { getDeviceFingerprint, getDeviceInfo } from '@/lib/fingerprint'
 import api from '@/lib/api'
 
 // Cookie helpers — keep middleware in sync with the JWT in localStorage.
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+const COOKIE_MAX_AGE = 60 * 60 // 1 hour, aligned with JWT access token lifetime
 
 const setAuthCookie = (token) => {
   if (typeof document === 'undefined') return

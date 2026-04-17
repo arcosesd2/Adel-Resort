@@ -31,7 +31,7 @@ api.interceptors.response.use(
           // Mirror the new token to the cookie so middleware stays in sync.
           if (typeof document !== 'undefined') {
             const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-            document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`
+            document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60}; SameSite=Lax${secure}`
           }
           original.headers.Authorization = `Bearer ${data.access}`
           return api(original)
