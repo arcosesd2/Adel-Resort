@@ -18,20 +18,35 @@ export default function BookingManagementSection() {
   const [open, setOpen] = useState(true)
   const [bookings, setBookings] = useState([])
   const [filter, setFilter] = useState('all')
+  const [roomFilter, setRoomFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    api.get('/rooms/').then(({ data }) => {
+      setRooms(data.results || data)
+    }).catch(() => {})
+  }, [])
 
   const fetchBookings = useCallback(async () => {
     setLoading(true)
     try {
-      const params = filter !== 'all' ? `?status=${filter}` : ''
-      const { data } = await api.get(`/bookings/admin/${params}`)
+      const params = new URLSearchParams()
+      if (filter !== 'all') params.set('status', filter)
+      if (roomFilter) params.set('room', roomFilter)
+      if (dateFrom) params.set('date_from', dateFrom)
+      if (dateTo) params.set('date_to', dateTo)
+      const qs = params.toString()
+      const { data } = await api.get(`/bookings/admin/${qs ? `?${qs}` : ''}`)
       setBookings(data.results || data)
     } catch {
       toast.error('Failed to load bookings.')
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filter, roomFilter, dateFrom, dateTo])
 
   useEffect(() => {
     if (open) fetchBookings()
@@ -72,24 +87,70 @@ export default function BookingManagementSection() {
 
       {open && (
         <>
-          {/* Filter */}
-          <div className="px-6 py-3 border-b border-gray-100 bg-gray-50 flex items-center gap-3">
-            <label className="text-sm text-gray-600">Status:</label>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
-            >
-              {STATUS_OPTIONS.map(s => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
+          {/* Filters */}
+          <div className="px-6 py-3 border-b border-gray-100 bg-gray-50 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <label className="text-sm text-gray-600">Status:</label>
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+              >
+                {STATUS_OPTIONS.map(s => (
+                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <label className="text-sm text-gray-600">Room:</label>
+              <select
+                value={roomFilter}
+                onChange={(e) => setRoomFilter(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+              >
+                <option value="">All Rooms</option>
+                {rooms.map(r => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <label className="text-sm text-gray-600">From:</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <label className="text-sm text-gray-600">To:</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+              />
+            </div>
+
+            {(roomFilter || dateFrom || dateTo) && (
+              <button
+                onClick={() => { setRoomFilter(''); setDateFrom(''); setDateTo('') }}
+                className="text-xs text-ocean-600 hover:text-ocean-800 underline"
+              >
+                Clear filters
+              </button>
+            )}
+
             {loading && <span className="text-xs text-gray-400">Loading...</span>}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[600px]">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Ref</th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Guest</th>

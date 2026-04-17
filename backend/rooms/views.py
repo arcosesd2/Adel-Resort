@@ -97,18 +97,40 @@ class RoomDetailView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
 
 
-def _get_booked_slots(room):
+def _get_booked_slots(room, include_details=False):
     """Collect all booked slots for active bookings of a room."""
-    bookings = Booking.objects.filter(
+    qs = Booking.objects.filter(
         room=room,
         status__in=['confirmed', 'pending']
-    ).values('id', 'slots')
+    )
+    if include_details:
+        qs = qs.select_related('user')
+        bookings = qs.values(
+            'id', 'slots', 'reference_code', 'status', 'guests',
+            'check_in', 'check_out', 'total_price',
+            'user__first_name', 'user__last_name', 'user__username', 'user__email',
+        )
+    else:
+        bookings = qs.values('id', 'slots')
 
     booked_slots = []
     for booking in bookings:
+        extra = {'booking_id': booking['id']}
+        if include_details:
+            name = f"{booking['user__first_name']} {booking['user__last_name']}".strip()
+            extra.update({
+                'guest_name': name or booking['user__username'],
+                'guest_email': booking['user__email'],
+                'reference_code': booking['reference_code'],
+                'status': booking['status'],
+                'guests': booking['guests'],
+                'check_in': str(booking['check_in']),
+                'check_out': str(booking['check_out']),
+                'total_price': str(booking['total_price']),
+            })
         if booking['slots']:
             for slot in booking['slots']:
-                booked_slots.append({**slot, 'booking_id': booking['id']})
+                booked_slots.append({**slot, **extra})
     return booked_slots
 
 
@@ -120,11 +142,16 @@ def room_availability(request, pk):
     except Room.DoesNotExist:
         return Response({'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+    include_details = (
+        request.query_params.get('details') == '1'
+        and request.user.is_authenticated
+        and getattr(request.user, 'is_staff', False)
+    )
     return Response({
         'room_id': room.id,
         'room_name': room.name,
         'max_rooms': room.max_rooms,
-        'booked_slots': _get_booked_slots(room),
+        'booked_slots': _get_booked_slots(room, include_details=include_details),
     })
 
 

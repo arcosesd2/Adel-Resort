@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import api from '@/lib/api'
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -12,20 +12,14 @@ function fmtDate(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-/**
- * Read-only occupancy calendar for admin Room Overview.
- * Shows occupied count per date with color coding:
- *   - 0 bookings: neutral/gray
- *   - < 50%: green
- *   - 50-79%: amber
- *   - 80-99%: orange
- *   - 100% (full): red
- */
 export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
   const isSlotMode = bookingMode === 'slot'
   const [bookedSlots, setBookedSlots] = useState([])
   const [maxRooms, setMaxRooms] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [hoveredDate, setHoveredDate] = useState(null)
+  const [selectedDate, setSelectedDate] = useState(null)
+  const hoverRef = useRef(null)
 
   const now = new Date()
   const [viewYear, setViewYear] = useState(now.getFullYear())
@@ -34,7 +28,7 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
   useEffect(() => {
     ;(async () => {
       try {
-        const { data } = await api.get(`/rooms/${roomId}/availability/`)
+        const { data } = await api.get(`/rooms/${roomId}/availability/?details=1`)
         setBookedSlots(data.booked_slots || [])
         setMaxRooms(data.max_rooms || 1)
       } catch (err) { console.error('Failed to load availability:', err) }
@@ -42,25 +36,45 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
     })()
   }, [roomId])
 
-  // Count bookings per date (and per slot for slot mode)
   const dateCounts = useMemo(() => {
-    const counts = {} // { "2026-04-13": count } or { "2026-04-13:day": count, "2026-04-13:night": count }
+    const counts = {}
     for (const s of bookedSlots) {
       if (isSlotMode && !isDayOnly) {
-        // For slot mode, track day and night separately
         const dayKey = `${s.date}:day`
         const nightKey = `${s.date}:night`
-        if (s.slot === 'day') {
-          counts[dayKey] = (counts[dayKey] || 0) + 1
-        } else if (s.slot === 'night') {
-          counts[nightKey] = (counts[nightKey] || 0) + 1
-        }
+        if (s.slot === 'day') counts[dayKey] = (counts[dayKey] || 0) + 1
+        else if (s.slot === 'night') counts[nightKey] = (counts[nightKey] || 0) + 1
       }
-      // Always track total per date
       counts[s.date] = (counts[s.date] || 0) + 1
     }
     return counts
   }, [bookedSlots, isSlotMode, isDayOnly])
+
+  const bookingsByDate = useMemo(() => {
+    const map = {}
+    for (const s of bookedSlots) {
+      if (!s.guest_name) continue
+      if (!map[s.date]) map[s.date] = []
+      const existing = map[s.date].find(b => b.booking_id === s.booking_id)
+      if (existing) {
+        if (s.slot && !existing.slots.includes(s.slot)) existing.slots.push(s.slot)
+      } else {
+        map[s.date].push({
+          booking_id: s.booking_id,
+          guest_name: s.guest_name,
+          guest_email: s.guest_email,
+          reference_code: s.reference_code,
+          status: s.status,
+          guests: s.guests,
+          check_in: s.check_in,
+          check_out: s.check_out,
+          total_price: s.total_price,
+          slots: s.slot ? [s.slot] : [],
+        })
+      }
+    }
+    return map
+  }, [bookedSlots])
 
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1) } else setViewMonth(m => m - 1) }
   const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(v => v + 1) } else setViewMonth(m => m + 1) }
@@ -79,7 +93,6 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
     return days
   }, [viewYear, viewMonth, daysInMonth, firstDayOfWeek])
 
-  // For slot mode rooms (day/night), max bookings per date = maxRooms * slots_per_day
   const slotsPerDay = (isSlotMode && !isDayOnly) ? 2 : 1
 
   function getOccupancyInfo(dateStr) {
@@ -122,6 +135,9 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
       </div>
     )
   }
+
+  const hoveredBookings = hoveredDate ? (bookingsByDate[hoveredDate] || []) : []
+  const selectedBookings = selectedDate ? (bookingsByDate[selectedDate] || []) : []
 
   return (
     <div className="space-y-3 pt-3">
@@ -175,18 +191,22 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
             const { day, dateStr, isPast } = cell
             const info = getOccupancyInfo(dateStr)
             const colors = cellColor(info.pct, info.isFull, isPast)
+            const dateBookings = bookingsByDate[dateStr] || []
+            const hasBookings = dateBookings.length > 0
 
             return (
               <div
                 key={dateStr}
-                className={`border-b border-r border-gray-100 p-1 ${colors.bg} ${isPast ? 'opacity-60' : ''}`}
+                className={`relative border-b border-r border-gray-100 p-1 ${colors.bg} ${isPast ? 'opacity-60' : ''} ${hasBookings ? 'cursor-pointer' : ''} group`}
+                onMouseEnter={() => hasBookings && setHoveredDate(dateStr)}
+                onMouseLeave={() => setHoveredDate(null)}
+                onClick={() => hasBookings && setSelectedDate(dateStr)}
               >
                 <div className={`text-xs font-medium ${colors.text}`}>
                   {day}
                 </div>
 
                 {isSlotMode && !isDayOnly ? (
-                  // Slot mode: show day/night counts separately
                   <div className="flex gap-0.5 mt-0.5">
                     <div className={`flex-1 text-center rounded text-[9px] font-bold py-0.5 ${badgeColor(info.dayCount, maxRooms)}`} title={`Day: ${info.dayCount}/${maxRooms}`}>
                       {info.dayCount}/{maxRooms}
@@ -196,9 +216,27 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
                     </div>
                   </div>
                 ) : (
-                  // Overnight/24hr/day-only: single count
                   <div className={`text-center rounded text-[10px] font-bold py-0.5 mt-1 ${badgeColor(info.totalCount, maxRooms)}`} title={`${info.totalCount}/${maxRooms} booked`}>
                     {info.totalCount}/{maxRooms}
+                  </div>
+                )}
+
+                {/* Hover tooltip */}
+                {hoveredDate === dateStr && hasBookings && (
+                  <div className="absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 pointer-events-none">
+                    <div className="text-[10px] font-semibold text-gray-500 mb-1">{dateStr}</div>
+                    {dateBookings.slice(0, 5).map(b => (
+                      <div key={b.booking_id} className="text-xs text-gray-700 truncate">
+                        {b.guest_name}
+                        {isSlotMode && !isDayOnly && b.slots.length > 0 && (
+                          <span className="text-gray-400 ml-1">({b.slots.join(', ')})</span>
+                        )}
+                      </div>
+                    ))}
+                    {dateBookings.length > 5 && (
+                      <div className="text-[10px] text-gray-400 mt-0.5">+{dateBookings.length - 5} more</div>
+                    )}
+                    <div className="text-[10px] text-ocean-500 mt-1">Click for details</div>
                   </div>
                 )}
               </div>
@@ -212,6 +250,53 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
         <div className="flex items-center gap-3 text-[10px] text-gray-500">
           <span>Left = Day slot</span>
           <span>Right = Night slot</span>
+        </div>
+      )}
+
+      {/* Detail modal */}
+      {selectedDate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSelectedDate(null)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-800">
+                Bookings for {selectedDate}
+              </h3>
+              <button onClick={() => setSelectedDate(null)} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5 space-y-3">
+              {selectedBookings.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">No bookings on this date</p>
+              ) : (
+                selectedBookings.map(b => (
+                  <div key={b.booking_id} className="border border-gray-200 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-800">{b.guest_name}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        b.status === 'confirmed' ? 'bg-green-100 text-green-700'
+                        : b.status === 'pending' ? 'bg-amber-100 text-amber-700'
+                        : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {b.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600">
+                      <div><span className="text-gray-400">Ref:</span> {b.reference_code}</div>
+                      <div><span className="text-gray-400">Email:</span> {b.guest_email}</div>
+                      <div><span className="text-gray-400">Check-in:</span> {b.check_in}</div>
+                      <div><span className="text-gray-400">Check-out:</span> {b.check_out}</div>
+                      <div><span className="text-gray-400">Guests:</span> {b.guests}</div>
+                      <div><span className="text-gray-400">Total:</span> ₱{Number(b.total_price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+                      {isSlotMode && !isDayOnly && b.slots.length > 0 && (
+                        <div className="col-span-2"><span className="text-gray-400">Slots:</span> {b.slots.join(', ')}</div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

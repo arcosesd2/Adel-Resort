@@ -322,6 +322,15 @@ class AdminBookingListView(generics.ListAPIView):
         status_filter = self.request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)
+        room_filter = self.request.query_params.get('room')
+        if room_filter:
+            qs = qs.filter(room_id=room_filter)
+        date_from = self.request.query_params.get('date_from')
+        if date_from:
+            qs = qs.filter(check_out__gte=date_from)
+        date_to = self.request.query_params.get('date_to')
+        if date_to:
+            qs = qs.filter(check_in__lte=date_to)
         return qs
 
 
