@@ -37,6 +37,33 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
+REFRESH_COOKIE_NAME = 'refresh_token'
+REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60  # 7 days — must match SIMPLE_JWT REFRESH_TOKEN_LIFETIME
+
+
+def _set_refresh_cookie(response, refresh_str):
+    """Set the refresh token as an HttpOnly Secure cookie."""
+    from django.conf import settings as dj_settings
+    response.set_cookie(
+        REFRESH_COOKIE_NAME,
+        refresh_str,
+        max_age=REFRESH_COOKIE_MAX_AGE,
+        httponly=True,
+        secure=not dj_settings.DEBUG,
+        samesite='Lax',
+        path='/api/auth/',
+    )
+
+
+def _clear_refresh_cookie(response):
+    response.delete_cookie(REFRESH_COOKIE_NAME, path='/api/auth/')
+
+
+def _get_refresh_from_request(request):
+    """Prefer the HttpOnly cookie; fall back to request body for backward compatibility."""
+    return request.COOKIES.get(REFRESH_COOKIE_NAME) or request.data.get('refresh')
+
+
 class LoginRateThrottle(ScopedRateThrottle):
     scope = 'login'
 
@@ -69,11 +96,14 @@ def register(request):
         except Exception:
             import logging
             logging.getLogger(__name__).exception('Failed to send verification email')
-        return Response({
+        refresh_str = str(refresh)
+        response = Response({
             'user': UserSerializer(user, context={'request': request}).data,
             'access': str(refresh.access_token),
-            'refresh': str(refresh),
+            'refresh': refresh_str,
         }, status=status.HTTP_201_CREATED)
+        _set_refresh_cookie(response, refresh_str)
+        return response
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -139,31 +169,50 @@ def login(request):
     if user.is_staff or user.is_superadmin:
         log_activity(user, 'auth', 'Logged in', ip_address=ip)
     refresh = RefreshToken.for_user(user)
-    return Response({
+    refresh_str = str(refresh)
+    response = Response({
         'user': UserSerializer(user, context={'request': request}).data,
         'access': str(refresh.access_token),
-        'refresh': str(refresh),
+        'refresh': refresh_str,
     })
+    _set_refresh_cookie(response, refresh_str)
+    return response
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout(request):
+    refresh_str = _get_refresh_from_request(request)
+    response = Response({'detail': 'Logged out successfully.'})
+    _clear_refresh_cookie(response)
+    if not refresh_str:
+        return response
     try:
-        refresh_token = request.data.get('refresh')
-        token = RefreshToken(refresh_token)
+        token = RefreshToken(refresh_str)
         token.blacklist()
-        return Response({'detail': 'Logged out successfully.'})
     except TokenError:
-        return Response({'detail': 'Invalid token.'}, status=status.HTTP_400_BAD_REQUEST)
+        pass
+    return response
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def refresh_token(request):
+    refresh_str = _get_refresh_from_request(request)
+    if not refresh_str:
+        return Response({'detail': 'No refresh token supplied.'}, status=status.HTTP_401_UNAUTHORIZED)
     try:
-        refresh = RefreshToken(request.data.get('refresh'))
-        return Response({'access': str(refresh.access_token)})
+        refresh = RefreshToken(refresh_str)
+        response = Response({'access': str(refresh.access_token)})
+        # If SIMPLE_JWT token rotation is on, the old token is blacklisted and str(refresh)
+        # now holds the new one; re-set the cookie so the browser has the fresh refresh.
+        try:
+            rotated = str(refresh)
+            if rotated and rotated != refresh_str:
+                _set_refresh_cookie(response, rotated)
+        except Exception:
+            pass
+        return response
     except TokenError:
         return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -248,11 +297,14 @@ def change_password(request):
 
     # Issue new tokens
     refresh = RefreshToken.for_user(user)
-    return Response({
+    refresh_str = str(refresh)
+    response = Response({
         'detail': 'Password changed successfully.',
         'access': str(refresh.access_token),
-        'refresh': str(refresh),
+        'refresh': refresh_str,
     })
+    _set_refresh_cookie(response, refresh_str)
+    return response
 
 
 # ─── Email Verification ──────────────────────────────────────────────
@@ -587,6 +639,7 @@ def login_activity(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def authorize_device(request):
     """Authorize a device for a staff user logging in for the first time."""
     username = request.data.get('username', '')
@@ -631,12 +684,15 @@ def authorize_device(request):
     log_activity(user, 'auth', f'Authorized device: {device_name or fingerprint[:12]}', ip_address=get_client_ip(request))
 
     refresh = RefreshToken.for_user(user)
-    return Response({
+    refresh_str = str(refresh)
+    response = Response({
         'user': UserSerializer(user, context={'request': request}).data,
         'access': str(refresh.access_token),
-        'refresh': str(refresh),
+        'refresh': refresh_str,
         'detail': 'Device authorized successfully.',
     })
+    _set_refresh_cookie(response, refresh_str)
+    return response
 
 
 @api_view(['POST'])

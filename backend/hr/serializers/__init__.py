@@ -1,4 +1,7 @@
-from .employee import EmployeeSerializer, EmployeeWriteSerializer, CompensationProfileSerializer
+from .employee import (
+    EmployeeSerializer, EmployeeListSerializer, EmployeeWriteSerializer,
+    CompensationProfileSerializer,
+)
 from .payroll import (
     PayrollPeriodSerializer, PayrollRunSerializer,
     PayslipSerializer, PayslipLineItemSerializer,
@@ -7,7 +10,7 @@ from .payroll import (
 from .loan import LoanSerializer, LoanWriteSerializer, LoanPaymentSerializer
 
 __all__ = [
-    'EmployeeSerializer', 'EmployeeWriteSerializer', 'CompensationProfileSerializer',
+    'EmployeeSerializer', 'EmployeeListSerializer', 'EmployeeWriteSerializer', 'CompensationProfileSerializer',
     'PayrollPeriodSerializer', 'PayrollRunSerializer',
     'PayslipSerializer', 'PayslipLineItemSerializer',
     'SSSBracketSerializer', 'PhilHealthRateSerializer', 'PagIbigRateSerializer', 'BIRTaxBracketSerializer',

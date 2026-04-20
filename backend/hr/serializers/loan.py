@@ -20,6 +20,18 @@ class LoanPaymentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Must be greater than zero.')
         return value
 
+    def validate(self, attrs):
+        # Enforce amount ≤ remaining_balance when loan context is known.
+        # View passes loan via serializer.save(loan=loan); for binding-time
+        # validation we check against the instance's loan when present.
+        loan = self.context.get('loan')
+        if loan is not None and attrs.get('amount') is not None:
+            if attrs['amount'] > loan.remaining_balance:
+                raise serializers.ValidationError({
+                    'amount': f'Cannot exceed remaining balance of PHP {loan.remaining_balance}.'
+                })
+        return attrs
+
 
 class LoanSerializer(serializers.ModelSerializer):
     employee_code = serializers.CharField(source='employee.employee_code', read_only=True)

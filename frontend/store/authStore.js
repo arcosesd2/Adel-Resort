@@ -12,9 +12,19 @@ const setAuthCookie = (token) => {
   document.cookie = `access_token=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`
 }
 
+// Compact role cookie read by middleware to gate routes before hydration.
+// Format: "s:1,a:0,sa:1" → is_staff / is_admin / is_superadmin as flags.
+const setRoleCookie = (user) => {
+  if (typeof document === 'undefined' || !user) return
+  const secure = window.location.protocol === 'https:' ? '; Secure' : ''
+  const flags = `s:${user.is_staff ? 1 : 0},a:${user.is_admin ? 1 : 0},sa:${user.is_superadmin ? 1 : 0}`
+  document.cookie = `user_role=${flags}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`
+}
+
 const clearAuthCookie = () => {
   if (typeof document === 'undefined') return
   document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+  document.cookie = 'user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 }
 
 const useAuthStore = create((set, get) => ({
@@ -40,6 +50,7 @@ const useAuthStore = create((set, get) => ({
     setAuthCookie(token)
     try {
       const { data } = await api.get('/auth/me/')
+      setRoleCookie(data)
       set({ user: data, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
     } catch {
       clearTokens()
@@ -54,6 +65,7 @@ const useAuthStore = create((set, get) => ({
     const { data } = await api.post('/auth/login/', { username, password, device_fingerprint, device_info })
     setTokens(data.access, data.refresh)
     setAuthCookie(data.access)
+    setRoleCookie(data.user)
     set({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
     return data
   },
@@ -62,14 +74,17 @@ const useAuthStore = create((set, get) => ({
     const { data } = await api.post('/auth/register/', userData)
     setTokens(data.access, data.refresh)
     setAuthCookie(data.access)
+    setRoleCookie(data.user)
     set({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
     return data
   },
 
   logout: async () => {
     try {
+      // Refresh token is sent automatically via HttpOnly cookie (withCredentials).
+      // Body fallback retained for sessions issued before the cookie migration.
       const refresh = localStorage.getItem('refresh_token')
-      await api.post('/auth/logout/', { refresh })
+      await api.post('/auth/logout/', refresh ? { refresh } : {})
     } catch {}
     clearTokens()
     clearAuthCookie()
@@ -79,6 +94,7 @@ const useAuthStore = create((set, get) => ({
   fetchMe: async () => {
     try {
       const { data } = await api.get('/auth/me/')
+      setRoleCookie(data)
       set({ user: data, isAuthenticated: true })
     } catch {
       clearTokens()

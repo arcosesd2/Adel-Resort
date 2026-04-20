@@ -1,6 +1,7 @@
 import io
 from decimal import Decimal
 
+from django.conf import settings
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -45,7 +46,8 @@ def generate_payslip_pdf(payslip):
     elements.append(Paragraph('Adel Beach Resort', title_style))
     elements.append(Paragraph('Lawigan, Surigao Del Sur | 09685361395 | arnelarcos@adel-resort.ph',
                               subtitle_style))
-    elements.append(Paragraph('Employer TIN: 000-000-000-00000', subtitle_style))
+    elements.append(Paragraph(f'Employer TIN: {getattr(settings, "EMPLOYER_TIN", "000-000-000-00000")}',
+                              subtitle_style))
     elements.append(Spacer(1, 6 * mm))
 
     elements.append(Paragraph('PAYSLIP', heading_style))

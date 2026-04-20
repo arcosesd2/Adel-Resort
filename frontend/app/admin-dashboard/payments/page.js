@@ -17,9 +17,10 @@ export default function PaymentsPage() {
     if (!isReady) return
     if (!isAuthenticated) { router.replace('/auth/login?redirect=/admin-dashboard/payments'); return }
     if (!user?.is_staff) { router.replace('/dashboard'); return }
+    if (!(user?.is_admin || user?.is_superadmin)) { router.replace('/admin-dashboard'); return }
   }, [isReady, isAuthenticated, user, router])
 
-  if (!isReady || !user?.is_staff) return null
+  if (!isReady || !(user?.is_admin || user?.is_superadmin)) return null
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">

@@ -19,4 +19,4 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CreateReviewSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
     rating = serializers.IntegerField(min_value=1, max_value=5)
-    comment = serializers.CharField()
+    comment = serializers.CharField(max_length=2000, allow_blank=False, trim_whitespace=True)

@@ -9,6 +9,7 @@ from accounts.permissions import IsAdminOrSuperAdmin
 
 from hr.models import Loan, LoanPayment
 from hr.serializers import LoanSerializer, LoanWriteSerializer, LoanPaymentSerializer
+from hr.views._pagination import paginate_or_list
 
 
 @api_view(['GET', 'POST'])
@@ -25,11 +26,7 @@ def loan_list(request):
         ad = request.query_params.get('auto_deduct')
         if ad is not None:
             qs = qs.filter(auto_deduct=ad.lower() == 'true')
-        try:
-            limit = min(int(request.query_params.get('limit', 200)), 500)
-        except (ValueError, TypeError):
-            limit = 200
-        return Response(LoanSerializer(qs[:limit], many=True).data)
+        return paginate_or_list(request, qs, LoanSerializer)
 
     serializer = LoanWriteSerializer(data=request.data)
     if serializer.is_valid():
@@ -112,7 +109,7 @@ def loan_payments(request, pk):
 
     with transaction.atomic():
         loan = Loan.objects.select_for_update().get(pk=pk)
-        serializer = LoanPaymentSerializer(data=request.data)
+        serializer = LoanPaymentSerializer(data=request.data, context={'loan': loan})
         if serializer.is_valid():
             payment = serializer.save(loan=loan, recorded_by=request.user)
             log_activity(request.user, 'loan',

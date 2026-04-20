@@ -9,9 +9,10 @@ from accounts.permissions import IsAdminOrSuperAdmin
 
 from hr.models import Employee, CompensationProfile, Loan, Payslip
 from hr.serializers import (
-    EmployeeSerializer, EmployeeWriteSerializer, CompensationProfileSerializer,
+    EmployeeSerializer, EmployeeListSerializer, EmployeeWriteSerializer, CompensationProfileSerializer,
     LoanSerializer, PayslipSerializer,
 )
+from hr.views._pagination import paginate_or_list
 
 
 def _get_ip(request):
@@ -37,11 +38,7 @@ def employee_list(request):
                 Q(user__last_name__icontains=search) |
                 Q(employee_code__icontains=search)
             )
-        try:
-            limit = min(int(request.query_params.get('limit', 200)), 500)
-        except (ValueError, TypeError):
-            limit = 200
-        return Response(EmployeeSerializer(qs[:limit], many=True).data)
+        return paginate_or_list(request, qs, EmployeeListSerializer)
 
     serializer = EmployeeWriteSerializer(data=request.data)
     if serializer.is_valid():

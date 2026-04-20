@@ -70,6 +70,44 @@ class EmployeeSerializer(serializers.ModelSerializer):
         return str(total.quantize(Decimal('0.01')))
 
 
+class EmployeeListSerializer(serializers.ModelSerializer):
+    """Slim list serializer — omits government IDs (TIN/SSS/PhilHealth/Pag-IBIG)
+    to keep PII out of list responses. Use EmployeeSerializer for detail views."""
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    user_full_name = serializers.SerializerMethodField()
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    current_compensation = serializers.SerializerMethodField()
+    active_loans_count = serializers.SerializerMethodField()
+    total_outstanding_loan = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Employee
+        fields = (
+            'id', 'user', 'user_username', 'user_full_name', 'user_email',
+            'employee_code', 'hire_date', 'termination_date',
+            'employment_status', 'position', 'department',
+            'is_active', 'created_at', 'updated_at',
+            'current_compensation', 'active_loans_count', 'total_outstanding_loan',
+        )
+        read_only_fields = fields
+
+    def get_user_full_name(self, obj):
+        return obj.user.get_full_name() if obj.user else ''
+
+    def get_current_compensation(self, obj):
+        c = obj.current_compensation()
+        return CompensationProfileSerializer(c).data if c else None
+
+    def get_active_loans_count(self, obj):
+        return obj.loans.filter(status='active').count()
+
+    def get_total_outstanding_loan(self, obj):
+        total = Decimal('0')
+        for loan in obj.loans.filter(status='active'):
+            total += loan.remaining_balance
+        return str(total.quantize(Decimal('0.01')))
+
+
 class EmployeeWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee

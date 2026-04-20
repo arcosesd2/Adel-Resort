@@ -11,6 +11,7 @@ from hr.serializers import (
     PayrollPeriodSerializer, PayrollRunSerializer, PayslipSerializer,
 )
 from hr.services import payroll_engine
+from hr.views._pagination import paginate_or_list
 
 
 @api_view(['GET'])
@@ -85,11 +86,7 @@ def run_list(request):
         st = request.query_params.get('status')
         if st:
             qs = qs.filter(status=st)
-        try:
-            limit = min(int(request.query_params.get('limit', 200)), 500)
-        except (ValueError, TypeError):
-            limit = 200
-        return Response(PayrollRunSerializer(qs[:limit], many=True).data)
+        return paginate_or_list(request, qs, PayrollRunSerializer)
 
     period_id = request.data.get('period_id')
     employee_ids = request.data.get('employee_ids') or None
@@ -189,11 +186,7 @@ def payslip_list(request):
     period = request.query_params.get('period')
     if period:
         qs = qs.filter(run__period_id=period)
-    try:
-        limit = min(int(request.query_params.get('limit', 200)), 500)
-    except (ValueError, TypeError):
-        limit = 200
-    return Response(PayslipSerializer(qs[:limit], many=True).data)
+    return paginate_or_list(request, qs, PayslipSerializer)
 
 
 @api_view(['GET'])

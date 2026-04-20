@@ -60,7 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserManagementSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False, min_length=8)
+    password = serializers.CharField(write_only=True, required=False, min_length=10)
     device_count = serializers.SerializerMethodField()
     login_count = serializers.SerializerMethodField()
     last_login = serializers.DateTimeField(read_only=True)
@@ -77,6 +77,14 @@ class UserManagementSerializer(serializers.ModelSerializer):
 
     def get_login_count(self, obj):
         return obj.login_attempts.filter(success=True).count()
+
+    def validate_password(self, value):
+        from django.core.exceptions import ValidationError as DjValidationError
+        try:
+            validate_password(value)
+        except DjValidationError as e:
+            raise serializers.ValidationError(list(e.messages))
+        return value
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)

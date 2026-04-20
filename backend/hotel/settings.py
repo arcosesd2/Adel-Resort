@@ -59,7 +59,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'hotel.middleware.ContentSecurityPolicyMiddleware',
 ]
+
+EMPLOYER_TIN = os.environ.get('EMPLOYER_TIN', '000-000-000-00000')
 
 ROOT_URLCONF = 'hotel.urls'
 
