@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, Send } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X, Send, ExternalLink } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
@@ -178,6 +178,17 @@ export default function AdminEventsPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+                  {item.is_active && (
+                    <a
+                      href={`/events/${item.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-gray-400 hover:text-ocean-600"
+                      title="View on site"
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                  )}
                   <button
                     onClick={() => handleBroadcast(item)}
                     disabled={!item.is_active}

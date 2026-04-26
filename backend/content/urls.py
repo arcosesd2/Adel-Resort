@@ -1,11 +1,16 @@
 from django.urls import path
-from .views import NewsListView, EventListView, PromotionListView, PricingListView
+from .views import (
+    NewsListView, EventListView, PromotionListView, PricingListView,
+    NewsDetailView, EventDetailView,
+)
 from . import views
 
 urlpatterns = [
     # Public endpoints
     path('news/', NewsListView.as_view(), name='news-list'),
+    path('news/<int:pk>/', NewsDetailView.as_view(), name='news-detail'),
     path('events/', EventListView.as_view(), name='event-list'),
+    path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
     path('promotions/', PromotionListView.as_view(), name='promotion-list'),
     path('pricing/', PricingListView.as_view(), name='pricing-list'),
     path('settings/', views.site_settings, name='site-settings'),

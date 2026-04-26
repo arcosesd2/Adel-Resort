@@ -3,7 +3,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes, throttle_classes
 from rest_framework.throttling import AnonRateThrottle
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny
 from accounts.permissions import IsAdminOrSuperAdmin
@@ -39,6 +39,18 @@ class EventListView(ListAPIView):
 
     def get_queryset(self):
         return Event.objects.filter(is_active=True)
+
+
+class NewsDetailView(RetrieveAPIView):
+    serializer_class = NewsSerializer
+    permission_classes = [AllowAny]
+    queryset = News.objects.filter(is_active=True)
+
+
+class EventDetailView(RetrieveAPIView):
+    serializer_class = EventSerializer
+    permission_classes = [AllowAny]
+    queryset = Event.objects.filter(is_active=True)
 
 
 class PromotionListView(ListAPIView):
