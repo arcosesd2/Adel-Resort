@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from accounts.permissions import IsAdminOrSuperAdmin
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
+from datetime import date
 
 class AnalyticsRateThrottle(ScopedRateThrottle):
     scope = 'analytics'
@@ -97,12 +98,19 @@ class RoomDetailView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
 
 
-def _get_booked_slots(room, include_details=False):
-    """Collect all booked slots for active bookings of a room."""
-    qs = Booking.objects.filter(
-        room=room,
-        status__in=['confirmed', 'pending', 'completed']
-    )
+def _get_booked_slots(room, include_details=False, include_past=True):
+    """Collect all booked slots for active bookings of a room.
+
+    `include_past=True` adds completed bookings and keeps every slot — used
+    by the admin Room Overview calendar so past stays remain visible.
+    `include_past=False` drops completed bookings and filters out slot dates
+    earlier than today — used by the public Availability page so visitors
+    only see present and future bookings.
+    """
+    statuses = ['confirmed', 'pending']
+    if include_past:
+        statuses.append('completed')
+    qs = Booking.objects.filter(room=room, status__in=statuses)
     if include_details:
         qs = qs.select_related('user')
         bookings = qs.values(
@@ -130,6 +138,10 @@ def _get_booked_slots(room, include_details=False):
             })
         if booking['slots']:
             for slot in booking['slots']:
+                if not include_past:
+                    slot_date = slot.get('date')
+                    if slot_date and slot_date < date.today().isoformat():
+                        continue
                 booked_slots.append({**slot, **extra})
     return booked_slots
 
@@ -286,7 +298,7 @@ def all_rooms_availability(request):
             'night_price': str(room.night_price) if room.night_price else None,
             'is_day_only': room.is_day_only,
             'max_rooms': room.max_rooms,
-            'booked_slots': _get_booked_slots(room),
+            'booked_slots': _get_booked_slots(room, include_past=False),
         })
 
     return Response(result)
