@@ -101,7 +101,7 @@ def _get_booked_slots(room, include_details=False):
     """Collect all booked slots for active bookings of a room."""
     qs = Booking.objects.filter(
         room=room,
-        status__in=['confirmed', 'pending']
+        status__in=['confirmed', 'pending', 'completed']
     )
     if include_details:
         qs = qs.select_related('user')

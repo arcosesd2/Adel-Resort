@@ -112,7 +112,7 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
   }
 
   function cellColor(pct, isFull, isPast) {
-    if (isPast) return { bg: 'bg-gray-50', text: 'text-gray-400' }
+    if (isPast && pct === 0) return { bg: 'bg-gray-50', text: 'text-gray-400' }
     if (isFull) return { bg: 'bg-red-100', text: 'text-red-800' }
     if (pct >= 80) return { bg: 'bg-orange-100', text: 'text-orange-800' }
     if (pct >= 50) return { bg: 'bg-amber-100', text: 'text-amber-800' }
@@ -197,7 +197,7 @@ export default function OccupancyCalendar({ roomId, bookingMode, isDayOnly }) {
             return (
               <div
                 key={dateStr}
-                className={`relative border-b border-r border-gray-100 p-1 ${colors.bg} ${isPast ? 'opacity-60' : ''} ${hasBookings ? 'cursor-pointer' : ''} group`}
+                className={`relative border-b border-r border-gray-100 p-1 ${colors.bg} ${isPast && !hasBookings ? 'opacity-60' : ''} ${hasBookings ? 'cursor-pointer' : ''} group`}
                 onMouseEnter={() => hasBookings && setHoveredDate(dateStr)}
                 onMouseLeave={() => setHoveredDate(null)}
                 onClick={() => hasBookings && setSelectedDate(dateStr)}

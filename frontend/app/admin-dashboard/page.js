@@ -50,6 +50,7 @@ function AdminDashboardContent() {
   })
   const [creatingOnsite, setCreatingOnsite] = useState(false)
   const [isBackdateMode, setIsBackdateMode] = useState(false)
+  const [excludeFromSales, setExcludeFromSales] = useState(false)
   const [onsiteVoucherCode, setOnsiteVoucherCode] = useState('')
   const [bookingRefreshKey, setBookingRefreshKey] = useState(0)
   const [defaultCheckIn, setDefaultCheckIn] = useState(null)
@@ -242,6 +243,7 @@ function AdminDashboardContent() {
         special_requests: onsiteForm.special_requests,
       }
       if (isBackdateMode) payload.backdate = true
+      if (excludeFromSales) payload.excluded_from_sales = true
       if (onsiteVoucherCode.trim()) payload.voucher_code = onsiteVoucherCode.trim()
       if (onsiteForm.manual_discount) {
         payload.manual_discount = parseFloat(onsiteForm.manual_discount)
@@ -260,6 +262,7 @@ function AdminDashboardContent() {
       setOnsiteForm({ guest_name: '', guest_username: '', guest_phone: '', room: '', guests: 1, slots: [], special_requests: '', manual_discount: '', manual_discount_type: 'fixed' })
       setOnsiteVoucherCode('')
       setIsBackdateMode(false)
+      setExcludeFromSales(false)
       setShowOnsiteForm(false)
       setBookingRefreshKey(k => k + 1)
     } catch (err) {
@@ -628,6 +631,20 @@ function AdminDashboardContent() {
               {isBackdateMode && (
                 <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
                   Recording a past stay — will be saved as COMPLETED
+                </span>
+              )}
+              <label className="flex items-center gap-2 cursor-pointer ml-4">
+                <input
+                  type="checkbox"
+                  checked={excludeFromSales}
+                  onChange={e => setExcludeFromSales(e.target.checked)}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Exclude from Sales / Net Income</span>
+              </label>
+              {excludeFromSales && (
+                <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
+                  Will not count toward sales or revenue
                 </span>
               )}
             </div>

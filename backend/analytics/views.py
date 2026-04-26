@@ -91,15 +91,13 @@ def admin_dashboard(request):
     )
 
     # Business metrics — net income = sum of all confirmed + completed bookings
-    net_income = (
-        Booking.objects
-        .filter(status__in=['confirmed', 'completed'])
-        .aggregate(total=Sum('total_price'))['total']
-    ) or 0
-
-    total_sales = Booking.objects.filter(
-        status__in=['confirmed', 'completed']
-    ).count()
+    # (excluding bookings explicitly flagged as excluded_from_sales)
+    sales_qs = Booking.objects.filter(
+        status__in=['confirmed', 'completed'],
+        excluded_from_sales=False,
+    )
+    net_income = sales_qs.aggregate(total=Sum('total_price'))['total'] or 0
+    total_sales = sales_qs.count()
 
     pending_sales = Booking.objects.filter(status='pending').count()
 
@@ -144,7 +142,7 @@ def admin_dashboard(request):
             pages_visited=Count('page_path', distinct=True),
             last_seen=Max('timestamp'),
         )
-        .order_by('-total_views')[:100]
+        .order_by('-last_seen')[:100]
     )
 
     # Per-visitor page view details
@@ -158,13 +156,16 @@ def admin_dashboard(request):
     )
 
     # Revenue by month — last 12 months
+    # Sourced from bookings (same source as Net Income / Total Sales) so the
+    # charts stay in sync with the headline sales metrics — including walk-in
+    # / onsite bookings that may not have a matching Payment record.
     twelve_months_ago = timezone.now() - timedelta(days=365)
     revenue_by_month = list(
-        Payment.objects
-        .filter(status='succeeded', created_at__gte=twelve_months_ago)
+        sales_qs
+        .filter(created_at__gte=twelve_months_ago)
         .annotate(month=TruncMonth('created_at'))
         .values('month')
-        .annotate(revenue=Sum('amount'))
+        .annotate(revenue=Sum('total_price'))
         .order_by('month')
     )
     for entry in revenue_by_month:
@@ -174,11 +175,11 @@ def admin_dashboard(request):
     # Revenue by day — last 30 days
     thirty_days_ago = timezone.now() - timedelta(days=30)
     revenue_by_day = list(
-        Payment.objects
-        .filter(status='succeeded', created_at__gte=thirty_days_ago)
+        sales_qs
+        .filter(created_at__gte=thirty_days_ago)
         .annotate(day=TruncDate('created_at'))
         .values('day')
-        .annotate(revenue=Sum('amount'))
+        .annotate(revenue=Sum('total_price'))
         .order_by('day')
     )
     for entry in revenue_by_day:

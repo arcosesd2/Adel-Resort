@@ -104,6 +104,7 @@ def onsite_booking(request):
     slots = data.get('slots', [])
     special_requests = data.get('special_requests', '')
     is_backdate = bool(data.get('backdate', False))
+    excluded_from_sales = bool(data.get('excluded_from_sales', False))
 
     if not guest_name or not room_id or not slots:
         return Response({'detail': 'Guest name, room, and slots are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -270,6 +271,7 @@ def onsite_booking(request):
         status=BookingStatus.COMPLETED if is_backdate else BookingStatus.CONFIRMED,
         special_requests=special_requests,
         is_backdated=is_backdate,
+        excluded_from_sales=excluded_from_sales,
     )
 
     if voucher:
