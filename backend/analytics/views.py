@@ -27,6 +27,13 @@ class AnalyticsRateThrottle(ScopedRateThrottle):
 def track_page_view(request):
     serializer = TrackPageViewSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    u = request.user
+    if u and u.is_authenticated and (
+        getattr(u, 'is_staff', False)
+        or getattr(u, 'is_admin', False)
+        or getattr(u, 'is_superadmin', False)
+    ):
+        return Response(status=status.HTTP_201_CREATED)
     PageView.objects.create(**serializer.validated_data)
     return Response(status=status.HTTP_201_CREATED)
 

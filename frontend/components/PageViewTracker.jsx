@@ -17,20 +17,25 @@ function getVisitorId() {
 
 export default function PageViewTracker() {
   const pathname = usePathname()
-  const { user } = useAuthStore()
+  const { user, isReady } = useAuthStore()
 
   useEffect(() => {
-    if (user?.is_superadmin) return
+    if (!isReady) return
+    if (user?.is_staff || user?.is_admin || user?.is_superadmin) return
 
     try {
       const visitor_id = getVisitorId()
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
       fetch(`${API_URL}/api/analytics/track/`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ visitor_id, page_path: pathname }),
       }).catch(() => {})
     } catch {}
-  }, [pathname, user])
+  }, [pathname, user, isReady])
 
   return null
 }
