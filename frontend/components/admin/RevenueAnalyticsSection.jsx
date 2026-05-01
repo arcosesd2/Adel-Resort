@@ -51,7 +51,7 @@ export default function RevenueAnalyticsSection({ data, comparisons }) {
 
       {open && (
         <div className="p-6">
-          {/* Summary Cards: This Month / Last Month / MoM / YoY */}
+          {/* Summary Cards: This Month / Last Month / Monthly / Yearly */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div className="bg-green-50 rounded-xl p-4">
               <p className="text-sm text-gray-500">This Month</p>
@@ -62,14 +62,14 @@ export default function RevenueAnalyticsSection({ data, comparisons }) {
               <p className="text-xl font-bold text-blue-700">{formatCurrency(mom.prev)}</p>
             </div>
             <div className={`rounded-xl p-4 ${mom.delta_pct >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
-              <p className="text-sm text-gray-500">MoM Change</p>
+              <p className="text-sm text-gray-500">Monthly Change</p>
               <p className={`text-xl font-bold ${mom.delta_pct >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
                 {formatDelta(mom.delta_pct)}
               </p>
             </div>
             {yoy ? (
               <div className={`rounded-xl p-4 ${yoy.delta_pct >= 0 ? 'bg-cyan-50' : 'bg-rose-50'}`}>
-                <p className="text-sm text-gray-500">YoY Change</p>
+                <p className="text-sm text-gray-500">Yearly Change</p>
                 <p className={`text-xl font-bold ${yoy.delta_pct >= 0 ? 'text-cyan-700' : 'text-rose-700'}`}>
                   {formatDelta(yoy.delta_pct)}
                 </p>
@@ -77,7 +77,7 @@ export default function RevenueAnalyticsSection({ data, comparisons }) {
               </div>
             ) : (
               <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-sm text-gray-500">YoY Change</p>
+                <p className="text-sm text-gray-500">Yearly Change</p>
                 <p className="text-xl font-bold text-gray-400">—</p>
                 <p className="text-xs text-gray-400 mt-1">loading…</p>
               </div>
