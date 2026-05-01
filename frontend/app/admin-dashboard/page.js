@@ -623,55 +623,6 @@ function AdminDashboardContent() {
           ))}
       </div>
 
-      {/* Date Range Filter — re-fetches /revenue-insights/ */}
-      <div className="card p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <span className="text-sm font-medium text-gray-700">Analytics Date Range:</span>
-        <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="input-field text-sm"
-            aria-label="From"
-          />
-          <span className="text-gray-400 text-sm">→</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="input-field text-sm"
-            aria-label="To"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => fetchInsights(dateFrom, dateTo)}
-            disabled={insightsLoading}
-            className="btn-primary text-sm px-3 py-1.5 disabled:opacity-50"
-          >
-            {insightsLoading ? 'Loading…' : 'Apply'}
-          </button>
-          {(dateFrom || dateTo) && (
-            <button
-              onClick={() => { setDateFrom(''); setDateTo(''); fetchInsights('', '') }}
-              className="btn-outline text-sm px-3 py-1.5"
-            >
-              Reset
-            </button>
-          )}
-        </div>
-        {!dateFrom && !dateTo && (
-          <span className="text-xs text-gray-400 ml-auto">Defaults: 30-day KPIs · 12-month breakdowns</span>
-        )}
-      </div>
-
-      {/* Revenue Analytics — visible to all staff */}
-      <RevenueAnalyticsSection data={data} comparisons={insights?.comparisons} />
-      {insights && <RevenueBreakdownsSection insights={insights} />}
-      {insights && <HotelKpiSection insights={insights} />}
-      {insights && <DiscountsSection insights={insights} />}
-      {insights && <GuestInsightsSection insights={insights} isSuperadmin={!!user?.is_superadmin} />}
-
       {/* Onsite Booking */}
       <div ref={onsiteSectionRef} className="card overflow-hidden mb-10">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -821,6 +772,55 @@ function AdminDashboardContent() {
           </form>
         )}
       </div>
+
+      {/* Date Range Filter — re-fetches /revenue-insights/ */}
+      <div className="card p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <span className="text-sm font-medium text-gray-700">Analytics Date Range:</span>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="input-field text-sm"
+            aria-label="From"
+          />
+          <span className="text-gray-400 text-sm">→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="input-field text-sm"
+            aria-label="To"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fetchInsights(dateFrom, dateTo)}
+            disabled={insightsLoading}
+            className="btn-primary text-sm px-3 py-1.5 disabled:opacity-50"
+          >
+            {insightsLoading ? 'Loading…' : 'Apply'}
+          </button>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo(''); fetchInsights('', '') }}
+              className="btn-outline text-sm px-3 py-1.5"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        {!dateFrom && !dateTo && (
+          <span className="text-xs text-gray-400 ml-auto">Defaults: 30-day KPIs · 12-month breakdowns</span>
+        )}
+      </div>
+
+      {/* Revenue Analytics — visible to all staff */}
+      <RevenueAnalyticsSection data={data} comparisons={insights?.comparisons} />
+      {insights && <RevenueBreakdownsSection insights={insights} />}
+      {insights && <HotelKpiSection insights={insights} />}
+      {insights && <DiscountsSection insights={insights} />}
+      {insights && <GuestInsightsSection insights={insights} isSuperadmin={!!user?.is_superadmin} />}
 
       {/* Chat Conversations */}
       <div className="card overflow-hidden mb-10">
