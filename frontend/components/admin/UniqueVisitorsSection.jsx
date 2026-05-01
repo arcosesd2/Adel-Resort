@@ -58,9 +58,9 @@ export default function UniqueVisitorsSection({ data }) {
                       </td>
                       <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{v.total_views}</td>
                       <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{v.pages_visited}</td>
-                      <td className="px-6 py-3 text-sm text-gray-500 text-right">
+                      <td className="px-6 py-3 text-sm text-gray-500 text-right whitespace-nowrap">
                         {v.last_seen
-                          ? new Date(v.last_seen).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                          ? new Date(v.last_seen).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                           : '\u2014'}
                       </td>
                     </tr>

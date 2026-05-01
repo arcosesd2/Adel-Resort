@@ -967,23 +967,52 @@ function AdminDashboardContent() {
                           {row.page_path}
                         </td>
                         <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">{row.views.toLocaleString()}</td>
-                        <td className="px-6 py-3 text-sm text-gray-500 text-right">
-                          {row.last_viewed ? new Date(row.last_viewed).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '\u2014'}
+                        <td className="px-6 py-3 text-sm text-gray-500 text-right whitespace-nowrap">
+                          {row.last_viewed ? new Date(row.last_viewed).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '\u2014'}
                         </td>
                       </tr>
-                      {isExpanded && dailyRows.map((d) => (
-                        <tr key={`${row.page_path}-${d.view_date}`} className="bg-gray-50/60">
-                          <td className="px-6 pl-14 py-2 text-xs text-gray-500">
-                            {new Date(d.view_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                          </td>
-                          <td className="px-6 py-2 text-xs text-gray-600 text-right">{d.views.toLocaleString()}</td>
-                          <td className="px-6 py-2"></td>
-                        </tr>
-                      ))}
-                      {isExpanded && dailyRows.length === 0 && (
-                        <tr className="bg-gray-50/60">
-                          <td colSpan={3} className="px-6 pl-14 py-2 text-xs text-gray-400">No daily data available</td>
-                        </tr>
+                      {isExpanded && (
+                        <>
+                          {(row.recent_accesses || []).length > 0 && (
+                            <tr className="bg-gray-50/40">
+                              <td colSpan={3} className="px-6 pl-14 py-1 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+                                Recent accesses
+                              </td>
+                            </tr>
+                          )}
+                          {(row.recent_accesses || []).map((a, i) => (
+                            <tr key={`${row.page_path}-acc-${i}`} className="bg-gray-50/60">
+                              <td className="px-6 pl-14 py-1.5 text-xs text-gray-500 font-mono">
+                                {a.visitor_id ? `${a.visitor_id.slice(0, 8)}\u2026` : '\u2014'}
+                              </td>
+                              <td className="px-6 py-1.5"></td>
+                              <td className="px-6 py-1.5 text-xs text-gray-500 text-right whitespace-nowrap">
+                                {new Date(a.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </td>
+                            </tr>
+                          ))}
+                          {dailyRows.length > 0 && (
+                            <tr className="bg-gray-50/40">
+                              <td colSpan={3} className="px-6 pl-14 py-1 text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+                                Daily totals
+                              </td>
+                            </tr>
+                          )}
+                          {dailyRows.map((d) => (
+                            <tr key={`${row.page_path}-${d.view_date}`} className="bg-gray-50/60">
+                              <td className="px-6 pl-14 py-2 text-xs text-gray-500">
+                                {new Date(d.view_date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                              </td>
+                              <td className="px-6 py-2 text-xs text-gray-600 text-right">{d.views.toLocaleString()}</td>
+                              <td className="px-6 py-2"></td>
+                            </tr>
+                          ))}
+                          {dailyRows.length === 0 && (row.recent_accesses || []).length === 0 && (
+                            <tr className="bg-gray-50/60">
+                              <td colSpan={3} className="px-6 pl-14 py-2 text-xs text-gray-400">No data available</td>
+                            </tr>
+                          )}
+                        </>
                       )}
                     </React.Fragment>
                   )

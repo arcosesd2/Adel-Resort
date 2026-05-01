@@ -10,7 +10,7 @@ from django.db.models.functions import Concat, TruncDate, TruncMonth
 from datetime import timedelta, date, datetime
 from django.utils import timezone
 
-from .models import PageView
+from .models import PageView, StaffVisitor
 from .serializers import TrackPageViewSerializer
 from bookings.models import Booking
 from payments.models import Payment
@@ -57,13 +57,32 @@ class AnalyticsRateThrottle(ScopedRateThrottle):
 def track_page_view(request):
     serializer = TrackPageViewSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    visitor_id = serializer.validated_data['visitor_id']
+
     u = request.user
-    if u and u.is_authenticated and (
-        getattr(u, 'is_staff', False)
-        or getattr(u, 'is_admin', False)
-        or getattr(u, 'is_superadmin', False)
-    ):
+    is_staff_user = bool(
+        u and u.is_authenticated and (
+            getattr(u, 'is_staff', False)
+            or getattr(u, 'is_admin', False)
+            or getattr(u, 'is_superadmin', False)
+        )
+    )
+
+    # Authenticated staff: mark this visitor_id permanently and don't record
+    # the view. update_or_create keeps last_seen + user fresh on every hit.
+    if is_staff_user:
+        StaffVisitor.objects.update_or_create(
+            visitor_id=visitor_id,
+            defaults={'user': u},
+        )
         return Response(status=status.HTTP_201_CREATED)
+
+    # Anonymous request from a browser previously seen as staff: drop silently.
+    # Covers the "logged out then back in" race where the tracker fires before
+    # the auth state refreshes.
+    if StaffVisitor.objects.filter(visitor_id=visitor_id).exists():
+        return Response(status=status.HTTP_201_CREATED)
+
     PageView.objects.create(**serializer.validated_data)
     return Response(status=status.HTTP_201_CREATED)
 
@@ -106,20 +125,46 @@ def public_stats(request):
 @api_view(['GET'])
 @permission_classes([IsAdminOrSuperAdmin])
 def admin_dashboard(request):
+    # Public-facing PageView queryset — strips out anything from a visitor_id
+    # that has ever been logged in as staff/admin/superadmin (StaffVisitor),
+    # so logging in once permanently scrubs that browser from public stats.
+    staff_visitor_ids = StaffVisitor.objects.values_list('visitor_id', flat=True)
+    page_view_qs = PageView.objects.exclude(visitor_id__in=staff_visitor_ids)
+
     # Page view analytics
-    page_views = (
-        PageView.objects
+    page_views = list(
+        page_view_qs
         .values('page_path')
         .annotate(views=Count('id'), last_viewed=Max('timestamp'))
         .order_by('-last_viewed')
     )
-    unique_visitors = PageView.objects.values('visitor_id').distinct().count()
-    total_page_views = PageView.objects.count()
+    unique_visitors = page_view_qs.values('visitor_id').distinct().count()
+    total_page_views = page_view_qs.count()
+
+    # Recent access timestamps per path (last 50 hits each, full datetime).
+    # One query → group in Python instead of N queries (one per path).
+    RECENT_PER_PATH = 50
+    recent_accesses_by_path = {}
+    relevant_paths = {r['page_path'] for r in page_views}
+    for entry in page_view_qs.order_by('-timestamp').values('page_path', 'visitor_id', 'timestamp')[:5000]:
+        path = entry['page_path']
+        if path not in relevant_paths:
+            continue
+        bucket = recent_accesses_by_path.setdefault(path, [])
+        if len(bucket) < RECENT_PER_PATH:
+            bucket.append({
+                'visitor_id': entry['visitor_id'],
+                'timestamp': entry['timestamp'].isoformat(),
+            })
+    for row in page_views:
+        row['recent_accesses'] = recent_accesses_by_path.get(row['page_path'], [])
+        if row.get('last_viewed'):
+            row['last_viewed'] = row['last_viewed'].isoformat()
 
     # Daily page views (last 90 days)
     ninety_days_ago = timezone.now() - timedelta(days=90)
     daily_page_views = list(
-        PageView.objects
+        page_view_qs
         .filter(timestamp__gte=ninety_days_ago)
         .annotate(view_date=TruncDate('timestamp'))
         .values('page_path', 'view_date')
@@ -171,7 +216,7 @@ def admin_dashboard(request):
 
     # Unique visitors list — grouped by visitor_id, last 90 days
     unique_visitors_list = list(
-        PageView.objects
+        page_view_qs
         .filter(timestamp__gte=ninety_days_ago)
         .values('visitor_id')
         .annotate(
@@ -184,7 +229,7 @@ def admin_dashboard(request):
 
     # Per-visitor page view details
     visitor_page_views = list(
-        PageView.objects
+        page_view_qs
         .filter(timestamp__gte=ninety_days_ago)
         .annotate(view_date=TruncDate('timestamp'))
         .values('visitor_id', 'page_path', 'view_date')

@@ -27,6 +27,17 @@ const clearAuthCookie = () => {
   document.cookie = 'user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 }
 
+// Once a browser logs in as staff/admin/superadmin, mark it permanently so
+// PageViewTracker never counts it again — even after logout. Cleared only
+// when the user manually clears localStorage. Backend mirrors this server-side
+// via StaffVisitor so other browsers can be scrubbed retroactively.
+const markStaffVisitorIfNeeded = (user) => {
+  if (typeof window === 'undefined' || !user) return
+  if (user.is_staff || user.is_admin || user.is_superadmin) {
+    localStorage.setItem('staff_visitor', '1')
+  }
+}
+
 const useAuthStore = create((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -51,6 +62,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const { data } = await api.get('/auth/me/')
       setRoleCookie(data)
+      markStaffVisitorIfNeeded(data)
       set({ user: data, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
     } catch {
       clearTokens()
@@ -66,6 +78,7 @@ const useAuthStore = create((set, get) => ({
     setTokens(data.access, data.refresh)
     setAuthCookie(data.access)
     setRoleCookie(data.user)
+    markStaffVisitorIfNeeded(data.user)
     set({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
     return data
   },
@@ -75,6 +88,7 @@ const useAuthStore = create((set, get) => ({
     setTokens(data.access, data.refresh)
     setAuthCookie(data.access)
     setRoleCookie(data.user)
+    markStaffVisitorIfNeeded(data.user)
     set({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
     return data
   },
@@ -95,6 +109,7 @@ const useAuthStore = create((set, get) => ({
     try {
       const { data } = await api.get('/auth/me/')
       setRoleCookie(data)
+      markStaffVisitorIfNeeded(data)
       set({ user: data, isAuthenticated: true })
     } catch {
       clearTokens()
