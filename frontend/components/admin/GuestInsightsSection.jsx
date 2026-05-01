@@ -104,7 +104,7 @@ export default function GuestInsightsSection({ insights, isSuperadmin }) {
                     {top_spenders.length === 0 ? (
                       <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-400">No data</td></tr>
                     ) : top_spenders.map((g) => (
-                      <tr key={g.user__id}>
+                      <tr key={g.guest_name}>
                         <td className="px-3 py-2 font-medium text-gray-700">{g.guest_name}</td>
                         <td className="px-3 py-2 text-gray-500">
                           {g.user__username && !g.user__username.startsWith('walkin-') ? g.user__username : '—'}

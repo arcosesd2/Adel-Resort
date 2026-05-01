@@ -637,7 +637,17 @@ def _compute_revenue_insights(is_superadmin, custom_from, custom_to):
             )
             row['total_spent'] = float(row['total_spent'] or 0)
             row['last_booking'] = row['last_booking'].isoformat() if row['last_booking'] else None
-        result['top_spenders'] = top_spenders
+        merged = {}
+        for row in top_spenders:
+            key = row['guest_name']
+            if key in merged:
+                merged[key]['total_spent'] += row['total_spent']
+                merged[key]['bookings'] += row['bookings']
+                if row['last_booking'] and (not merged[key]['last_booking'] or row['last_booking'] > merged[key]['last_booking']):
+                    merged[key]['last_booking'] = row['last_booking']
+            else:
+                merged[key] = dict(row)
+        result['top_spenders'] = sorted(merged.values(), key=lambda r: r['total_spent'], reverse=True)[:20]
 
     return result
 
