@@ -1,10 +1,11 @@
+from decimal import Decimal
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
-from accounts.permissions import IsAdminOrSuperAdmin
+from accounts.permissions import IsAdminOrSuperAdmin, IsSuperAdmin
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
-from django.db.models import Count, Sum, Max, Avg, F, Value, Q
+from django.db.models import Count, Sum, Max, Min, Avg, F, Value, Q
 from django.db.models.functions import Concat, TruncDate, TruncMonth
 from datetime import timedelta, date, datetime
 from django.utils import timezone
@@ -13,8 +14,37 @@ from .models import PageView
 from .serializers import TrackPageViewSerializer
 from bookings.models import Booking
 from payments.models import Payment
-from rooms.models import Room
+from rooms.models import Room, RoomType
 from reviews.models import Review
+
+
+# Walk-in detector: backdated bookings OR auto-generated walk-in usernames
+# (see bookings/views.py:135 — placeholder format `walkin-<8hex>`).
+WALKIN_Q = Q(is_backdated=True) | Q(user__username__startswith='walkin-')
+
+
+def _sales_qs():
+    """Predicate used everywhere a 'real sale' is counted — matches Net Income."""
+    return Booking.objects.filter(
+        status__in=['confirmed', 'completed'],
+        excluded_from_sales=False,
+    )
+
+
+def _parse_iso_date(s):
+    if not s:
+        return None
+    try:
+        return datetime.strptime(s, '%Y-%m-%d').date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _slots_per_day(room):
+    """Available slots per day for a room. Slot-mode rooms have a day + night slot."""
+    if room.is_day_only or room.booking_mode in ('overnight', '24hr'):
+        return 1
+    return 2
 
 
 class AnalyticsRateThrottle(ScopedRateThrottle):
@@ -333,4 +363,460 @@ def export_revenue_csv(request):
             p.payment_type,
         ])
 
+    return response
+
+
+def _compute_revenue_insights(is_superadmin, custom_from, custom_to):
+    today = date.today()
+    long_start = custom_from or (today - timedelta(days=365))
+    long_end = custom_to or today
+    short_start = custom_from or (today - timedelta(days=30))
+    short_end = custom_to or today
+
+    sales_long = _sales_qs().filter(created_at__date__range=(long_start, long_end))
+    sales_short_qs = _sales_qs().filter(check_in__range=(short_start, short_end))
+
+    # ---------- Breakdowns (long window) ----------
+    revenue_by_room = list(
+        sales_long
+        .values('room__id', 'room__name', 'room__room_type')
+        .annotate(revenue=Sum('total_price'), bookings=Count('id'))
+        .order_by('-revenue')
+    )
+    type_label = dict(RoomType.choices)
+    for row in revenue_by_room:
+        row['room_type_label'] = type_label.get(row['room__room_type'], row['room__room_type'])
+        row['revenue'] = float(row['revenue'] or 0)
+
+    revenue_by_room_type = list(
+        sales_long
+        .values('room__room_type')
+        .annotate(revenue=Sum('total_price'), bookings=Count('id'))
+        .order_by('-revenue')
+    )
+    for row in revenue_by_room_type:
+        row['room_type_label'] = type_label.get(row['room__room_type'], row['room__room_type'])
+        row['revenue'] = float(row['revenue'] or 0)
+
+    revenue_by_payment_type = list(
+        sales_long
+        .values('payment__payment_type')
+        .annotate(revenue=Sum('total_price'), bookings=Count('id'))
+        .order_by('-revenue')
+    )
+    for row in revenue_by_payment_type:
+        if row['payment__payment_type'] is None:
+            row['payment__payment_type'] = 'onsite'
+        row['revenue'] = float(row['revenue'] or 0)
+
+    weekday_revenue = Decimal('0')
+    weekend_revenue = Decimal('0')
+    weekday_bookings = 0
+    weekend_bookings = 0
+    for b in sales_long.values('check_in', 'total_price'):
+        if b['check_in'].weekday() >= 5:
+            weekend_revenue += b['total_price']
+            weekend_bookings += 1
+        else:
+            weekday_revenue += b['total_price']
+            weekday_bookings += 1
+    weekday_vs_weekend = {
+        'weekday': {'revenue': float(weekday_revenue), 'bookings': weekday_bookings},
+        'weekend': {'revenue': float(weekend_revenue), 'bookings': weekend_bookings},
+    }
+
+    # ---------- KPIs (short window) ----------
+    short_revenue = sales_short_qs.aggregate(t=Sum('total_price'))['t'] or Decimal('0')
+    short_bookings = sales_short_qs.count()
+
+    occupied_room_nights = 0
+    daily_occupied = {}
+    for b in sales_short_qs.values('slots'):
+        for s in b['slots'] or []:
+            try:
+                slot_date = date.fromisoformat(s['date'])
+            except (ValueError, KeyError, TypeError):
+                continue
+            if short_start <= slot_date <= short_end:
+                occupied_room_nights += 1
+                daily_occupied[slot_date] = daily_occupied.get(slot_date, 0) + 1
+
+    period_days = (short_end - short_start).days + 1
+    daily_capacity = 0
+    for room in Room.objects.filter(is_active=True):
+        daily_capacity += room.max_rooms * _slots_per_day(room)
+    total_available_slots = daily_capacity * period_days
+
+    adr = float(short_revenue) / occupied_room_nights if occupied_room_nights > 0 else 0
+    revpar = float(short_revenue) / total_available_slots if total_available_slots > 0 else 0
+    occupancy_pct = (occupied_room_nights / total_available_slots * 100) if total_available_slots > 0 else 0
+
+    occupancy_trend = []
+    cursor = short_start
+    while cursor <= short_end:
+        occupied = daily_occupied.get(cursor, 0)
+        pct = round((occupied / daily_capacity) * 100, 1) if daily_capacity > 0 else 0
+        occupancy_trend.append({'date': cursor.isoformat(), 'occupancy_pct': pct})
+        cursor += timedelta(days=1)
+
+    # ---------- Lead time (long window) ----------
+    lead_buckets_order = ['0', '1-3', '4-7', '8-14', '15-30', '31+']
+    lead_buckets = {k: 0 for k in lead_buckets_order}
+    for b in sales_long.values('check_in', 'created_at'):
+        diff = (b['check_in'] - b['created_at'].date()).days
+        if diff <= 0:
+            lead_buckets['0'] += 1
+        elif diff <= 3:
+            lead_buckets['1-3'] += 1
+        elif diff <= 7:
+            lead_buckets['4-7'] += 1
+        elif diff <= 14:
+            lead_buckets['8-14'] += 1
+        elif diff <= 30:
+            lead_buckets['15-30'] += 1
+        else:
+            lead_buckets['31+'] += 1
+    lead_time_buckets = [{'bucket': k, 'count': lead_buckets[k]} for k in lead_buckets_order]
+
+    # ---------- Discounts, vouchers, cancellations (long window) ----------
+    from vouchers.models import VoucherUsage
+
+    voucher_roi = list(
+        VoucherUsage.objects
+        .filter(created_at__date__range=(long_start, long_end))
+        .values('voucher__code')
+        .annotate(
+            uses=Count('id'),
+            total_discount=Sum('discount_amount'),
+            revenue_after=Sum('booking__total_price'),
+        )
+        .order_by('-total_discount')
+    )
+    for row in voucher_roi:
+        row['total_discount'] = float(row['total_discount'] or 0)
+        row['revenue_after'] = float(row['revenue_after'] or 0)
+        row['roi'] = round(row['revenue_after'] / row['total_discount'], 2) if row['total_discount'] > 0 else None
+
+    manual_discount_total = float(
+        sales_long.aggregate(t=Sum('manual_discount'))['t'] or Decimal('0')
+    )
+
+    cancel_window = Booking.objects.filter(created_at__date__range=(long_start, long_end))
+    total_in_window = cancel_window.count()
+    cancelled_in_window = cancel_window.filter(status='cancelled').count()
+    cancellation_stats = {
+        'total': total_in_window,
+        'cancelled': cancelled_in_window,
+        'rate_pct': round((cancelled_in_window / total_in_window) * 100, 1) if total_in_window > 0 else 0,
+    }
+
+    refunded_revenue = float(
+        Payment.objects.filter(
+            status='refunded',
+            created_at__date__range=(long_start, long_end),
+        ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
+    )
+
+    lost_revenue = float(
+        Booking.objects.filter(
+            status='cancelled',
+            created_at__date__range=(long_start, long_end),
+        ).aggregate(t=Sum('total_price'))['t'] or Decimal('0')
+    )
+
+    walkin_qs = sales_long.filter(WALKIN_Q)
+    online_qs = sales_long.exclude(WALKIN_Q)
+    walkin_vs_online = {
+        'walkin': {
+            'count': walkin_qs.count(),
+            'revenue': float(walkin_qs.aggregate(t=Sum('total_price'))['t'] or Decimal('0')),
+        },
+        'online': {
+            'count': online_qs.count(),
+            'revenue': float(online_qs.aggregate(t=Sum('total_price'))['t'] or Decimal('0')),
+        },
+    }
+
+    # ---------- Period comparisons ----------
+    monthly_qs = list(
+        _sales_qs()
+        .annotate(month=TruncMonth('created_at'))
+        .values('month')
+        .annotate(revenue=Sum('total_price'))
+    )
+    monthly_revenue = {row['month'].strftime('%Y-%m'): float(row['revenue'] or 0) for row in monthly_qs}
+
+    today_ref = long_end
+    this_month_key = today_ref.strftime('%Y-%m')
+    prev_month_dt = (today_ref.replace(day=1) - timedelta(days=1))
+    prev_month_key = prev_month_dt.strftime('%Y-%m')
+    yoy_dt = today_ref.replace(year=today_ref.year - 1)
+    yoy_key = yoy_dt.strftime('%Y-%m')
+
+    def _delta(curr, prev):
+        if prev <= 0:
+            return 100.0 if curr > 0 else 0.0
+        return round((curr - prev) / prev * 100, 1)
+
+    mom_curr = monthly_revenue.get(this_month_key, 0)
+    mom_prev = monthly_revenue.get(prev_month_key, 0)
+    yoy_prev = monthly_revenue.get(yoy_key, 0)
+
+    comparisons = {
+        'mom': {'curr': mom_curr, 'prev': mom_prev, 'delta_pct': _delta(mom_curr, mom_prev)},
+        'yoy': {'curr': mom_curr, 'prev': yoy_prev, 'delta_pct': _delta(mom_curr, yoy_prev)},
+    }
+
+    # ---------- Guest insights (aggregates for all staff) ----------
+    completed_all = _sales_qs()
+    user_booking_counts = list(
+        completed_all.values('user').annotate(c=Count('id'))
+    )
+    total_users = len(user_booking_counts)
+    repeat_users = sum(1 for u in user_booking_counts if u['c'] >= 2)
+    repeat_booking_rate = round(repeat_users / total_users * 100, 1) if total_users > 0 else 0
+
+    # New vs returning within the long window
+    user_first_booking = {}
+    for row in completed_all.values('user').annotate(first=Min('created_at')):
+        user_first_booking[row['user']] = row['first']
+
+    new_count = 0
+    returning_count = 0
+    for b in sales_long.values('user', 'created_at'):
+        first = user_first_booking.get(b['user'])
+        if first and first >= b['created_at']:
+            new_count += 1
+        else:
+            returning_count += 1
+    new_vs_returning = {'new': new_count, 'returning': returning_count}
+
+    result = {
+        'long_window': {'from': long_start.isoformat(), 'to': long_end.isoformat()},
+        'short_window': {'from': short_start.isoformat(), 'to': short_end.isoformat()},
+        'revenue_by_room': revenue_by_room,
+        'revenue_by_room_type': revenue_by_room_type,
+        'revenue_by_payment_type': revenue_by_payment_type,
+        'weekday_vs_weekend': weekday_vs_weekend,
+        'adr': round(adr, 2),
+        'revpar': round(revpar, 2),
+        'occupancy_pct': round(occupancy_pct, 1),
+        'short_window_revenue': float(short_revenue),
+        'short_window_bookings': short_bookings,
+        'occupied_room_nights': occupied_room_nights,
+        'total_available_slots': total_available_slots,
+        'occupancy_trend': occupancy_trend,
+        'lead_time_buckets': lead_time_buckets,
+        'voucher_roi': voucher_roi,
+        'manual_discount_total': manual_discount_total,
+        'cancellation_stats': cancellation_stats,
+        'refunded_revenue': refunded_revenue,
+        'lost_revenue': lost_revenue,
+        'walkin_vs_online': walkin_vs_online,
+        'comparisons': comparisons,
+        'repeat_booking_rate': repeat_booking_rate,
+        'new_vs_returning': new_vs_returning,
+    }
+
+    # ---------- Superadmin-only: named top spenders ----------
+    if is_superadmin:
+        top_spenders = list(
+            sales_long
+            .values('user__id', 'user__first_name', 'user__last_name', 'user__username')
+            .annotate(
+                total_spent=Sum('total_price'),
+                bookings=Count('id'),
+                last_booking=Max('created_at'),
+            )
+            .order_by('-total_spent')[:20]
+        )
+        for row in top_spenders:
+            row['guest_name'] = (
+                f"{row['user__first_name'] or ''} {row['user__last_name'] or ''}".strip()
+                or row['user__username']
+            )
+            row['total_spent'] = float(row['total_spent'] or 0)
+            row['last_booking'] = row['last_booking'].isoformat() if row['last_booking'] else None
+        result['top_spenders'] = top_spenders
+
+    return result
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminOrSuperAdmin])
+def revenue_insights(request):
+    from django.core.cache import cache
+
+    is_superadmin = bool(getattr(request.user, 'is_superadmin', False))
+    custom_from = _parse_iso_date(request.query_params.get('from'))
+    custom_to = _parse_iso_date(request.query_params.get('to'))
+    use_cache = not (custom_from or custom_to)
+    cache_key = f'revenue_insights:{"superadmin" if is_superadmin else "staff"}'
+
+    if use_cache:
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+    data = _compute_revenue_insights(is_superadmin, custom_from, custom_to)
+
+    if use_cache:
+        cache.set(cache_key, data, 600)
+
+    return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminOrSuperAdmin])
+def export_breakdowns_csv(request):
+    import csv
+    from django.http import HttpResponse
+
+    custom_from = _parse_iso_date(request.query_params.get('from'))
+    custom_to = _parse_iso_date(request.query_params.get('to'))
+    data = _compute_revenue_insights(
+        bool(getattr(request.user, 'is_superadmin', False)),
+        custom_from, custom_to,
+    )
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="revenue-breakdowns.csv"'
+    writer = csv.writer(response)
+
+    window = data['long_window']
+    writer.writerow([f"Window: {window['from']} to {window['to']}"])
+    writer.writerow([])
+
+    writer.writerow(['Revenue by Room'])
+    writer.writerow(['Room', 'Type', 'Bookings', 'Revenue'])
+    for row in data['revenue_by_room']:
+        writer.writerow([row['room__name'], row['room_type_label'], row['bookings'], row['revenue']])
+    writer.writerow([])
+
+    writer.writerow(['Revenue by Room Type'])
+    writer.writerow(['Room Type', 'Bookings', 'Revenue'])
+    for row in data['revenue_by_room_type']:
+        writer.writerow([row['room_type_label'], row['bookings'], row['revenue']])
+    writer.writerow([])
+
+    writer.writerow(['Revenue by Payment Type'])
+    writer.writerow(['Payment Type', 'Bookings', 'Revenue'])
+    for row in data['revenue_by_payment_type']:
+        writer.writerow([row['payment__payment_type'], row['bookings'], row['revenue']])
+    writer.writerow([])
+
+    writer.writerow(['Weekday vs Weekend'])
+    writer.writerow(['Bucket', 'Bookings', 'Revenue'])
+    writer.writerow(['Weekday', data['weekday_vs_weekend']['weekday']['bookings'], data['weekday_vs_weekend']['weekday']['revenue']])
+    writer.writerow(['Weekend', data['weekday_vs_weekend']['weekend']['bookings'], data['weekday_vs_weekend']['weekend']['revenue']])
+    writer.writerow([])
+
+    writer.writerow(['Hotel KPIs (short window: ' + data['short_window']['from'] + ' to ' + data['short_window']['to'] + ')'])
+    writer.writerow(['ADR', data['adr']])
+    writer.writerow(['RevPAR', data['revpar']])
+    writer.writerow(['Occupancy %', data['occupancy_pct']])
+    writer.writerow(['Occupied Room-Nights', data['occupied_room_nights']])
+    writer.writerow(['Available Room-Nights', data['total_available_slots']])
+    writer.writerow([])
+
+    writer.writerow(['Lead Time Buckets (days from booking to check-in)'])
+    writer.writerow(['Bucket', 'Bookings'])
+    for row in data['lead_time_buckets']:
+        writer.writerow([row['bucket'], row['count']])
+
+    return response
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminOrSuperAdmin])
+def export_vouchers_csv(request):
+    import csv
+    from django.http import HttpResponse
+
+    custom_from = _parse_iso_date(request.query_params.get('from'))
+    custom_to = _parse_iso_date(request.query_params.get('to'))
+    data = _compute_revenue_insights(
+        bool(getattr(request.user, 'is_superadmin', False)),
+        custom_from, custom_to,
+    )
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="voucher-roi.csv"'
+    writer = csv.writer(response)
+    window = data['long_window']
+    writer.writerow([f"Window: {window['from']} to {window['to']}"])
+    writer.writerow([])
+    writer.writerow(['Voucher Code', 'Uses', 'Total Discount Given', 'Revenue After Discount', 'ROI (revenue ÷ discount)'])
+    for row in data['voucher_roi']:
+        writer.writerow([
+            row['voucher__code'], row['uses'], row['total_discount'],
+            row['revenue_after'], row['roi'] if row['roi'] is not None else '',
+        ])
+    writer.writerow([])
+    writer.writerow(['Manual Discount Total (post-migration only)', data['manual_discount_total']])
+
+    return response
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminOrSuperAdmin])
+def export_cancellations_csv(request):
+    import csv
+    from django.http import HttpResponse
+
+    date_from = request.query_params.get('from')
+    date_to = request.query_params.get('to')
+
+    qs = Booking.objects.select_related('user', 'room', 'payment').filter(
+        status='cancelled'
+    ).order_by('-updated_at')
+    if date_from:
+        qs = qs.filter(created_at__date__gte=date_from)
+    if date_to:
+        qs = qs.filter(created_at__date__lte=date_to)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="cancellations.csv"'
+    writer = csv.writer(response)
+    writer.writerow(['Reference', 'Guest', 'Room', 'Check-in', 'Check-out',
+                     'Total Price', 'Created', 'Cancelled At', 'Payment Status'])
+    for b in qs:
+        guest_name = f'{b.user.first_name} {b.user.last_name}'.strip() or b.user.username
+        try:
+            payment_status = b.payment.status
+        except Payment.DoesNotExist:
+            payment_status = ''
+        writer.writerow([
+            b.reference_code, guest_name, b.room.name,
+            b.check_in, b.check_out, b.total_price,
+            b.created_at.strftime('%Y-%m-%d %H:%M'),
+            b.updated_at.strftime('%Y-%m-%d %H:%M'),
+            payment_status,
+        ])
+
+    return response
+
+
+@api_view(['GET'])
+@permission_classes([IsSuperAdmin])
+def export_top_guests_csv(request):
+    import csv
+    from django.http import HttpResponse
+
+    custom_from = _parse_iso_date(request.query_params.get('from'))
+    custom_to = _parse_iso_date(request.query_params.get('to'))
+    data = _compute_revenue_insights(True, custom_from, custom_to)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="top-guests.csv"'
+    writer = csv.writer(response)
+    window = data['long_window']
+    writer.writerow([f"Window: {window['from']} to {window['to']}"])
+    writer.writerow([])
+    writer.writerow(['Guest', 'Username', 'Bookings', 'Total Spent', 'Last Booking'])
+    for row in data.get('top_spenders', []):
+        writer.writerow([
+            row['guest_name'], row['user__username'],
+            row['bookings'], row['total_spent'], row['last_booking'] or '',
+        ])
     return response

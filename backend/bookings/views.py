@@ -272,6 +272,8 @@ def onsite_booking(request):
         special_requests=special_requests,
         is_backdated=is_backdate,
         excluded_from_sales=excluded_from_sales,
+        manual_discount=manual_discount,
+        manual_discount_type=manual_discount_type if manual_discount > 0 else '',
     )
 
     if voucher:

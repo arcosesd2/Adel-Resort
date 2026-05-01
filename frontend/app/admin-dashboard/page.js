@@ -16,6 +16,22 @@ const RevenueAnalyticsSection = dynamic(
   () => import('@/components/admin/RevenueAnalyticsSection'),
   { ssr: false }
 )
+const RevenueBreakdownsSection = dynamic(
+  () => import('@/components/admin/RevenueBreakdownsSection'),
+  { ssr: false }
+)
+const HotelKpiSection = dynamic(
+  () => import('@/components/admin/HotelKpiSection'),
+  { ssr: false }
+)
+const DiscountsSection = dynamic(
+  () => import('@/components/admin/DiscountsSection'),
+  { ssr: false }
+)
+const GuestInsightsSection = dynamic(
+  () => import('@/components/admin/GuestInsightsSection'),
+  { ssr: false }
+)
 
 const statCards = [
   { key: 'total_page_views', label: 'Total Page Views', icon: Eye, color: 'text-blue-600', bg: 'bg-blue-50', superadminOnly: true },
@@ -30,6 +46,10 @@ const statCards = [
 
 function AdminDashboardContent() {
   const [data, setData] = useState(null)
+  const [insights, setInsights] = useState(null)
+  const [insightsLoading, setInsightsLoading] = useState(false)
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
   const [loading, setLoading] = useState(true)
   // Use selectors so this component doesn't re-render on unrelated store updates
   // (InactivityGuard touches `lastActivity` on every mousemove/keydown/scroll/
@@ -139,6 +159,8 @@ function AdminDashboardContent() {
         setLoading(false)
       })
 
+    fetchInsights()
+
     fetchConversations()
     fetchRooms()
     fetchVouchers()
@@ -226,6 +248,22 @@ function AdminDashboardContent() {
       const { data } = await api.get('/vouchers/')
       setVouchers(data)
     } catch {}
+  }
+
+  const fetchInsights = async (from = dateFrom, to = dateTo) => {
+    setInsightsLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (from) params.set('from', from)
+      if (to) params.set('to', to)
+      const url = params.toString() ? `/analytics/revenue-insights/?${params}` : '/analytics/revenue-insights/'
+      const { data } = await api.get(url)
+      setInsights(data)
+    } catch {
+      setInsights(null)
+    } finally {
+      setInsightsLoading(false)
+    }
   }
 
   const handleCreateOnsiteBooking = async (e) => {
@@ -505,6 +543,64 @@ function AdminDashboardContent() {
             <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
             <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Revenue</span>
           </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/breakdowns/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'revenue-breakdowns.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group"
+          >
+            <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Breakdowns</span>
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/vouchers/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'voucher-roi.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group"
+          >
+            <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Vouchers</span>
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const res = await api.get('/analytics/export/cancellations/', { responseType: 'blob' })
+                const url = URL.createObjectURL(res.data)
+                const a = document.createElement('a'); a.href = url; a.download = 'cancellations.csv'; a.click()
+                URL.revokeObjectURL(url)
+              } catch { toast.error('Export failed') }
+            }}
+            className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group"
+          >
+            <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
+            <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Cancellations</span>
+          </button>
+          {user?.is_superadmin && (
+            <button
+              onClick={async () => {
+                try {
+                  const res = await api.get('/analytics/export/top-guests/', { responseType: 'blob' })
+                  const url = URL.createObjectURL(res.data)
+                  const a = document.createElement('a'); a.href = url; a.download = 'top-guests.csv'; a.click()
+                  URL.revokeObjectURL(url)
+                } catch { toast.error('Export failed') }
+              }}
+              className="flex flex-col items-center justify-center gap-1.5 p-4 rounded-xl border border-gray-200 bg-white hover:bg-ocean-50 hover:border-ocean-300 transition-all text-center group"
+            >
+              <FileDown size={20} className="text-gray-500 group-hover:text-ocean-600" />
+              <span className="text-sm font-medium text-gray-700 group-hover:text-ocean-700">Export Top Guests</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -527,8 +623,54 @@ function AdminDashboardContent() {
           ))}
       </div>
 
-      {/* Revenue Analytics — superadmin only */}
-      {user?.is_superadmin && <RevenueAnalyticsSection data={data} />}
+      {/* Date Range Filter — re-fetches /revenue-insights/ */}
+      <div className="card p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <span className="text-sm font-medium text-gray-700">Analytics Date Range:</span>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="input-field text-sm"
+            aria-label="From"
+          />
+          <span className="text-gray-400 text-sm">→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="input-field text-sm"
+            aria-label="To"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fetchInsights(dateFrom, dateTo)}
+            disabled={insightsLoading}
+            className="btn-primary text-sm px-3 py-1.5 disabled:opacity-50"
+          >
+            {insightsLoading ? 'Loading…' : 'Apply'}
+          </button>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(''); setDateTo(''); fetchInsights('', '') }}
+              className="btn-outline text-sm px-3 py-1.5"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+        {!dateFrom && !dateTo && (
+          <span className="text-xs text-gray-400 ml-auto">Defaults: 30-day KPIs · 12-month breakdowns</span>
+        )}
+      </div>
+
+      {/* Revenue Analytics — visible to all staff */}
+      <RevenueAnalyticsSection data={data} comparisons={insights?.comparisons} />
+      {insights && <RevenueBreakdownsSection insights={insights} />}
+      {insights && <HotelKpiSection insights={insights} />}
+      {insights && <DiscountsSection insights={insights} />}
+      {insights && <GuestInsightsSection insights={insights} isSuperadmin={!!user?.is_superadmin} />}
 
       {/* Onsite Booking */}
       <div ref={onsiteSectionRef} className="card overflow-hidden mb-10">

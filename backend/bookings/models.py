@@ -26,6 +26,8 @@ class Booking(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True)
     is_backdated = models.BooleanField(default=False)
     excluded_from_sales = models.BooleanField(default=False)
+    manual_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    manual_discount_type = models.CharField(max_length=10, blank=True)
 
     class Meta:
         ordering = ['-created_at']
