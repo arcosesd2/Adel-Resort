@@ -20,6 +20,7 @@ User = get_user_model()
 class BookingListCreateView(generics.ListCreateAPIView):
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
         return Booking.objects.filter(user=self.request.user).select_related('room')
@@ -320,9 +321,10 @@ def onsite_booking(request):
 class AdminBookingListView(generics.ListAPIView):
     serializer_class = AdminBookingSerializer
     permission_classes = [IsAdminOrSuperAdmin]
+    pagination_class = None
 
     def get_queryset(self):
-        qs = Booking.objects.select_related('user', 'room').all()
+        qs = Booking.objects.select_related('user', 'room').all().order_by('-created_at')
         status_filter = self.request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)

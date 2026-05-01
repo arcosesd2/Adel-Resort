@@ -28,6 +28,7 @@ from accounts.models import log_activity
 class NewsListView(ListAPIView):
     serializer_class = NewsSerializer
     permission_classes = [AllowAny]
+    pagination_class = None
 
     def get_queryset(self):
         return News.objects.filter(is_active=True)
@@ -36,6 +37,7 @@ class NewsListView(ListAPIView):
 class EventListView(ListAPIView):
     serializer_class = EventSerializer
     permission_classes = [AllowAny]
+    pagination_class = None
 
     def get_queryset(self):
         return Event.objects.filter(is_active=True)
@@ -56,6 +58,7 @@ class EventDetailView(RetrieveAPIView):
 class PromotionListView(ListAPIView):
     serializer_class = PromotionSerializer
     permission_classes = [AllowAny]
+    pagination_class = None
 
     def get_queryset(self):
         today = timezone.now().date()

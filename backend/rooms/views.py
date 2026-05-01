@@ -45,6 +45,7 @@ class RoomListView(generics.ListAPIView):
     serializer_class = RoomListSerializer
     permission_classes = [AllowAny]
     filterset_class = RoomFilter
+    pagination_class = None
 
     def get_queryset(self):
         qs = Room.objects.filter(is_active=True).prefetch_related('images')
