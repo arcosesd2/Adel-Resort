@@ -3,13 +3,16 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
-import { Eye, EyeOff, Monitor, ShieldCheck, AlertTriangle } from 'lucide-react'
+import { ShieldCheck, AlertTriangle, Loader2, ArrowUpRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import { getDeviceFingerprint, getDeviceInfo } from '@/lib/fingerprint'
 import api from '@/lib/api'
+import SplitLayout from '@/components/auth/SplitLayout'
+import Field from '@/components/forms/Field'
+
+const LOGIN_IMAGE = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&q=85'
 
 function LoginForm() {
   const router = useRouter()
@@ -19,9 +22,8 @@ function LoginForm() {
   const { login, isAuthenticated, isReady, user } = useAuthStore()
 
   const [form, setForm] = useState({ username: '', password: '' })
-  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [deviceAuth, setDeviceAuth] = useState(null) // null | 'authorize' | 'blocked'
+  const [deviceAuth, setDeviceAuth] = useState(null)
 
   useEffect(() => {
     if (!isReady) return
@@ -38,7 +40,7 @@ function LoginForm() {
     setLoading(true)
     try {
       const data = await login(form.username, form.password)
-      toast.success('Welcome back!')
+      toast.success('Welcome back.')
       const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
       router.replace(dest)
     } catch (err) {
@@ -68,7 +70,7 @@ function LoginForm() {
         device_info: deviceInfo,
       })
       setAuthTokens(data)
-      toast.success('Device authorized! Welcome back!')
+      toast.success('Device authorized.')
       const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
       router.replace(dest)
     } catch (err) {
@@ -88,97 +90,135 @@ function LoginForm() {
 
   if (deviceAuth === 'blocked') {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="glass-card p-8 text-center">
-          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="text-red-600" size={28} />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Device Not Authorized</h2>
-          <p className="text-gray-500 text-sm mb-4">
-            Your account is locked to another device. Contact your admin to approve this device or reset your device authorization.
-          </p>
-          <button onClick={() => setDeviceAuth(null)} className="btn-primary text-sm px-4 py-2">
-            Try Again
-          </button>
+      <div className="text-center">
+        <div className="w-14 h-14 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-full flex items-center justify-center mx-auto mb-5">
+          <AlertTriangle className="text-red-600 dark:text-red-400" size={26} strokeWidth={1.75} />
         </div>
-      </motion.div>
+        <h1 className="font-serif text-2xl text-navy-900 dark:text-ivory-100 mb-3 tracking-tight">Device not authorized</h1>
+        <p className="text-navy-500 dark:text-ivory-200 text-sm mb-6 leading-relaxed">
+          This account is locked to another device. Contact your admin to approve this device or reset device authorization.
+        </p>
+        <button
+          onClick={() => setDeviceAuth(null)}
+          className="inline-flex items-center justify-center gap-2 px-7 py-3 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors focus-ring text-sm"
+        >
+          Try again
+        </button>
+      </div>
     )
   }
 
   if (deviceAuth === 'authorize') {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-        <div className="glass-card p-8 text-center">
-          <div className="w-14 h-14 bg-ocean-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="text-ocean-600" size={28} />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Authorize This Device</h2>
-          <p className="text-gray-500 text-sm mb-6">
-            This is your first time logging in as staff. Would you like to authorize this device for future logins? Once authorized, you'll be locked to this device.
-          </p>
-          <div className="space-y-3">
-            <button onClick={handleAuthorizeDevice} disabled={loading}
-              className="btn-primary w-full py-3 flex items-center justify-center gap-2">
-              {loading ? 'Authorizing...' : <><ShieldCheck size={18} /> Authorize This Device</>}
-            </button>
-            <button onClick={() => setDeviceAuth(null)} className="text-gray-500 hover:text-gray-700 text-sm w-full block">
-              Cancel
-            </button>
-          </div>
+      <div className="text-center">
+        <div className="w-14 h-14 bg-brass-50 dark:bg-brass-800/40 border border-brass-200 dark:border-brass-700 rounded-full flex items-center justify-center mx-auto mb-5">
+          <ShieldCheck className="text-brass-600 dark:text-brass-300" size={26} strokeWidth={1.75} />
         </div>
-      </motion.div>
+        <h1 className="font-serif text-2xl text-navy-900 dark:text-ivory-100 mb-3 tracking-tight">Authorize this device</h1>
+        <p className="text-navy-500 dark:text-ivory-200 text-sm mb-6 leading-relaxed">
+          This is your first staff sign-in here. Authorize this device for future logins? Once authorized, your account is locked to it.
+        </p>
+        <div className="space-y-3">
+          <button
+            onClick={handleAuthorizeDevice}
+            disabled={loading}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors disabled:opacity-50 focus-ring text-sm"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16} /> : <ShieldCheck size={16} strokeWidth={1.75} />}
+            Authorize this device
+          </button>
+          <button
+            onClick={() => setDeviceAuth(null)}
+            className="text-navy-500 dark:text-navy-300 hover:text-navy-900 dark:hover:text-ivory-100 text-sm w-full transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md">
-      <div className="text-center mb-8">
-        <div className="flex flex-col items-center mb-2">
-          <Image src="/logo.png" alt="Adel Beach Resort" width={100} height={100} className="object-contain" />
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 font-serif">Welcome Back</h1>
-        <p className="text-gray-500 mt-2">Sign in to manage your bookings</p>
-      </div>
+    <>
+      <p className="eyebrow mb-3">Member access</p>
+      <h1 className="font-serif text-3xl md:text-4xl text-navy-900 dark:text-ivory-100 mb-2 tracking-tight">
+        Welcome back.
+      </h1>
+      <p className="text-navy-500 dark:text-ivory-200 text-sm mb-8">
+        Sign in to manage your bookings, favorites, and preferences.
+      </p>
 
-      <div className="glass-card p-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input type="text" name="username" value={form.username} onChange={handleChange} required placeholder="Enter your username" className="input-field" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} name="password" value={form.password} onChange={handleChange} required placeholder="••••••••" className="input-field pr-10" />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-          <button type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50">
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-        <div className="text-center mt-4">
-          <Link href="/auth/forgot-password" className="text-sm text-ocean-600 hover:text-ocean-700 font-medium">Forgot your password?</Link>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field
+          label="Username"
+          name="username"
+          value={form.username}
+          onChange={handleChange}
+          placeholder="Enter your username"
+          required
+          autoComplete="username"
+        />
+        <Field
+          label="Password"
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          placeholder="••••••••"
+          required
+          autoComplete="current-password"
+        />
+        <div className="text-right">
+          <Link
+            href="/auth/forgot-password"
+            className="text-xs font-medium text-brass-600 dark:text-brass-300 hover:underline focus-ring rounded"
+          >
+            Forgot your password?
+          </Link>
         </div>
-        <p className="text-center text-gray-500 text-sm mt-4">
-          Don't have an account?{' '}
-          <Link href={redirect !== '/dashboard' ? `/auth/register?redirect=${encodeURIComponent(redirect)}` : '/auth/register'} className="text-ocean-600 hover:underline font-medium">Register here</Link>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-ring text-sm tracking-wide"
+        >
+          {loading ? <Loader2 className="animate-spin" size={16} /> : null}
+          {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+
+      <div className="mt-10 pt-6 border-t border-ivory-300 dark:border-navy-700">
+        <p className="text-sm text-navy-500 dark:text-ivory-200">
+          New here?{' '}
+          <Link
+            href={redirect !== '/dashboard' ? `/auth/register?redirect=${encodeURIComponent(redirect)}` : '/auth/register'}
+            className="inline-flex items-center gap-1 font-semibold text-navy-900 dark:text-ivory-100 hover:text-brass-600 dark:hover:text-brass-300 transition-colors"
+          >
+            Create an account
+            <ArrowUpRight size={14} strokeWidth={2} />
+          </Link>
         </p>
       </div>
-    </motion.div>
+    </>
   )
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-ocean-50 via-white to-sand-50 px-4 relative overflow-hidden">
-      <div className="absolute top-20 left-[10%] w-64 h-64 bg-ocean-200/30 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-20 right-[10%] w-48 h-48 bg-sand-200/30 rounded-full blur-3xl pointer-events-none" />
-      <Suspense fallback={<div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean-600" />}>
+    <SplitLayout
+      imageSrc={LOGIN_IMAGE}
+      imageAlt="Adel Beach Resort coastline at sunset"
+      eyebrow="Member sign-in"
+      caption="Take the long way back to the shore."
+    >
+      <Suspense
+        fallback={
+          <div className="flex justify-center py-12">
+            <Loader2 className="animate-spin text-brass-500" size={28} />
+          </div>
+        }
+      >
         <LoginForm />
       </Suspense>
-    </div>
+    </SplitLayout>
   )
 }

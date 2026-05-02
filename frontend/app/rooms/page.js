@@ -14,6 +14,28 @@ function isWeekend(dateStr) {
   return d.getDay() === 0 || d.getDay() === 6
 }
 
+function SkeletonGrid() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="bg-white dark:bg-navy-900 border border-ivory-300 dark:border-navy-700 rounded-xl overflow-hidden"
+        >
+          <div className="h-64 skeleton rounded-none" />
+          <div className="p-6 space-y-3">
+            <div className="h-5 skeleton w-3/4" />
+            <div className="h-3 skeleton w-1/2" />
+            <div className="h-3 skeleton w-2/3" />
+            <div className="h-px skeleton my-3" />
+            <div className="h-8 skeleton w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function RoomsContent() {
   const searchParams = useSearchParams()
   const initialRoomType = searchParams.get('room_type') || ''
@@ -61,48 +83,38 @@ function RoomsContent() {
 
   const showWeekendNotice = weekendWalkinOnly && isWeekend(filters.date)
   const displayRooms = showWeekendNotice
-    ? rooms.filter(r => !r.is_weekend_walkin_restricted)
+    ? rooms.filter((r) => !r.is_weekend_walkin_restricted)
     : rooms
 
   return (
     <>
-      {/* Filters */}
       <RoomFilters onFilter={handleFilter} initialFilters={{ room_type: initialRoomType }} />
 
-      {/* Weekend walk-in notice */}
       {showWeekendNotice && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-6 flex items-start gap-3">
-          <AlertTriangle size={20} className="text-amber-500 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-amber-800">
-            All Trapal Tables and Cottages can only be booked via walk-in during the weekends.
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-5 py-4 mb-6 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.75} />
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            Trapal Tables and Cottages can only be booked via walk-in during weekends.
           </p>
         </div>
       )}
 
-      {/* Room Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="card animate-pulse">
-              <div className="h-56 bg-gray-200" />
-              <div className="p-5 space-y-3">
-                <div className="h-5 bg-gray-200 rounded w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-4 bg-gray-200 rounded" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <SkeletonGrid />
       ) : displayRooms.length === 0 ? (
-        <div className="text-center py-20">
-          <Hotel size={48} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-500 mb-2">No rooms found</h3>
-          <p className="text-gray-400">Try adjusting your filters</p>
+        <div className="text-center py-24">
+          <div className="w-16 h-16 mx-auto mb-5 rounded-full border border-ivory-300 dark:border-navy-700 flex items-center justify-center text-navy-300 dark:text-navy-300">
+            <Hotel size={26} strokeWidth={1.5} />
+          </div>
+          <h3 className="font-serif text-2xl text-navy-900 dark:text-ivory-100 mb-2 tracking-tight">No rooms match.</h3>
+          <p className="text-navy-500 dark:text-ivory-200 text-sm">Try adjusting the filters above.</p>
         </div>
       ) : (
         <>
-          <p className="text-gray-500 text-sm mb-4">{displayRooms.length} room{displayRooms.length !== 1 ? 's' : ''} available</p>
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <p className="eyebrow mb-5">
+            {displayRooms.length} {displayRooms.length === 1 ? 'room' : 'rooms'} available
+          </p>
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {displayRooms.map((room) => (
               <StaggerItem key={room.id}>
                 <RoomCard room={room} />
@@ -117,33 +129,19 @@ function RoomsContent() {
 
 export default function RoomsPage() {
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-gradient-to-b from-ocean-50 to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <FadeInUp className="text-center mb-10">
-          <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">Browse Our Rooms</p>
-          <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Rooms & Accommodations
+    <div className="min-h-screen pt-24 pb-20 bg-ivory-100 dark:bg-navy-950">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <FadeInUp className="max-w-3xl mb-12 md:mb-16">
+          <p className="eyebrow mb-3">Browse our rooms</p>
+          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-navy-900 dark:text-ivory-100 mb-4 leading-tight tracking-tight">
+            Rooms &amp; accommodations.
           </h1>
-          <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-            Choose from cottages, kubo rooms, fully furnished houses, air-conditioned rooms, and more.
+          <p className="text-navy-500 dark:text-ivory-200 text-base md:text-lg leading-relaxed max-w-2xl">
+            Cottages, kubo rooms, fully furnished houses, air-conditioned suites, and event spaces — right by the shore.
           </p>
         </FadeInUp>
 
-        <Suspense fallback={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="card animate-pulse">
-                <div className="h-56 bg-gray-200" />
-                <div className="p-5 space-y-3">
-                  <div className="h-5 bg-gray-200 rounded w-3/4" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2" />
-                  <div className="h-4 bg-gray-200 rounded" />
-                </div>
-              </div>
-            ))}
-          </div>
-        }>
+        <Suspense fallback={<SkeletonGrid />}>
           <RoomsContent />
         </Suspense>
       </div>

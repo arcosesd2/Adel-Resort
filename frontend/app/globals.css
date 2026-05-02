@@ -5,9 +5,27 @@
 @import 'react-datepicker/dist/react-datepicker.css';
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 240, 249, 255;
-  --background-end-rgb: 255, 255, 255;
+  --bg-page: 251 249 244;        /* ivory-100 */
+  --bg-surface: 255 255 255;
+  --bg-muted: 245 241 232;       /* ivory-200 */
+  --fg-primary: 10 22 40;        /* navy-900 */
+  --fg-secondary: 30 52 84;      /* navy-500 */
+  --fg-muted: 122 139 168;       /* navy-300 */
+  --accent: 176 141 87;          /* brass-500 */
+  --accent-soft: 241 230 204;    /* brass-100 */
+  --hairline: 235 228 210;       /* ivory-300 */
+}
+
+.dark {
+  --bg-page: 6 14 28;            /* navy-950 */
+  --bg-surface: 10 22 40;        /* navy-900 */
+  --bg-muted: 15 31 58;          /* navy-700 */
+  --fg-primary: 251 249 244;     /* ivory-100 */
+  --fg-secondary: 220 220 220;
+  --fg-muted: 122 139 168;       /* navy-300 */
+  --accent: 212 178 122;         /* brass-300 */
+  --accent-soft: 90 69 37;       /* brass-800 */
+  --hairline: 23 42 71;          /* navy-600 */
 }
 
 html {
@@ -15,7 +33,44 @@ html {
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
+  background-color: rgb(var(--bg-page));
+  color: rgb(var(--fg-primary));
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer base {
+  h1, h2, h3 {
+    @apply font-serif;
+    color: rgb(var(--fg-primary));
+  }
+  h1 {
+    @apply text-4xl md:text-6xl leading-[1.05] tracking-tight font-semibold;
+  }
+  h2 {
+    @apply text-3xl md:text-5xl leading-[1.1] tracking-tight font-semibold;
+  }
+  h3 {
+    @apply text-2xl md:text-3xl leading-[1.2] tracking-tight font-semibold;
+  }
+  h4 {
+    @apply text-lg md:text-xl font-sans font-semibold;
+    color: rgb(var(--fg-primary));
+  }
+  h5 {
+    @apply text-base font-sans font-semibold;
+    color: rgb(var(--fg-primary));
+  }
+  h6 {
+    @apply text-sm font-sans font-semibold;
+    color: rgb(var(--fg-primary));
+  }
+  p {
+    line-height: 1.65;
+  }
+  ::selection {
+    background: rgba(176, 141, 87, 0.25);
+    color: inherit;
+  }
 }
 
 .react-datepicker-wrapper {
@@ -59,58 +114,115 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply bg-ocean-600 hover:bg-ocean-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+    @apply bg-navy-900 hover:bg-navy-800 text-ivory-50 dark:bg-brass-500 dark:hover:bg-brass-400 dark:text-navy-900 font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-ring;
   }
   .btn-secondary {
-    @apply bg-sand-500 hover:bg-sand-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+    @apply bg-brass-500 hover:bg-brass-600 text-ivory-50 dark:bg-brass-400 dark:hover:bg-brass-300 dark:text-navy-900 font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-ring;
   }
   .btn-outline {
-    @apply border-2 border-ocean-600 text-ocean-600 hover:bg-ocean-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+    @apply border border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-ivory-50 dark:border-brass-300 dark:text-brass-300 dark:hover:bg-brass-300 dark:hover:text-navy-900 font-semibold py-3 px-6 rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-ring;
+  }
+  .btn-ghost {
+    @apply text-navy-900 hover:bg-ivory-200 dark:text-ivory-100 dark:hover:bg-navy-700 font-medium py-2 px-4 rounded-lg transition-colors focus-ring;
   }
   .card {
-    @apply bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply bg-white dark:bg-navy-800 border border-ivory-300 dark:border-navy-700 rounded-2xl shadow-editorial overflow-hidden transition-all duration-300 hover:shadow-editorial-lg hover:-translate-y-0.5;
+  }
+  .card-flat {
+    @apply bg-white dark:bg-navy-800 border border-ivory-300 dark:border-navy-700 rounded-2xl;
   }
   .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 rounded-2xl shadow-glass;
+    @apply bg-white/70 dark:bg-navy-900/70 backdrop-blur-md border border-white/40 dark:border-navy-700/60 rounded-2xl shadow-glass;
   }
   .glass-card-dark {
-    @apply bg-ocean-900/60 backdrop-blur-md border border-white/10 rounded-2xl;
+    @apply bg-navy-900/70 backdrop-blur-md border border-white/10 rounded-2xl;
   }
+  .input,
   .input-field {
-    @apply w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent;
+    @apply w-full border border-ivory-300 dark:border-navy-700 bg-white dark:bg-navy-800 rounded-lg px-4 py-2.5 text-sm text-navy-900 dark:text-ivory-100 placeholder:text-navy-300 dark:placeholder:text-navy-300 focus:outline-none focus:ring-2 focus:ring-brass-300 focus:border-brass-500 transition-all duration-200;
   }
-  .input {
-    @apply w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-ocean-400 focus:border-ocean-400 focus:bg-white transition-all duration-200;
+  .input-error {
+    @apply border-red-500 focus:ring-red-200 focus:border-red-500 dark:focus:ring-red-900;
+  }
+  .input-success {
+    @apply border-emerald-500 focus:ring-emerald-200 focus:border-emerald-500 dark:focus:ring-emerald-900;
   }
   .label {
-    @apply block text-sm font-medium text-gray-600 mb-1.5;
+    @apply block text-sm font-medium text-navy-500 dark:text-ivory-300 mb-1.5;
   }
-  select.input {
-    @apply appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%236b7280%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_12px_center] bg-white pr-10 cursor-pointer hover:border-gray-300;
-  }
-  select.input:focus {
-    @apply bg-white;
-  }
-  select.input option {
-    @apply bg-white text-gray-900;
+  select.input,
+  select.input-field {
+    @apply appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%237a8ba8%22%20d%3D%22M6%208L1%203h10z%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_12px_center] pr-10 cursor-pointer;
   }
 }
 
 @layer utilities {
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-ocean-400 to-sand-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-navy-900 via-brass-600 to-brass-500 dark:from-ivory-100 dark:via-brass-300 dark:to-brass-400;
   }
   .text-shadow-hero {
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
   }
   .skeleton {
-    @apply bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer rounded-lg;
+    @apply bg-gradient-to-r from-ivory-200 via-ivory-100 to-ivory-200 dark:from-navy-700 dark:via-navy-800 dark:to-navy-700 bg-[length:200%_100%] animate-shimmer rounded-lg;
+  }
+  .eyebrow {
+    @apply inline-block text-xs font-semibold uppercase tracking-eyebrow text-brass-600 dark:text-brass-300;
+  }
+  .eyebrow-muted {
+    @apply inline-block text-xs font-semibold uppercase tracking-eyebrow text-navy-300 dark:text-navy-300;
+  }
+  .hairline {
+    @apply border-t border-ivory-300 dark:border-navy-700;
+  }
+  .hairline-brass {
+    @apply border-t border-brass-300 dark:border-brass-700;
+  }
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brass-400 focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-100 dark:focus-visible:ring-offset-navy-900;
+  }
+  .surface {
+    background-color: rgb(var(--bg-surface));
+    color: rgb(var(--fg-primary));
+  }
+  .surface-muted {
+    background-color: rgb(var(--bg-muted));
+    color: rgb(var(--fg-primary));
+  }
+  .text-fg-primary {
+    color: rgb(var(--fg-primary));
+  }
+  .text-fg-secondary {
+    color: rgb(var(--fg-secondary));
+  }
+  .text-fg-muted {
+    color: rgb(var(--fg-muted));
+  }
+  .text-accent {
+    color: rgb(var(--accent));
+  }
+  .bg-accent-soft {
+    background-color: rgb(var(--accent-soft));
+  }
+  .border-hairline {
+    border-color: rgb(var(--hairline));
   }
 }
 
 @keyframes shrink {
   from { width: 100%; }
   to { width: 0%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Print styles */

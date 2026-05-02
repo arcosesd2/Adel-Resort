@@ -2,11 +2,15 @@
 
 import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Eye, EyeOff, Loader2, CheckCircle, KeyRound } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Loader2, CheckCircle2, KeyRound } from 'lucide-react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
+import SplitLayout from '@/components/auth/SplitLayout'
+import Field from '@/components/forms/Field'
+import PasswordStrength from '@/components/forms/PasswordStrength'
+
+const RESET_IMAGE = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600&q=85'
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -15,21 +19,25 @@ function ResetPasswordForm() {
   const token = searchParams.get('token')
 
   const [form, setForm] = useState({ new_password: '', new_password2: '' })
-  const [showPw, setShowPw] = useState({ new: false, confirm: false })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
   if (!uid || !token) {
     return (
-      <div className="glass-card p-8 text-center max-w-md mx-auto">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Invalid Reset Link</h2>
-        <p className="text-gray-500 mb-4">This password reset link is invalid or has expired.</p>
-        <Link href="/auth/forgot-password" className="btn-primary py-2.5 px-6 text-sm inline-block">
-          Request New Link
+      <div className="text-center">
+        <h1 className="font-serif text-2xl text-navy-900 dark:text-ivory-100 mb-3 tracking-tight">Invalid reset link</h1>
+        <p className="text-navy-500 dark:text-ivory-200 text-sm mb-6">This password reset link is invalid or has expired.</p>
+        <Link
+          href="/auth/forgot-password"
+          className="inline-flex items-center justify-center px-6 py-3 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors text-sm focus-ring"
+        >
+          Request new link
         </Link>
       </div>
     )
   }
+
+  const passwordsMismatch = form.new_password2.length > 0 && form.new_password !== form.new_password2
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -44,113 +52,105 @@ function ResetPasswordForm() {
       setTimeout(() => router.push('/auth/login'), 3000)
     } catch (err) {
       const errors = err.response?.data
-      if (errors?.detail) {
-        toast.error(errors.detail)
-      } else if (errors?.new_password) {
-        toast.error(errors.new_password[0])
-      } else {
-        toast.error('Failed to reset password')
-      }
+      if (errors?.detail) toast.error(errors.detail)
+      else if (errors?.new_password) toast.error(errors.new_password[0])
+      else toast.error('Failed to reset password')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-md"
-    >
-      <div className="glass-card p-8">
-        {!success ? (
-          <>
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 bg-ocean-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <KeyRound className="text-ocean-600" size={24} />
-              </div>
-              <h1 className="text-2xl font-serif font-bold text-ocean-800">Set New Password</h1>
-              <p className="text-gray-500 text-sm mt-1">Choose a strong password (min. 10 characters).</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                <div className="relative">
-                  <input
-                    type={showPw.new ? 'text' : 'password'}
-                    value={form.new_password}
-                    onChange={(e) => setForm({ ...form, new_password: e.target.value })}
-                    className="input-field pr-10"
-                    placeholder="Min. 10 characters"
-                    required
-                    minLength={10}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw({ ...showPw, new: !showPw.new })}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPw.new ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                <div className="relative">
-                  <input
-                    type={showPw.confirm ? 'text' : 'password'}
-                    value={form.new_password2}
-                    onChange={(e) => setForm({ ...form, new_password2: e.target.value })}
-                    className="input-field pr-10"
-                    placeholder="Confirm new password"
-                    required
-                    minLength={10}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw({ ...showPw, confirm: !showPw.confirm })}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPw.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary w-full py-3 flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-                Reset Password
-              </button>
-            </form>
-          </>
-        ) : (
-          <div className="text-center py-4">
-            <CheckCircle className="text-emerald-500 mx-auto mb-3" size={48} />
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Password Reset!</h2>
-            <p className="text-gray-500 text-sm mb-4">
-              Your password has been reset. Redirecting to login...
-            </p>
-            <Link href="/auth/login" className="text-ocean-600 hover:text-ocean-700 text-sm font-medium">
-              Go to Login
-            </Link>
-          </div>
-        )}
+  if (success) {
+    return (
+      <div className="text-center">
+        <div className="w-14 h-14 bg-brass-50 dark:bg-brass-800/40 border border-brass-200 dark:border-brass-700 rounded-full flex items-center justify-center mx-auto mb-5">
+          <CheckCircle2 className="text-brass-600 dark:text-brass-300" size={28} strokeWidth={1.75} />
+        </div>
+        <h1 className="font-serif text-2xl text-navy-900 dark:text-ivory-100 mb-3 tracking-tight">Password reset.</h1>
+        <p className="text-navy-500 dark:text-ivory-200 text-sm mb-6 leading-relaxed">
+          Your password has been reset. We're sending you back to sign in…
+        </p>
+        <Link
+          href="/auth/login"
+          className="text-brass-600 dark:text-brass-300 text-sm font-semibold hover:underline focus-ring rounded"
+        >
+          Go to sign in
+        </Link>
       </div>
-    </motion.div>
+    )
+  }
+
+  return (
+    <>
+      <div className="w-12 h-12 bg-brass-50 dark:bg-brass-800/40 border border-brass-200 dark:border-brass-700 rounded-full flex items-center justify-center mb-5">
+        <KeyRound className="text-brass-600 dark:text-brass-300" size={20} strokeWidth={1.75} />
+      </div>
+      <p className="eyebrow mb-3">New password</p>
+      <h1 className="font-serif text-3xl md:text-4xl text-navy-900 dark:text-ivory-100 mb-2 tracking-tight">
+        Set a new password.
+      </h1>
+      <p className="text-navy-500 dark:text-ivory-200 text-sm mb-8">
+        At least 10 characters. A mix of letters, numbers, and symbols is best.
+      </p>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Field
+            label="New password"
+            name="new_password"
+            type="password"
+            value={form.new_password}
+            onChange={(e) => setForm({ ...form, new_password: e.target.value })}
+            placeholder="Min. 10 characters"
+            required
+            minLength={10}
+            autoComplete="new-password"
+          />
+          <PasswordStrength password={form.new_password} />
+        </div>
+        <Field
+          label="Confirm password"
+          name="new_password2"
+          type="password"
+          value={form.new_password2}
+          onChange={(e) => setForm({ ...form, new_password2: e.target.value })}
+          placeholder="Repeat new password"
+          required
+          minLength={10}
+          autoComplete="new-password"
+          error={passwordsMismatch ? 'Passwords do not match' : undefined}
+          success={!passwordsMismatch && form.new_password2.length > 0 && form.new_password === form.new_password2 ? true : undefined}
+        />
+        <button
+          type="submit"
+          disabled={loading || passwordsMismatch}
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-ring text-sm tracking-wide"
+        >
+          {loading ? <Loader2 className="animate-spin" size={16} /> : null}
+          Reset password
+        </button>
+      </form>
+    </>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-ocean-50 to-white flex items-center justify-center px-4 pt-20 pb-12">
-      <Suspense fallback={
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean-600" />
-      }>
+    <SplitLayout
+      imageSrc={RESET_IMAGE}
+      imageAlt="Quiet shoreline"
+      eyebrow="Reset password"
+      caption="A new key, and you're back."
+    >
+      <Suspense
+        fallback={
+          <div className="flex justify-center py-12">
+            <Loader2 className="animate-spin text-brass-500" size={28} />
+          </div>
+        }
+      >
         <ResetPasswordForm />
       </Suspense>
-    </div>
+    </SplitLayout>
   )
 }
