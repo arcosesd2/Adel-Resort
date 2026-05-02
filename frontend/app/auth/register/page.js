@@ -3,14 +3,11 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2, ArrowUpRight } from 'lucide-react'
+import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
+import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
-import SplitLayout from '@/components/auth/SplitLayout'
-import Field from '@/components/forms/Field'
-import PasswordStrength from '@/components/forms/PasswordStrength'
-
-const REGISTER_IMAGE = 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1600&q=85'
 
 function RegisterForm() {
   const router = useRouter()
@@ -28,11 +25,10 @@ function RegisterForm() {
     password: '',
     password2: '',
   })
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
-
-  const passwordsMismatch = form.password2.length > 0 && form.password !== form.password2
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -42,15 +38,15 @@ function RegisterForm() {
     }
     setLoading(true)
     try {
-      await register(form)
-      toast.success('Account created. Welcome.')
+      const data = await register(form)
+      toast.success('Account created! Welcome to Adel Beach Resort.')
       router.replace(redirect)
       router.refresh()
     } catch (err) {
       const data = err.response?.data
       if (data && typeof data === 'object') {
         const messages = Object.values(data).flat()
-        messages.forEach((msg) => toast.error(Array.isArray(msg) ? msg[0] : msg))
+        messages.forEach(msg => toast.error(Array.isArray(msg) ? msg[0] : msg))
       } else {
         toast.error(err.message || 'Registration failed')
       }
@@ -60,141 +56,157 @@ function RegisterForm() {
   }
 
   return (
-    <>
-      <p className="eyebrow mb-3">New guest</p>
-      <h1 className="font-serif text-3xl md:text-4xl text-navy-900 dark:text-ivory-100 mb-2 tracking-tight">
-        Create your account.
-      </h1>
-      <p className="text-navy-500 dark:text-ivory-200 text-sm mb-8">
-        It takes a minute. Then bookings, favorites, and updates live in one place.
-      </p>
+    <div className="min-h-screen pt-20 flex items-center justify-center bg-gradient-to-br from-ocean-50 via-white to-sand-50 px-4 py-10 relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-20 left-[10%] w-64 h-64 bg-ocean-200/30 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-20 right-[10%] w-48 h-48 bg-sand-200/30 rounded-full blur-3xl pointer-events-none" />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <Field
-            label="First name"
-            name="first_name"
-            value={form.first_name}
-            onChange={handleChange}
-            placeholder="Juan"
-            required
-            autoComplete="given-name"
-          />
-          <Field
-            label="Last name"
-            name="last_name"
-            value={form.last_name}
-            onChange={handleChange}
-            placeholder="Dela Cruz"
-            required
-            autoComplete="family-name"
-          />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="text-center mb-8">
+          <div className="flex flex-col items-center mb-2">
+            <Image src="/logo.png" alt="Adel Beach Resort" width={100} height={100} className="object-contain" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 font-serif">Create Account</h1>
+          <p className="text-gray-500 mt-2">Join us and start planning your dream escape</p>
         </div>
 
-        <Field
-          label="Username"
-          name="username"
-          value={form.username}
-          onChange={handleChange}
-          placeholder="Choose a username"
-          required
-          autoComplete="username"
-        />
+        <div className="glass-card p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input
+                  type="text"
+                  name="first_name"
+                  value={form.first_name}
+                  onChange={handleChange}
+                  required
+                  placeholder="John"
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={form.last_name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Doe"
+                  className="input-field"
+                />
+              </div>
+            </div>
 
-        <Field
-          label="Email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="you@email.com"
-          required
-          autoComplete="email"
-        />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input
+                type="text"
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                required
+                placeholder="Choose a username"
+                className="input-field"
+              />
+            </div>
 
-        <Field
-          label="Phone"
-          name="phone"
-          type="tel"
-          value={form.phone}
-          onChange={handleChange}
-          placeholder="09XX XXX XXXX"
-          autoComplete="tel"
-          hint="Optional — we'll use this for booking reminders only."
-        />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email (required)</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="your@email.com"
+                required
+                className="input-field"
+              />
+            </div>
 
-        <div>
-          <Field
-            label="Password"
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="At least 10 characters"
-            required
-            minLength={10}
-            autoComplete="new-password"
-          />
-          <PasswordStrength password={form.password} />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="09XX XXX XXXX"
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  minLength={10}
+                  placeholder="At least 10 characters"
+                  className="input-field pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <input
+                type="password"
+                name="password2"
+                value={form.password2}
+                onChange={handleChange}
+                required
+                placeholder="Repeat password"
+                className="input-field"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full disabled:opacity-50"
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <p className="text-center text-gray-500 text-sm mt-6">
+            Already have an account?{' '}
+            <Link href={redirect !== '/dashboard' ? `/auth/login?redirect=${encodeURIComponent(redirect)}` : '/auth/login'} className="text-ocean-600 hover:underline font-medium">
+              Sign in here
+            </Link>
+          </p>
         </div>
-
-        <Field
-          label="Confirm password"
-          name="password2"
-          type="password"
-          value={form.password2}
-          onChange={handleChange}
-          placeholder="Repeat password"
-          required
-          autoComplete="new-password"
-          error={passwordsMismatch ? 'Passwords do not match' : undefined}
-          success={!passwordsMismatch && form.password2.length > 0 && form.password === form.password2 ? true : undefined}
-        />
-
-        <button
-          type="submit"
-          disabled={loading || passwordsMismatch}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus-ring text-sm tracking-wide"
-        >
-          {loading ? <Loader2 className="animate-spin" size={16} /> : null}
-          {loading ? 'Creating account…' : 'Create account'}
-        </button>
-      </form>
-
-      <div className="mt-10 pt-6 border-t border-ivory-300 dark:border-navy-700">
-        <p className="text-sm text-navy-500 dark:text-ivory-200">
-          Already have one?{' '}
-          <Link
-            href={redirect !== '/dashboard' ? `/auth/login?redirect=${encodeURIComponent(redirect)}` : '/auth/login'}
-            className="inline-flex items-center gap-1 font-semibold text-navy-900 dark:text-ivory-100 hover:text-brass-600 dark:hover:text-brass-300 transition-colors"
-          >
-            Sign in instead
-            <ArrowUpRight size={14} strokeWidth={2} />
-          </Link>
-        </p>
-      </div>
-    </>
+      </motion.div>
+    </div>
   )
 }
 
 export default function RegisterPage() {
   return (
-    <SplitLayout
-      imageSrc={REGISTER_IMAGE}
-      imageAlt="Cottages by the shore"
-      eyebrow="New guest"
-      caption="A little setup. Then a long stay."
-      reverse
-    >
-      <Suspense
-        fallback={
-          <div className="flex justify-center py-12">
-            <Loader2 className="animate-spin text-brass-500" size={28} />
-          </div>
-        }
-      >
-        <RegisterForm />
-      </Suspense>
-    </SplitLayout>
+    <Suspense fallback={
+      <div className="min-h-screen pt-20 flex items-center justify-center bg-ocean-50 px-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean-600" />
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   )
 }

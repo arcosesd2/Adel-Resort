@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users, MessageSquare, AlertTriangle, Clock, Loader2 } from 'lucide-react'
+import { Users, MessageSquare, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SlotPicker from './SlotPicker'
 import useAuthStore from '@/store/authStore'
@@ -17,6 +17,10 @@ function getDraft(roomId) {
 
 function saveDraft(roomId, data) {
   try { sessionStorage.setItem(`booking_draft_${roomId}`, JSON.stringify(data)) } catch {}
+}
+
+function clearDraft(roomId) {
+  try { sessionStorage.removeItem(`booking_draft_${roomId}`) } catch {}
 }
 
 export default function BookingForm({ room }) {
@@ -58,14 +62,12 @@ export default function BookingForm({ room }) {
   const dayPrice = parseFloat(room.day_price)
   const nightPrice = parseFloat(room.night_price || room.day_price)
 
-  const overnightCount = slots.filter((s) => s.slot === 'overnight' || s.slot === '24hr').length
-  const dayCount = slots.filter((s) => s.slot === 'day').length
-  const nightCount = slots.filter((s) => s.slot === 'night').length
+  const overnightCount = slots.filter(s => s.slot === 'overnight' || s.slot === '24hr').length
+  const dayCount = slots.filter(s => s.slot === 'day').length
+  const nightCount = slots.filter(s => s.slot === 'night').length
   const totalPrice = isOvernight
     ? overnightCount * dayPrice
     : dayCount * dayPrice + nightCount * nightPrice
-
-  const priceLabel = is24hr ? 'per 24 hours' : isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -81,7 +83,7 @@ export default function BookingForm({ room }) {
         checkIn: rangeRef.current.checkIn,
         checkOut: rangeRef.current.checkOut,
       })
-      toast.error('Please sign in to book')
+      toast.error('Please login to book')
       router.push(`/auth/login?redirect=/rooms/${room.id}`)
       return
     }
@@ -106,7 +108,7 @@ export default function BookingForm({ room }) {
         slots,
         special_requests: specialRequests,
       })
-      toast.success('Booking submitted. Reserved once admin approves.')
+      toast.success('Booking submitted! Your room will be reserved once the admin approves it.')
       router.push(`/checkout?booking=${data.id}`)
     } catch (err) {
       const msg = err.response?.data?.non_field_errors?.[0]
@@ -119,164 +121,141 @@ export default function BookingForm({ room }) {
     }
   }
 
-  const submitLabel = loading
-    ? 'Creating booking…'
-    : !isAuthenticated
-    ? 'Sign in to reserve'
-    : user?.is_staff
-    ? 'Create on-site booking'
-    : 'Reserve now'
-
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white dark:bg-navy-900 border border-ivory-300 dark:border-navy-700 rounded-2xl shadow-editorial overflow-hidden"
-    >
-      {/* Header strip */}
-      <div className="px-6 py-5 border-b border-ivory-300 dark:border-navy-700">
-        <p className="eyebrow mb-2">Reserve your stay</p>
-        <div className="flex items-end justify-between gap-4">
-          <h3 className="font-serif text-2xl text-navy-900 dark:text-ivory-100 leading-tight tracking-tight">
-            Choose your dates.
-          </h3>
-          <div className="text-right">
-            <p className="font-serif text-2xl text-navy-900 dark:text-ivory-100 leading-none">
-              ₱{Number(room.day_price).toLocaleString()}
-            </p>
-            <p className="text-[11px] text-navy-300 dark:text-navy-300 mt-1 uppercase tracking-wider">{priceLabel}</p>
+    <form onSubmit={handleSubmit} className="card p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-serif font-semibold">Reserve Your Stay</h3>
+        <div className="text-right">
+          <span className="text-2xl font-bold text-ocean-700">₱{room.day_price}</span>
+          {!isOvernight && !room.is_day_only && room.night_price && (
+            <span className="text-gray-400 text-sm"> / ₱{room.night_price}</span>
+          )}
+          <div className="text-gray-400 text-xs">
+            {is24hr ? 'per 24 hours' : isOvernight ? 'per night' : room.is_day_only ? 'day tour' : 'per slot'}
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-5">
-        {/* Schedule reminders */}
-        {isOvernight && !is24hr && (
-          <div className="text-xs text-navy-500 dark:text-ivory-200 flex items-center gap-2 bg-ivory-100 dark:bg-navy-800 border border-ivory-300 dark:border-navy-700 rounded px-3 py-2">
-            <Clock size={13} strokeWidth={1.75} className="text-brass-600 dark:text-brass-300" />
-            Check-in <strong className="text-navy-900 dark:text-ivory-100 mx-1">2:00 PM</strong> · check-out <strong className="text-navy-900 dark:text-ivory-100 mx-1">12:00 NN</strong>
-          </div>
-        )}
-        {is24hr && (
-          <div className="text-xs text-navy-500 dark:text-ivory-200 flex items-center gap-2 bg-ivory-100 dark:bg-navy-800 border border-ivory-300 dark:border-navy-700 rounded px-3 py-2">
-            <Clock size={13} strokeWidth={1.75} className="text-brass-600 dark:text-brass-300" />
-            Check-in &amp; check-out at the <strong className="text-navy-900 dark:text-ivory-100 mx-1">same time next day</strong> (24-hour stay)
-          </div>
-        )}
+      {isOvernight && !is24hr && (
+        <div className="bg-ocean-50 rounded-lg px-3 py-2 text-xs text-ocean-700">
+          Check-in: <strong>2:00 PM</strong> &middot; Check-out: <strong>12:00 NN</strong>
+        </div>
+      )}
+      {is24hr && (
+        <div className="bg-ocean-50 rounded-lg px-3 py-2 text-xs text-ocean-700">
+          Check-in &amp; check-out at <strong>same time</strong> the next day (24-hour stay)
+        </div>
+      )}
 
-        {weekendWalkinOnly && room.is_weekend_walkin_restricted && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 flex items-start gap-2">
-            <AlertTriangle size={15} className="text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.75} />
-            <p className="text-xs text-amber-800 dark:text-amber-200">
-              Cottages can only be booked via walk-in during the weekends.
-            </p>
-          </div>
-        )}
+      {/* Weekend walk-in notice */}
+      {weekendWalkinOnly && room.is_weekend_walkin_restricted && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-2">
+          <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-amber-800">
+            Cottages can only be booked via walk-in during the weekends.
+          </p>
+        </div>
+      )}
 
-        <SlotPicker
-          roomId={room.id}
-          isDayOnly={room.is_day_only}
-          bookingMode={room.booking_mode}
-          onSlotsChange={setSlots}
-          onRangeChange={handleRangeChange}
-          defaultCheckIn={savedCheckIn}
-          defaultCheckOut={savedCheckOut}
-          weekendDisabled={weekendWalkinOnly && room.is_weekend_walkin_restricted}
+      {/* Slot Picker */}
+      <SlotPicker
+        roomId={room.id}
+        isDayOnly={room.is_day_only}
+        bookingMode={room.booking_mode}
+        onSlotsChange={setSlots}
+        onRangeChange={handleRangeChange}
+        defaultCheckIn={savedCheckIn}
+        defaultCheckOut={savedCheckOut}
+        weekendDisabled={weekendWalkinOnly && room.is_weekend_walkin_restricted}
+      />
+
+      {/* Persons */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Users size={15} className="inline mr-1" />
+          Persons
+        </label>
+        <input
+          type="number"
+          min="1"
+          max={room.capacity}
+          value={guests}
+          onChange={(e) => setGuests(parseInt(e.target.value))}
+          className="input-field"
         />
-
-        <div>
-          <label className="label flex items-center gap-1.5">
-            <Users size={13} strokeWidth={1.75} />
-            Persons
-          </label>
-          <input
-            type="number"
-            min="1"
-            max={room.capacity}
-            value={guests}
-            onChange={(e) => setGuests(parseInt(e.target.value))}
-            className="input"
-          />
-          <p className="text-[11px] text-navy-300 dark:text-navy-300 mt-1.5">Max {room.capacity} persons</p>
-        </div>
-
-        <div>
-          <label className="label flex items-center gap-1.5">
-            <MessageSquare size={13} strokeWidth={1.75} />
-            Special requests <span className="text-navy-300 dark:text-navy-300 font-normal ml-1">(optional)</span>
-          </label>
-          <textarea
-            value={specialRequests}
-            onChange={(e) => setSpecialRequests(e.target.value)}
-            rows={3}
-            placeholder="Anything we should know in advance…"
-            className="input resize-none"
-          />
-        </div>
-
-        {slots.length > 0 && (
-          <div className="border border-ivory-300 dark:border-navy-700 rounded-xl p-5 bg-ivory-50 dark:bg-navy-800/40 space-y-2.5">
-            <p className="eyebrow mb-1">Summary</p>
-            {isOvernight && overnightCount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-navy-500 dark:text-ivory-200">
-                  {is24hr
-                    ? `${overnightCount} day${overnightCount !== 1 ? 's' : ''} (24hr)`
-                    : `${overnightCount} night${overnightCount !== 1 ? 's' : ''}`} × ₱{dayPrice.toFixed(2)}
-                </span>
-                <span className="font-medium text-navy-900 dark:text-ivory-100">₱{(overnightCount * dayPrice).toFixed(2)}</span>
-              </div>
-            )}
-            {!isOvernight && dayCount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-navy-500 dark:text-ivory-200">
-                  {dayCount} day slot{dayCount !== 1 ? 's' : ''} × ₱{dayPrice.toFixed(2)}
-                </span>
-                <span className="font-medium text-navy-900 dark:text-ivory-100">₱{(dayCount * dayPrice).toFixed(2)}</span>
-              </div>
-            )}
-            {!isOvernight && nightCount > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-navy-500 dark:text-ivory-200">
-                  {nightCount} night slot{nightCount !== 1 ? 's' : ''} × ₱{nightPrice.toFixed(2)}
-                </span>
-                <span className="font-medium text-navy-900 dark:text-ivory-100">₱{(nightCount * nightPrice).toFixed(2)}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-baseline pt-3 mt-1 border-t border-ivory-300 dark:border-navy-700">
-              <span className="text-sm font-semibold text-navy-700 dark:text-ivory-200">Total</span>
-              <span className="font-serif text-2xl text-navy-900 dark:text-ivory-100">
-                ₱{totalPrice.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {isAuthenticated && !user?.is_staff && slots.length > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
-            <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" strokeWidth={1.75} />
-            <span>
-              You'll have <strong>1 hour</strong> to complete payment. Unpaid reservations are automatically cancelled.
-            </span>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || slots.length === 0}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-navy-900 dark:bg-brass-500 text-ivory-50 dark:text-navy-900 font-semibold rounded-lg hover:bg-brass-500 hover:text-navy-900 dark:hover:bg-brass-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-ring text-sm tracking-wide"
-        >
-          {loading ? <Loader2 className="animate-spin" size={16} /> : null}
-          {submitLabel}
-        </button>
-
-        <p className="text-[11px] text-navy-300 dark:text-navy-300 text-center">
-          By booking, you agree to our{' '}
-          <a href="/refund-policy" target="_blank" className="text-brass-600 dark:text-brass-300 underline focus-ring rounded">
-            Refund &amp; Cancellation Policy
-          </a>
-          .
-        </p>
+        <p className="text-xs text-gray-400 mt-1">Max {room.capacity} persons</p>
       </div>
+
+      {/* Special Requests */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          <MessageSquare size={15} className="inline mr-1" />
+          Special Requests (optional)
+        </label>
+        <textarea
+          value={specialRequests}
+          onChange={(e) => setSpecialRequests(e.target.value)}
+          rows={3}
+          placeholder="Any special requests or needs..."
+          className="input-field"
+        />
+      </div>
+
+      {/* Price summary */}
+      {slots.length > 0 && (
+        <div className="bg-ocean-50 rounded-xl p-4 space-y-2 text-sm">
+          {isOvernight && overnightCount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {is24hr
+                  ? `${overnightCount} day${overnightCount !== 1 ? 's' : ''} (24hr) x ₱${dayPrice.toFixed(2)}`
+                  : `${overnightCount} night${overnightCount !== 1 ? 's' : ''} x ₱${dayPrice.toFixed(2)}`}
+              </span>
+              <span className="font-medium">₱{(overnightCount * dayPrice).toFixed(2)}</span>
+            </div>
+          )}
+          {!isOvernight && dayCount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {dayCount} day slot{dayCount !== 1 ? 's' : ''} x ₱{dayPrice.toFixed(2)}
+              </span>
+              <span className="font-medium">₱{(dayCount * dayPrice).toFixed(2)}</span>
+            </div>
+          )}
+          {!isOvernight && nightCount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                {nightCount} night slot{nightCount !== 1 ? 's' : ''} x ₱{nightPrice.toFixed(2)}
+              </span>
+              <span className="font-medium">₱{(nightCount * nightPrice).toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-bold text-base border-t border-ocean-200 pt-2">
+            <span>Total</span>
+            <span className="text-ocean-700">₱{totalPrice.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
+
+      <p className="text-xs text-gray-500 text-center">
+        By booking, you agree to our{' '}
+        <a href="/refund-policy" target="_blank" className="text-ocean-600 underline">Refund & Cancellation Policy</a>.
+      </p>
+
+      {isAuthenticated && !user?.is_staff && slots.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 flex items-start gap-2">
+          <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+          <span>You&apos;ll have <strong>1 hour</strong> to complete payment after booking. Unpaid reservations are automatically cancelled.</span>
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading || slots.length === 0}
+        className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Creating Booking...' : !isAuthenticated ? 'Login to Book' : user?.is_staff ? 'Create Onsite Booking' : 'Book Now'}
+      </button>
     </form>
   )
 }
