@@ -11,6 +11,12 @@ import { cloudinaryUrl } from '@/lib/cloudinary'
 
 const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80'
 
+function imageSrc(item) {
+  if (!item) return ''
+  if (typeof item === 'string') return item
+  return item.image_url || item.image || item.url || item.src || ''
+}
+
 const typeMeta = {
   cottage: 'Cottage',
   dos_andanas: 'Dos Andanas',
@@ -56,10 +62,10 @@ export default function RoomCard({ room, initialFavorited = false, isMostLoved =
           onClick={() => setLightboxOpen(true)}
         >
           <Image
-            src={cloudinaryUrl(primary_image || PLACEHOLDER, { width: 800 })}
+            src={cloudinaryUrl(imageSrc(primary_image) || PLACEHOLDER, { width: 800 })}
             alt={name}
             fill
-            unoptimized={!!primary_image?.includes('res.cloudinary.com')}
+            unoptimized={imageSrc(primary_image).includes('res.cloudinary.com')}
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
@@ -101,21 +107,25 @@ export default function RoomCard({ room, initialFavorited = false, isMostLoved =
           {/* Hover preview thumbs (only if more images exist) */}
           {previewStack.length > 0 && (
             <div className="absolute bottom-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              {previewStack.map((img, i) => (
-                <span
-                  key={i}
-                  className="block w-12 h-12 rounded overflow-hidden border border-ivory-50/90 shadow-md bg-ivory-200"
-                >
-                  <Image
-                    src={cloudinaryUrl(img, { width: 120 })}
-                    alt=""
-                    width={48}
-                    height={48}
-                    unoptimized={!!img?.includes('res.cloudinary.com')}
-                    className="object-cover w-full h-full"
-                  />
-                </span>
-              ))}
+              {previewStack.map((img, i) => {
+                const src = imageSrc(img)
+                if (!src) return null
+                return (
+                  <span
+                    key={i}
+                    className="block w-12 h-12 rounded overflow-hidden border border-ivory-50/90 shadow-md bg-ivory-200"
+                  >
+                    <Image
+                      src={cloudinaryUrl(src, { width: 120 })}
+                      alt=""
+                      width={48}
+                      height={48}
+                      unoptimized={src.includes('res.cloudinary.com')}
+                      className="object-cover w-full h-full"
+                    />
+                  </span>
+                )
+              })}
               {galleryImages.length > 4 && (
                 <span className="flex items-center justify-center w-12 h-12 rounded bg-navy-900/85 text-ivory-50 text-xs font-semibold border border-ivory-50/90">
                   +{galleryImages.length - 4}
