@@ -14,7 +14,7 @@ class ContentSecurityPolicyMiddleware:
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https://res.cloudinary.com; "
         "font-src 'self' data:; "
-        "connect-src 'self'; "
+        "connect-src 'self' https://staging.adel-resort.ph https://adel-resort.ph https://www.adel-resort.ph; "
         "frame-ancestors 'none'; "
         "base-uri 'self'; "
         "form-action 'self'"

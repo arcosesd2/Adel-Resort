@@ -32,3 +32,15 @@ yarn-error.log*
 *.swo
 .DS_Store
 Thumbs.db
+
+# Deploy secrets and helper scripts
+deploy/env.backend.staging
+deploy/env.frontend.staging
+deploy/copy-key*.py
+deploy/setup-ssh-bridge.py
+deploy/setup-cron.py
+deploy/sync-db.py
+deploy/test-*.py
+deploy/check-db.py
+deploy/install-python312.py
+deploy/debug-*.py
