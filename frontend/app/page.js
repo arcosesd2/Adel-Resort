@@ -122,16 +122,6 @@ export default async function HomePage() {
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInUp className="text-center mb-14">
-            <p className="text-blue-600 dark:text-cyan-200 font-light tracking-[0.3em] text-xs uppercase mb-4">What We Offer</p>
-            <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700 dark:from-blue-100 dark:to-cyan-200">
-              Stay, Celebrate, Roam
-            </h2>
-            <p className="text-blue-700/80 dark:text-blue-100/80 text-lg font-light max-w-2xl mx-auto">
-              Three reasons families and groups keep coming back to Lawigan.
-            </p>
-          </FadeInUp>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
             {featureTiles.map((tile, i) => (
               <FeatureTile key={tile.title} {...tile} index={i} />
@@ -142,7 +132,7 @@ export default async function HomePage() {
 
       {/* Stats Counter Section */}
       {showStats && <>
-      <WaveDivider color="#0c4a6e" />
+      <WaveDivider color="#0c4a6e" className="dark:hidden" />
       <section className="py-20 bg-gradient-to-r from-ocean-900 via-ocean-800 to-ocean-900 relative overflow-hidden">
         {/* Decorative bg elements */}
         <div className="absolute inset-0 pointer-events-none">
@@ -174,16 +164,24 @@ export default async function HomePage() {
       </section>
       </>}
 
-      {/* Wave → rooms */}
-      <WaveDivider color="#ffffff" />
+      {/* Wave → rooms (light mode only — dark mode flows section→section) */}
+      <WaveDivider color="#ffffff" className="dark:hidden" />
 
       {/* Featured Rooms */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-50 to-white dark:from-blue-900 dark:to-blue-950 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-60">
+          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-cyan-200/30 dark:bg-cyan-400/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-200/30 dark:bg-blue-400/10 rounded-full blur-3xl" />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInUp className="text-center mb-14">
-            <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">Stay With Us</p>
-            <h2 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">Featured Accommodations</h2>
-            <p className="text-gray-500 text-lg">From budget-friendly cottages to fully furnished rooms</p>
+            <p className="text-blue-600 dark:text-cyan-200 font-light tracking-[0.3em] text-xs uppercase mb-4">Stay With Us</p>
+            <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700 dark:from-blue-100 dark:to-cyan-200">
+              Featured Accommodations
+            </h2>
+            <p className="text-blue-700/80 dark:text-blue-100/80 text-lg font-light max-w-2xl mx-auto">
+              From budget-friendly cottages to fully furnished rooms
+            </p>
           </FadeInUp>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rooms.slice(0, 3).map((room) => (
@@ -203,34 +201,36 @@ export default async function HomePage() {
 
       {/* Testimonials */}
       {showTestimonials && <>
-      <WaveDivider color="#f0f9ff" />
-      <section className="py-20 bg-ocean-50 relative overflow-hidden">
+      <WaveDivider color="#f0f9ff" className="dark:hidden" />
+      <section className="py-20 bg-ocean-50 dark:bg-blue-950 relative overflow-hidden">
         {/* Decorative quote */}
-        <div className="absolute top-10 left-10 opacity-[0.04] pointer-events-none">
-          <Quote size={200} strokeWidth={1} />
+        <div className="absolute top-10 left-10 opacity-[0.04] dark:opacity-[0.08] pointer-events-none">
+          <Quote size={200} strokeWidth={1} className="dark:text-blue-200" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <FadeInUp className="text-center mb-14">
-            <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">Guest Reviews</p>
-            <h2 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">What Our Guests Say</h2>
+            <p className="text-blue-600 dark:text-cyan-200 font-light tracking-[0.3em] text-xs uppercase mb-4">Guest Reviews</p>
+            <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700 dark:from-blue-100 dark:to-cyan-200">
+              What Our Guests Say
+            </h2>
           </FadeInUp>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((t) => (
               <StaggerItem key={t.name}>
                 <div className="glass-card p-6 h-full flex flex-col">
-                  <Quote className="text-ocean-300 mb-4" size={28} />
-                  <p className="text-gray-600 leading-relaxed flex-1 mb-4">{t.text}</p>
+                  <Quote className="text-ocean-300 dark:text-cyan-300/60 mb-4" size={28} />
+                  <p className="text-gray-600 dark:text-blue-50/85 leading-relaxed flex-1 mb-4">{t.text}</p>
                   <div className="flex items-center gap-1 mb-2">
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         size={16}
-                        className={i < t.rating ? 'text-sand-400 fill-sand-400' : 'text-gray-300'}
+                        className={i < t.rating ? 'text-sand-400 fill-sand-400' : 'text-gray-300 dark:text-blue-200/30'}
                       />
                     ))}
                   </div>
-                  <p className="font-semibold text-gray-900">{t.name}</p>
+                  <p className="font-semibold text-gray-900 dark:text-blue-50">{t.name}</p>
                 </div>
               </StaggerItem>
             ))}
@@ -239,8 +239,8 @@ export default async function HomePage() {
       </section>
       </>}
 
-      {/* Wave → CTA */}
-      <WaveDivider color="#0c4a6e" />
+      {/* Wave → CTA (light only) */}
+      <WaveDivider color="#0c4a6e" className="dark:hidden" />
 
       {/* CTA Banner */}
       <section className="relative py-24 overflow-hidden">
