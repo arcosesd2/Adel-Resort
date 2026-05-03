@@ -2,11 +2,12 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Trophy, TreePalm, Music, CarFront, Quote, Star, Users, Home, Clock, Award } from 'lucide-react'
+import { ArrowRight, Quote, Star, Users, Home, Clock, Award } from 'lucide-react'
 import api from '@/lib/api'
 import RoomCard from '@/components/RoomCard'
 import HeroSection from '@/components/HeroSection'
 import WaveDivider from '@/components/WaveDivider'
+import FeatureTile from '@/components/FeatureTile'
 import { FadeInUp, StaggerContainer, StaggerItem, CountUp } from '@/components/motions'
 
 async function getFeaturedRooms() {
@@ -45,11 +46,34 @@ async function getSiteSettings() {
   }
 }
 
-const features = [
-  { icon: Trophy, title: 'Multi-purpose Court', desc: 'Volleyball, basketball and pickleball outdoor court for active fun with family and friends' },
-  { icon: TreePalm, title: "Children's Playground", desc: 'A safe and fun play area to keep the little ones entertained all day' },
-  { icon: Music, title: 'Karaoke Units', desc: 'Multiple karaoke setups around the resort — sing your heart out!' },
-  { icon: CarFront, title: 'Spacious Parking', desc: 'CCTV-monitored parking area so your vehicle stays safe while you relax' },
+const featureTiles = [
+  {
+    eyebrow: 'Stay With Us',
+    title: 'Beachfront Cottages',
+    body: 'Open-air cottages, kubo huts, and air-conditioned rooms steps from the Lawigan shore. Affordable, family-friendly, and built for that just-out-of-the-water feeling.',
+    image: '/features/cottages.jpg',
+    alt: 'Beachfront cottage at Adel Beach Resort',
+    href: '/rooms',
+    ctaLabel: 'Browse cottages',
+  },
+  {
+    eyebrow: 'Celebrate',
+    title: 'Function Hall',
+    body: 'A spacious, sea-breeze-cooled hall for reunions, birthdays, and beach weddings. Karaoke setup and parking included.',
+    image: '/features/function-hall.jpg',
+    alt: 'Function hall with ocean view',
+    href: '/rooms?room_type=function_hall',
+    ctaLabel: 'Reserve the hall',
+  },
+  {
+    eyebrow: 'Lawigan, Surigao Del Sur',
+    title: 'Beach & Day Tours',
+    body: 'Sunrise to sunset along the Pacific. Volleyball court, playground, karaoke units, and the kind of golden hour the south is known for.',
+    image: '/features/beach-activities.jpg',
+    alt: 'Sunset over Lawigan beach',
+    href: '/rooms',
+    ctaLabel: 'Plan a day tour',
+  },
 ]
 
 function buildStats(data) {
@@ -90,34 +114,29 @@ export default async function HomePage() {
       {/* Hero */}
       <HeroSection heroConfig={heroConfig} />
 
-      {/* Wave: hero → features */}
-      <WaveDivider color="#f0f9ff" />
+      {/* Features — Phase 2 photo tiles (replaces hero→features wave + 4-card grid) */}
+      <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-50 to-white dark:from-blue-950 dark:to-blue-900 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-60">
+          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-cyan-200/30 dark:bg-cyan-400/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-200/30 dark:bg-blue-400/10 rounded-full blur-3xl" />
+        </div>
 
-      {/* Features / Amenities */}
-      <section className="py-20 bg-ocean-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInUp className="text-center mb-14">
-            <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">What We Offer</p>
-            <h2 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">Resort Amenities</h2>
-            <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-              Everything you need for a fun and relaxing beach getaway with family and friends.
+            <p className="text-blue-600 dark:text-cyan-200 font-light tracking-[0.3em] text-xs uppercase mb-4">What We Offer</p>
+            <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700 dark:from-blue-100 dark:to-cyan-200">
+              Stay, Celebrate, Roam
+            </h2>
+            <p className="text-blue-700/80 dark:text-blue-100/80 text-lg font-light max-w-2xl mx-auto">
+              Three reasons families and groups keep coming back to Lawigan.
             </p>
           </FadeInUp>
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map(({ icon: Icon, title, desc }) => (
-              <StaggerItem key={title}>
-                <div className="bg-gradient-to-br from-ocean-200/50 to-sand-200/50 p-[1px] rounded-2xl">
-                  <div className="glass-card p-6 text-center h-full hover:shadow-glow-ocean transition-shadow duration-300">
-                    <div className="w-14 h-14 bg-gradient-to-br from-ocean-100 to-ocean-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="text-ocean-600" size={28} />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
-                  </div>
-                </div>
-              </StaggerItem>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+            {featureTiles.map((tile, i) => (
+              <FeatureTile key={tile.title} {...tile} index={i} />
             ))}
-          </StaggerContainer>
+          </div>
         </div>
       </section>
 
