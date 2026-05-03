@@ -9,9 +9,15 @@ import AuthValidator from '@/components/AuthValidator'
 import PageTransitionWrapper from '@/components/PageTransitionWrapper'
 import JsonLd from '@/components/JsonLd'
 import NotificationPopup from '@/components/NotificationPopup'
+import ThemeProvider from '@/components/ThemeProvider'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['200', '300', '400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+})
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
 
 export const metadata = {
@@ -43,42 +49,44 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="font-sans bg-white text-gray-900 min-h-screen flex flex-col">
-        <JsonLd data={{
-          '@context': 'https://schema.org',
-          '@type': 'Hotel',
-          name: 'Adel Beach Resort',
-          description: 'Beach resort in Lawigan, Surigao Del Sur offering cottages, rooms, and event spaces.',
-          url: 'https://adel-resort.ph',
-          telephone: '09685361395',
-          email: 'arnelarcos@adel-resort.ph',
-          address: {
-            '@type': 'PostalAddress',
-            streetAddress: 'Lawigan',
-            addressLocality: 'Surigao Del Sur',
-            addressCountry: 'PH',
-          },
-        }} />
-        <AuthValidator />
-        <Navbar />
-        <InactivityGuard />
-        <PageViewTracker />
-        <main className="flex-1">
-          <PageTransitionWrapper>{children}</PageTransitionWrapper>
-        </main>
-        <Footer />
-        <ChatWidget />
-        <NotificationPopup />
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: { background: '#333', color: '#fff' },
-            success: { style: { background: '#166534' } },
-            error: { style: { background: '#991b1b' } },
-          }}
-        />
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} suppressHydrationWarning>
+      <body className="font-sans bg-white dark:bg-blue-900 text-gray-900 dark:text-blue-50 min-h-screen flex flex-col">
+        <ThemeProvider>
+          <JsonLd data={{
+            '@context': 'https://schema.org',
+            '@type': 'Hotel',
+            name: 'Adel Beach Resort',
+            description: 'Beach resort in Lawigan, Surigao Del Sur offering cottages, rooms, and event spaces.',
+            url: 'https://adel-resort.ph',
+            telephone: '09685361395',
+            email: 'arnelarcos@adel-resort.ph',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: 'Lawigan',
+              addressLocality: 'Surigao Del Sur',
+              addressCountry: 'PH',
+            },
+          }} />
+          <AuthValidator />
+          <Navbar />
+          <InactivityGuard />
+          <PageViewTracker />
+          <main className="flex-1">
+            <PageTransitionWrapper>{children}</PageTransitionWrapper>
+          </main>
+          <Footer />
+          <ChatWidget />
+          <NotificationPopup />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: { background: '#333', color: '#fff' },
+              success: { style: { background: '#166534' } },
+              error: { style: { background: '#991b1b' } },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -19,6 +20,19 @@ module.exports = {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
+        },
+        blue: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49',
         },
         sand: {
           50: '#fdf8f0',
@@ -63,6 +77,7 @@ module.exports = {
       },
       boxShadow: {
         glass: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+        'glass-blue': '0 8px 32px 0 rgba(31, 38, 135, 0.3)',
         'glow-ocean': '0 0 20px rgba(2, 132, 199, 0.3)',
         'glow-sand': '0 0 20px rgba(220, 143, 45, 0.3)',
       },

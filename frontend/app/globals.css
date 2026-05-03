@@ -10,6 +10,12 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+.dark {
+  --foreground-rgb: 240, 249, 255;
+  --background-start-rgb: 12, 74, 110;
+  --background-end-rgb: 8, 47, 73;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -71,10 +77,10 @@ body {
     @apply bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
   }
   .glass-card {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 rounded-2xl shadow-glass;
+    @apply bg-white/70 dark:bg-white/10 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-2xl shadow-glass dark:shadow-glass-blue;
   }
   .glass-card-dark {
-    @apply bg-ocean-900/60 backdrop-blur-md border border-white/10 rounded-2xl;
+    @apply bg-blue-900/60 dark:bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl;
   }
   .input-field {
     @apply w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-ocean-500 focus:border-transparent;
