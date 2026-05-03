@@ -8,6 +8,7 @@ import {
   useTransform,
   animate,
   AnimatePresence,
+  useReducedMotion,
 } from 'framer-motion'
 
 // Fade + slide up on scroll into view
@@ -81,4 +82,4 @@ export function CountUp({ end, duration = 2, prefix = '', suffix = '', decimals 
   return <span ref={ref}>{display}</span>
 }
 
-export { motion, AnimatePresence }
+export { motion, AnimatePresence, useReducedMotion }

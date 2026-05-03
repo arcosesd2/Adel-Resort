@@ -17,8 +17,8 @@ const ROOM_TYPES = [
 export default function RoomFilters({ onFilter, initialFilters = {} }) {
   const [filters, setFilters] = useState({
     room_type: initialFilters.room_type || '',
-    date: '',
-    min_capacity: '',
+    date: initialFilters.date || '',
+    min_capacity: initialFilters.min_capacity || '',
     min_price: '',
     max_price: '',
   })

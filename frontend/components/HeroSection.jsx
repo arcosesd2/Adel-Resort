@@ -4,27 +4,21 @@ import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Play, Pause, Volume2, VolumeX } from 'lucide-react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
+import HomeBookingBar from './HomeBookingBar'
 
-const FALLBACK_POSTER = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&q=90'
+const FALLBACK_POSTER = '/hero/azure-shores.jpg'
 
 export default function HeroSection({ heroConfig }) {
   const videoRef = useRef(null)
-  const heroRef = useRef(null)
   const posterSrc = heroConfig?.poster_url || FALLBACK_POSTER
   const videoSrc = heroConfig?.video_url || null
 
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(true)
 
-  // Parallax scroll effect
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start'],
-  })
-  const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '20%'])
-  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1])
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  const reduce = useReducedMotion()
+  const headingInitial = reduce ? false : { y: 30, opacity: 0 }
 
   // Fix React muted attribute bug — must set directly on the DOM element
   const setVideoRef = (el) => {
@@ -97,67 +91,60 @@ export default function HeroSection({ heroConfig }) {
 
   return (
     <>
-      {/* Hero — poster image background with parallax */}
-      <section ref={heroRef} className="relative h-screen h-[100dvh] flex items-center justify-center overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: bgY, scale: bgScale }}>
+      {/* Hero — Azure Shores glassmorphism */}
+      <section className="relative h-screen h-[100dvh] flex items-center justify-center overflow-hidden">
+        {/* Layered background */}
+        <div className="absolute inset-0">
           <Image
             src={posterSrc}
-            alt="Adel Beach Resort hero"
+            alt="Adel Beach Resort"
             fill
+            priority
             sizes="100vw"
             className="object-cover object-center"
-            priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
-        </motion.div>
+          {/* Dark-mode multiply tint, scoped to bg only */}
+          <div className="absolute inset-0 hidden dark:block bg-blue-900/40 mix-blend-multiply" />
+          {/* Vertical gradient — darkens sky band (top) for navbar legibility, sandbar band (bottom) for booking bar */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/60 via-blue-900/30 to-blue-950/80 dark:from-blue-950/70 dark:via-blue-900/40 dark:to-blue-950/85" />
+          {/* Light-mode sky/sand wash */}
+          <div className="absolute inset-0 dark:hidden bg-gradient-to-b from-sky-200/30 via-transparent to-blue-100/20" />
+        </div>
 
         {/* Floating decorative particles */}
         <div className="absolute inset-0 z-[5] pointer-events-none overflow-hidden">
           <div className="absolute top-1/4 left-[15%] w-2 h-2 bg-white/15 rounded-full animate-float" />
           <div className="absolute top-1/3 right-[20%] w-3 h-3 bg-white/10 rounded-full animate-float-delayed" />
-          <div className="absolute bottom-1/3 left-[30%] w-1.5 h-1.5 bg-sand-300/20 rounded-full animate-float" />
+          <div className="absolute bottom-1/3 left-[30%] w-1.5 h-1.5 bg-cyan-200/20 rounded-full animate-float" />
           <div className="absolute top-[60%] right-[35%] w-2 h-2 bg-white/10 rounded-full animate-float-delayed" />
         </div>
 
+        {/* Hero content */}
         <motion.div
-          className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto"
-          style={{ opacity: contentOpacity }}
+          initial={headingInitial}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-24 md:pt-0"
         >
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="text-sand-300 font-semibold tracking-widest text-sm uppercase mb-4"
-          >
+          <p className="text-cyan-200 font-light tracking-[0.3em] text-xs uppercase mb-6">
             Lawigan, Surigao Del Sur
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="font-serif text-5xl md:text-7xl font-bold mb-6 leading-tight text-shadow-hero"
-          >
+          </p>
+          <h1 className="font-extralight text-5xl md:text-7xl lg:text-8xl mb-6 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-100 to-cyan-200 dark:from-blue-200 dark:to-cyan-200">
             Adel Beach Resort
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed"
-          >
+          </h1>
+          <p className="text-lg md:text-xl text-blue-50/90 font-light max-w-2xl mx-auto mb-10 leading-relaxed">
             Escape to the shores of Lawigan — affordable cottages, rooms, and event spaces right by the beach.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+          </p>
+          <div className="max-w-4xl mx-auto mb-8">
+            <HomeBookingBar />
+          </div>
+          <Link
+            href="/rooms"
+            className="inline-flex items-center gap-2 text-blue-100 hover:text-white font-light tracking-wide text-sm transition-colors"
           >
-            <Link href="/rooms" className="btn-primary px-8 py-4 text-lg flex items-center gap-2 justify-center">
-              Browse Accommodations
-              <ArrowRight size={20} />
-            </Link>
-          </motion.div>
+            Browse all accommodations
+            <ArrowRight size={16} />
+          </Link>
         </motion.div>
 
         {/* Scroll indicator */}

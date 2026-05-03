@@ -17,6 +17,8 @@ function isWeekend(dateStr) {
 function RoomsContent() {
   const searchParams = useSearchParams()
   const initialRoomType = searchParams.get('room_type') || ''
+  const initialDate = searchParams.get('date') || searchParams.get('checkin') || ''
+  const initialGuests = searchParams.get('guests') || ''
 
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -49,10 +51,13 @@ function RoomsContent() {
   }, [])
 
   useEffect(() => {
-    const initial = initialRoomType ? { room_type: initialRoomType } : {}
+    const initial = {}
+    if (initialRoomType) initial.room_type = initialRoomType
+    if (initialDate) initial.date = initialDate
+    if (initialGuests) initial.min_capacity = initialGuests
     setFilters(initial)
     fetchRooms(initial)
-  }, [fetchRooms, initialRoomType])
+  }, [fetchRooms, initialRoomType, initialDate, initialGuests])
 
   const handleFilter = (newFilters) => {
     setFilters(newFilters)
@@ -67,7 +72,10 @@ function RoomsContent() {
   return (
     <>
       {/* Filters */}
-      <RoomFilters onFilter={handleFilter} initialFilters={{ room_type: initialRoomType }} />
+      <RoomFilters
+        onFilter={handleFilter}
+        initialFilters={{ room_type: initialRoomType, date: initialDate, min_capacity: initialGuests }}
+      />
 
       {/* Weekend walk-in notice */}
       {showWeekendNotice && (
