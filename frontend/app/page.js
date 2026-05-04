@@ -154,7 +154,12 @@ export default async function HomePage() {
  <WaveDivider color="#ffffff" />
 
 {/* Featured Rooms */}
-  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-slate-50 via-sky-50 to-blue-50">
+  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-sky-200 via-blue-100 to-cyan-200">
+  <div className="absolute inset-0 pointer-events-none">
+  <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-sky-300/30 rounded-full blur-[120px]" />
+  <div className="absolute -bottom-32 -right-32 w-[40rem] h-[40rem] bg-cyan-300/25 rounded-full blur-[120px]" />
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-blue-200/30 rounded-full blur-[100px]" />
+  </div>
   <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
 <p className="text-ocean-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Stay With Us</p>
@@ -182,7 +187,12 @@ export default async function HomePage() {
  </section>
 
 {/* Amenities */}
-  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-cyan-200 via-blue-100 to-sky-200">
+  <div className="absolute inset-0 pointer-events-none">
+  <div className="absolute -top-32 -right-32 w-[40rem] h-[40rem] bg-cyan-300/25 rounded-full blur-[120px]" />
+  <div className="absolute -bottom-32 -left-32 w-[40rem] h-[40rem] bg-sky-300/30 rounded-full blur-[120px]" />
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-blue-200/30 rounded-full blur-[100px]" />
+  </div>
   <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
 <p className="text-ocean-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Resort Amenities</p>
@@ -196,7 +206,7 @@ export default async function HomePage() {
  <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 gap-6">
  {amenities.map(({ icon: Icon, title, body }) => (
  <StaggerItem key={title}>
-<div className="group h-full p-6 md:p-7 rounded-2xl bg-white/20 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.16)] hover:border-white/60 hover:-translate-y-1 transition-all duration-300">
+<div className="group h-full p-6 md:p-7 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.16)] hover:border-white/50 hover:-translate-y-1 transition-all duration-300">
   <div className="w-12 h-12 rounded-xl bg-ocean-500/10 backdrop-blur-md flex items-center justify-center mb-5 group-hover:bg-ocean-500/15 transition-colors">
     <Icon className="text-ocean-700" size={22} strokeWidth={1.5} />
   </div>
