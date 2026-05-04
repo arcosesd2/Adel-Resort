@@ -10,7 +10,6 @@ import useAuthStore from '@/store/authStore'
 import useNotificationStore from '@/store/notificationStore'
 import api from '@/lib/api'
 import toast from 'react-hot-toast'
-import ThemeToggle from './ThemeToggle'
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -58,13 +57,13 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      transparent ? 'bg-transparent' : 'bg-white/80 dark:bg-blue-900/80 backdrop-blur-lg shadow-md border-b border-white/20 dark:border-white/10'
+      transparent ? 'bg-transparent' : 'bg-white/80 backdrop-blur-lg shadow-md border-b border-white/20'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className={`flex items-center gap-2 font-serif font-bold text-xl ${
-            transparent ? 'text-white' : 'text-ocean-700 dark:text-blue-100'
+            transparent ? 'text-white' : 'text-ocean-700'
           }`}>
             <Image src="/logo.png" alt="Adel Beach Resort" width={44} height={44} className="object-contain" />
             <span className="hidden sm:inline">Adel Beach Resort</span>
@@ -77,8 +76,8 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`relative font-medium transition-colors py-1 ${
-                  transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
-                } ${pathname === link.href ? (transparent ? 'text-sand-200' : 'text-ocean-600 dark:text-cyan-200') : ''}`}
+                  transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
+                } ${pathname === link.href ? (transparent ? 'text-sand-200' : 'text-ocean-600') : ''}`}
               >
                 {link.label}
                 {pathname === link.href && (
@@ -94,7 +93,6 @@ export default function Navbar() {
 
           {/* Auth buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <ThemeToggle transparent={transparent} />
             {!isReady ? null : isAuthenticated ? (
               <>
                 {user?.is_staff ? (
@@ -102,7 +100,7 @@ export default function Navbar() {
                     <Link
                       href="/admin-dashboard"
                       className={`font-medium transition-colors ${
-                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                       }`}
                     >
                       Admin
@@ -110,7 +108,7 @@ export default function Navbar() {
                     <Link
                       href="/admin-account/notifications"
                       className={`relative font-medium transition-colors ${
-                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                       }`}
                     >
                       <Bell size={20} />
@@ -123,7 +121,7 @@ export default function Navbar() {
                     <Link
                       href="/admin-account"
                       className={`font-medium transition-colors flex items-center gap-1.5 ${
-                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                       }`}
                     >
                       <UserCircle size={20} />
@@ -135,7 +133,7 @@ export default function Navbar() {
                     <Link
                       href="/dashboard"
                       className={`font-medium transition-colors ${
-                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                       }`}
                     >
                       My Bookings
@@ -143,7 +141,7 @@ export default function Navbar() {
                     <Link
                       href="/account/notifications"
                       className={`relative font-medium transition-colors ${
-                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                       }`}
                     >
                       <Bell size={20} />
@@ -156,7 +154,7 @@ export default function Navbar() {
                     <Link
                       href="/account"
                       className={`font-medium transition-colors flex items-center gap-1.5 ${
-                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                        transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                       }`}
                     >
                       <UserCircle size={20} />
@@ -176,7 +174,7 @@ export default function Navbar() {
                 <Link
                   href="/auth/login"
                   className={`font-medium transition-colors ${
-                    transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200'
+                    transparent ? 'text-white hover:text-sand-200' : 'text-gray-700 hover:text-ocean-600'
                   }`}
                 >
                   Login
@@ -190,7 +188,7 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <button
-            className={`md:hidden p-2 ${transparent ? 'text-white' : 'text-gray-700 dark:text-blue-100'}`}
+            className={`md:hidden p-2 ${transparent ? 'text-white' : 'text-gray-700'}`}
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -206,7 +204,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden bg-white/95 dark:bg-blue-900/95 backdrop-blur-lg border-t border-gray-200 dark:border-white/10 shadow-lg overflow-hidden"
+            className="md:hidden bg-white/95 backdrop-blur-lg border-t border-gray-200 shadow-lg overflow-hidden"
           >
             <div className="px-4 py-4 space-y-3">
               {navLinks.map((link) => (
@@ -214,16 +212,12 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="block text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                  className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="border-t border-gray-200 dark:border-white/10 pt-3 space-y-2">
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-sm text-gray-600 dark:text-blue-200">Theme</span>
-                  <ThemeToggle />
-                </div>
+              <div className="border-t border-gray-200 pt-3 space-y-2">
                 {!isReady ? null : isAuthenticated ? (
                   <>
                     {user?.is_staff ? (
@@ -231,14 +225,14 @@ export default function Navbar() {
                         <Link
                           href="/admin-dashboard"
                           onClick={() => setMobileOpen(false)}
-                          className="block text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                          className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
                         >
                           Admin Dashboard
                         </Link>
                         <Link
                           href="/admin-account"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-2 text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
                         >
                           <UserCircle size={18} />
                           Staff Account
@@ -246,7 +240,7 @@ export default function Navbar() {
                         <Link
                           href="/admin-account/notifications"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-2 text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
                         >
                           <Bell size={18} />
                           Notifications
@@ -262,7 +256,7 @@ export default function Navbar() {
                         <Link
                           href="/account"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-2 text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
                         >
                           <UserCircle size={18} />
                           My Account
@@ -270,14 +264,14 @@ export default function Navbar() {
                         <Link
                           href="/dashboard"
                           onClick={() => setMobileOpen(false)}
-                          className="block text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                          className="block text-gray-700 hover:text-ocean-600 font-medium py-2"
                         >
                           My Bookings
                         </Link>
                         <Link
                           href="/account/notifications"
                           onClick={() => setMobileOpen(false)}
-                          className="flex items-center gap-2 text-gray-700 dark:text-blue-100 hover:text-ocean-600 dark:hover:text-cyan-200 font-medium py-2"
+                          className="flex items-center gap-2 text-gray-700 hover:text-ocean-600 font-medium py-2"
                         >
                           <Bell size={18} />
                           Notifications
@@ -298,7 +292,7 @@ export default function Navbar() {
                     <Link
                       href="/auth/login"
                       onClick={() => setMobileOpen(false)}
-                      className="block text-center border border-ocean-600 dark:border-cyan-300 text-ocean-600 dark:text-cyan-200 rounded-lg py-2 font-medium"
+                      className="block text-center border border-ocean-600 text-ocean-600 rounded-lg py-2 font-medium"
                     >
                       Login
                     </Link>
