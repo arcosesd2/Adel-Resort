@@ -100,7 +100,7 @@ export default function RoomCard({ room, initialFavorited = false }) {
  {amenities?.length > 0 && (
  <div className="flex flex-wrap gap-1.5 mb-4 min-h-[26px]">
  {(amenitiesExpanded ? amenities : amenities.slice(0, 4)).map((a) => (
- <span key={a} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+ <span key={a} className="text-xs bg-white/50 backdrop-blur-sm text-gray-700 px-2 py-0.5 rounded-full">
  {a}
  </span>
  ))}
@@ -123,9 +123,9 @@ export default function RoomCard({ room, initialFavorited = false }) {
  </div>
  )}
 
- <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+ <div className="flex items-center justify-between pt-3 border-t border-white/20">
  <div>
- <span className="inline-block bg-ocean-50 rounded-full px-3 py-1 text-2xl font-bold text-ocean-700">₱{day_price}</span>
+ <span className="inline-block bg-ocean-500/10 backdrop-blur-sm rounded-full px-3 py-1 text-2xl font-bold text-ocean-700">₱{day_price}</span>
  {!isOvernight && !is_day_only && night_price && (
  <span className="text-gray-400 text-sm"> / ₱{night_price}</span>
  )}

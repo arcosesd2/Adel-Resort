@@ -206,13 +206,13 @@ export default async function HomePage() {
  <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 gap-6">
  {amenities.map(({ icon: Icon, title, body }) => (
  <StaggerItem key={title}>
- <div className="group h-full p-6 md:p-7 rounded-2xl bg-white/40 backdrop-blur-md border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-300">
- <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-5 group-hover:from-blue-200 group-hover:to-cyan-200 transition-colors">
- <Icon className="text-blue-700" size={22} strokeWidth={1.5} />
- </div>
- <h3 className="font-extralight text-xl md:text-2xl text-blue-900 mb-3 leading-snug">{title}</h3>
- <p className="text-blue-800/70 text-sm leading-relaxed font-light">{body}</p>
- </div>
+<div className="group h-full p-6 md:p-7 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/25 shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.2)] hover:border-white/40 hover:-translate-y-1 transition-all duration-300">
+  <div className="w-12 h-12 rounded-xl bg-white/40 backdrop-blur-md flex items-center justify-center mb-5 group-hover:bg-white/50 transition-colors">
+    <Icon className="text-blue-700" size={22} strokeWidth={1.5} />
+  </div>
+  <h3 className="font-extralight text-xl md:text-2xl text-blue-900 mb-3 leading-snug">{title}</h3>
+  <p className="text-blue-800/80 text-sm leading-relaxed font-light">{body}</p>
+</div>
  </StaggerItem>
  ))}
  </StaggerContainer>
