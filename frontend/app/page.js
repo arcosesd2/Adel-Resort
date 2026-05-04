@@ -154,10 +154,11 @@ export default async function HomePage() {
  <WaveDivider color="#ffffff" />
 
  {/* Featured Rooms */}
- <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-50 to-white overflow-hidden">
- <div className="absolute inset-0 pointer-events-none opacity-40">
- <div className="absolute top-1/4 -left-20 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl" />
- <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
+ <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-100 via-cyan-50 to-blue-100 overflow-hidden">
+ <div className="absolute inset-0 pointer-events-none">
+ <div className="absolute top-1/4 -left-24 w-[28rem] h-[28rem] bg-cyan-300/40 rounded-full blur-3xl" />
+ <div className="absolute bottom-1/4 -right-24 w-[28rem] h-[28rem] bg-blue-300/40 rounded-full blur-3xl" />
+ <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-sky-200/50 rounded-full blur-3xl" />
  </div>
  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
@@ -186,10 +187,11 @@ export default async function HomePage() {
  </section>
 
  {/* Amenities */}
- <section className="relative py-24 md:py-28 bg-gradient-to-b from-white to-blue-50 overflow-hidden">
- <div className="absolute inset-0 pointer-events-none opacity-40">
- <div className="absolute top-1/3 -right-20 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl" />
- <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
+ <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-100 via-sky-100 to-cyan-100 overflow-hidden">
+ <div className="absolute inset-0 pointer-events-none">
+ <div className="absolute top-1/3 -right-24 w-[28rem] h-[28rem] bg-cyan-300/40 rounded-full blur-3xl" />
+ <div className="absolute bottom-1/4 -left-24 w-[28rem] h-[28rem] bg-blue-300/40 rounded-full blur-3xl" />
+ <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-sky-200/50 rounded-full blur-3xl" />
  </div>
  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
@@ -204,7 +206,7 @@ export default async function HomePage() {
  <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 gap-6">
  {amenities.map(({ icon: Icon, title, body }) => (
  <StaggerItem key={title}>
- <div className="group h-full p-6 md:p-7 rounded-2xl bg-white/50 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-300">
+ <div className="group h-full p-6 md:p-7 rounded-2xl bg-white/40 backdrop-blur-md border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-300">
  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-5 group-hover:from-blue-200 group-hover:to-cyan-200 transition-colors">
  <Icon className="text-blue-700" size={22} strokeWidth={1.5} />
  </div>
