@@ -150,17 +150,20 @@ export default async function HomePage() {
  </section>
  </>}
 
- {/* Wave → rooms */}
- <WaveDivider color="#ffffff" />
+{/* Wave → rooms */}
+  <WaveDivider color="#bfdbfe" />
 
-{/* Featured Rooms */}
-  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-sky-200 via-blue-100 to-cyan-200">
+  {/* Featured Rooms + Amenities — single continuous background */}
+  <section className="relative overflow-hidden bg-gradient-to-b from-sky-100 via-blue-50 to-cyan-100">
   <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-sky-300/30 rounded-full blur-[120px]" />
-  <div className="absolute -bottom-32 -right-32 w-[40rem] h-[40rem] bg-cyan-300/25 rounded-full blur-[120px]" />
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-blue-200/30 rounded-full blur-[100px]" />
+  <div className="absolute -top-24 left-[10%] w-[50rem] h-[50rem] bg-sky-300/30 rounded-full blur-[140px]" />
+  <div className="absolute top-[30%] right-[5%] w-[40rem] h-[40rem] bg-cyan-300/25 rounded-full blur-[120px]" />
+  <div className="absolute bottom-[10%] left-[20%] w-[45rem] h-[45rem] bg-blue-200/30 rounded-full blur-[130px]" />
   </div>
-  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+  {/* Featured Rooms */}
+  <div className="relative py-24 md:py-28">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
 <p className="text-ocean-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Stay With Us</p>
   <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-slate-800 to-ocean-700">
@@ -182,18 +185,13 @@ export default async function HomePage() {
  View All Accommodations
  <ArrowRight size={18} />
  </Link>
- </FadeInUp>
- </div>
- </section>
-
-{/* Amenities */}
-  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-cyan-200 via-blue-100 to-sky-200">
-  <div className="absolute inset-0 pointer-events-none">
-  <div className="absolute -top-32 -right-32 w-[40rem] h-[40rem] bg-cyan-300/25 rounded-full blur-[120px]" />
-  <div className="absolute -bottom-32 -left-32 w-[40rem] h-[40rem] bg-sky-300/30 rounded-full blur-[120px]" />
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-blue-200/30 rounded-full blur-[100px]" />
+</FadeInUp>
   </div>
-  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  </div>
+
+  {/* Amenities — same background continues */}
+  <div className="relative py-24 md:py-28">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
 <p className="text-ocean-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Resort Amenities</p>
   <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-slate-800 to-ocean-700">
@@ -214,12 +212,13 @@ export default async function HomePage() {
   <p className="text-slate-600 text-sm leading-relaxed font-light">{body}</p>
 </div>
  </StaggerItem>
- ))}
- </StaggerContainer>
- </div>
- </section>
+))}
+  </StaggerContainer>
+  </div>
+  </div>
+  </section>
 
- {/* Testimonials */}
+  {/* Testimonials */}
  {showTestimonials && <>
  <WaveDivider color="#f0f9ff" />
  <section className="py-20 bg-ocean-50 relative overflow-hidden">
