@@ -125,7 +125,7 @@ export default function RoomCard({ room, initialFavorited = false }) {
 
  <div className="flex items-center justify-between pt-3 border-t border-white/20">
  <div>
- <span className="inline-block bg-ocean-500/10 backdrop-blur-sm rounded-full px-3 py-1 text-2xl font-bold text-ocean-700">₱{day_price}</span>
+ <span className="inline-block bg-ocean-500/10 backdrop-blur-sm rounded-full px-3 py-1 text-2xl font-bold text-ocean-800">₱{day_price}</span>
  {!isOvernight && !is_day_only && night_price && (
  <span className="text-gray-400 text-sm"> / ₱{night_price}</span>
  )}

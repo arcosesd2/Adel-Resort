@@ -153,22 +153,17 @@ export default async function HomePage() {
  {/* Wave → rooms */}
  <WaveDivider color="#ffffff" />
 
- {/* Featured Rooms */}
- <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-100 via-cyan-50 to-blue-100 overflow-hidden">
- <div className="absolute inset-0 pointer-events-none">
- <div className="absolute top-1/4 -left-24 w-[28rem] h-[28rem] bg-cyan-300/40 rounded-full blur-3xl" />
- <div className="absolute bottom-1/4 -right-24 w-[28rem] h-[28rem] bg-blue-300/40 rounded-full blur-3xl" />
- <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-sky-200/50 rounded-full blur-3xl" />
- </div>
- <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+{/* Featured Rooms */}
+  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-slate-50 via-sky-50 to-blue-50">
+  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
- <p className="text-blue-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Stay With Us</p>
- <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700">
- Featured Accommodations
- </h2>
- <p className="text-blue-700/80 text-lg font-light max-w-2xl mx-auto">
- From budget-friendly cottages to fully furnished rooms
- </p>
+<p className="text-ocean-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Stay With Us</p>
+  <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-slate-800 to-ocean-700">
+  Featured Accommodations
+  </h2>
+  <p className="text-slate-600 text-lg font-light max-w-2xl mx-auto">
+  From budget-friendly cottages to fully furnished rooms
+  </p>
  </FadeInUp>
  <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {rooms.slice(0, 3).map((room) => (
@@ -186,32 +181,27 @@ export default async function HomePage() {
  </div>
  </section>
 
- {/* Amenities */}
- <section className="relative py-24 md:py-28 bg-gradient-to-b from-blue-100 via-sky-100 to-cyan-100 overflow-hidden">
- <div className="absolute inset-0 pointer-events-none">
- <div className="absolute top-1/3 -right-24 w-[28rem] h-[28rem] bg-cyan-300/40 rounded-full blur-3xl" />
- <div className="absolute bottom-1/4 -left-24 w-[28rem] h-[28rem] bg-blue-300/40 rounded-full blur-3xl" />
- <div className="absolute top-1/2 right-1/3 w-80 h-80 bg-sky-200/50 rounded-full blur-3xl" />
- </div>
- <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+{/* Amenities */}
+  <section className="relative py-24 md:py-28 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
  <FadeInUp className="text-center mb-14">
- <p className="text-blue-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Resort Amenities</p>
- <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700">
- Everything You Need
- </h2>
- <p className="text-blue-700/80 text-lg font-light max-w-2xl mx-auto">
- Comforts and conveniences for your stay
- </p>
+<p className="text-ocean-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Resort Amenities</p>
+  <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-slate-800 to-ocean-700">
+  Everything You Need
+  </h2>
+  <p className="text-slate-600 text-lg font-light max-w-2xl mx-auto">
+  Comforts and conveniences for your stay
+  </p>
  </FadeInUp>
  <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 gap-6">
  {amenities.map(({ icon: Icon, title, body }) => (
  <StaggerItem key={title}>
-<div className="group h-full p-6 md:p-7 rounded-2xl bg-white/15 backdrop-blur-xl border border-white/25 shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.2)] hover:border-white/40 hover:-translate-y-1 transition-all duration-300">
-  <div className="w-12 h-12 rounded-xl bg-white/40 backdrop-blur-md flex items-center justify-center mb-5 group-hover:bg-white/50 transition-colors">
-    <Icon className="text-blue-700" size={22} strokeWidth={1.5} />
+<div className="group h-full p-6 md:p-7 rounded-2xl bg-white/20 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.16)] hover:border-white/60 hover:-translate-y-1 transition-all duration-300">
+  <div className="w-12 h-12 rounded-xl bg-ocean-500/10 backdrop-blur-md flex items-center justify-center mb-5 group-hover:bg-ocean-500/15 transition-colors">
+    <Icon className="text-ocean-700" size={22} strokeWidth={1.5} />
   </div>
-  <h3 className="font-extralight text-xl md:text-2xl text-blue-900 mb-3 leading-snug">{title}</h3>
-  <p className="text-blue-800/80 text-sm leading-relaxed font-light">{body}</p>
+  <h3 className="font-extralight text-xl md:text-2xl text-slate-800 mb-3 leading-snug">{title}</h3>
+  <p className="text-slate-600 text-sm leading-relaxed font-light">{body}</p>
 </div>
  </StaggerItem>
  ))}
