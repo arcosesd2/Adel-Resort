@@ -11,12 +11,19 @@ export default function Footer() {
       <WaveDivider color="#0c4a6e" />
       <footer className="bg-ocean-900 text-white">
         {/* Newsletter Section */}
-        <div className="bg-gradient-to-r from-ocean-800 to-ocean-700">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="relative overflow-hidden bg-gradient-to-r from-ocean-800 to-ocean-700">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-20 -right-20 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-24 -left-16 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl" />
+          </div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <FadeInUp className="flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
-                <h3 className="font-serif text-2xl font-bold mb-1">Stay in the Loop</h3>
-                <p className="text-ocean-200 text-sm">Get updates on promos, events, and new accommodations.</p>
+                <p className="text-cyan-300/80 font-light tracking-[0.3em] text-xs uppercase mb-2">Stay in the Loop</p>
+                <h3 className="font-extralight text-3xl md:text-4xl leading-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-cyan-200 mb-1">
+                  News, promos & quiet escapes
+                </h3>
+                <p className="text-ocean-200 text-sm font-light">Get updates on promos, events, and new accommodations.</p>
               </div>
               <NewsletterForm />
             </FadeInUp>
@@ -27,7 +34,7 @@ export default function Footer() {
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand */}
             <StaggerItem className="md:col-span-1">
-              <Link href="/" className="flex items-center gap-2 font-serif font-bold text-xl mb-3">
+              <Link href="/" className="flex items-center gap-2 font-extralight tracking-wide text-xl mb-3">
                 <Image src="/logo.png" alt="Adel Beach Resort" width={40} height={40} className="object-contain" />
                 Adel Beach Resort
               </Link>
@@ -46,7 +53,7 @@ export default function Footer() {
 
             {/* Quick Links */}
             <StaggerItem>
-              <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
+              <h3 className="font-light tracking-[0.2em] text-xs uppercase text-cyan-200 mb-4">Quick Links</h3>
               <ul className="space-y-2 text-ocean-200">
                 {[
                   { href: '/', label: 'Home' },
@@ -67,7 +74,7 @@ export default function Footer() {
 
             {/* Accommodations */}
             <StaggerItem>
-              <h3 className="font-semibold text-lg mb-4">Accommodations</h3>
+              <h3 className="font-light tracking-[0.2em] text-xs uppercase text-cyan-200 mb-4">Accommodations</h3>
               <ul className="space-y-2 text-ocean-200 text-sm">
                 {[
                   { href: '/rooms?room_type=cottage', label: 'Cottages' },
@@ -87,7 +94,7 @@ export default function Footer() {
 
             {/* Contact */}
             <StaggerItem>
-              <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
+              <h3 className="font-light tracking-[0.2em] text-xs uppercase text-cyan-200 mb-4">Contact Us</h3>
               <ul className="space-y-3 text-ocean-200">
                 <li className="flex items-start gap-2 text-sm">
                   <MapPin size={16} className="mt-0.5 flex-shrink-0 text-sand-400" />
