@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Quote, Star, Users, Home, Clock, Award } from 'lucide-react'
+import { ArrowRight, Quote, Star, Users, Home, Clock, Award, Car, Music2, Baby, Trophy, ShoppingBag, Flame } from 'lucide-react'
 import api from '@/lib/api'
 import RoomCard from '@/components/RoomCard'
 import HeroSection from '@/components/HeroSection'
@@ -53,6 +53,39 @@ function buildStats(data) {
  { icon: Award, end: data?.average_rating || 0, label: 'Average Rating', decimals: 1 },
  ]
 }
+
+const amenities = [
+ {
+ icon: Car,
+ title: 'Spacious Parking',
+ body: 'Ample on-site parking for cars, vans, and motorcycles. Stay close to your cottage and arrive without the hassle of street parking.',
+ },
+ {
+ icon: Music2,
+ title: 'Karaoke Units',
+ body: 'Sing your heart out with private karaoke setups across the resort — a guest favorite for celebrations, family bonding, and late-afternoon fun.',
+ },
+ {
+ icon: Baby,
+ title: 'Children’s Playground',
+ body: 'Slides, swings, and a safe play space designed to keep the little ones entertained while parents relax by the shore.',
+ },
+ {
+ icon: Trophy,
+ title: 'Multi-purpose Court',
+ body: 'An outdoor court built for volleyball, basketball, and pickleball — perfect for group games, tournaments, and team-building activities.',
+ },
+ {
+ icon: ShoppingBag,
+ title: 'Mini Convenience Store',
+ body: 'Snacks, drinks, ice, and everyday essentials available on-site, so you don’t need to leave the resort for last-minute needs.',
+ },
+ {
+ icon: Flame,
+ title: 'Common Grill Area',
+ body: 'Shared grilling stations for cooking up your own seafood, barbecue, and beachside feasts. Bring your catch — we’ll provide the fire.',
+ },
+]
 
 const testimonials = [
  {
@@ -149,6 +182,38 @@ export default async function HomePage() {
  <ArrowRight size={18} />
  </Link>
  </FadeInUp>
+ </div>
+ </section>
+
+ {/* Amenities */}
+ <section className="relative py-24 md:py-28 bg-gradient-to-b from-white to-blue-50 overflow-hidden">
+ <div className="absolute inset-0 pointer-events-none opacity-40">
+ <div className="absolute top-1/3 -right-20 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl" />
+ <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
+ </div>
+ <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+ <FadeInUp className="text-center mb-14">
+ <p className="text-blue-600 font-light tracking-[0.3em] text-xs uppercase mb-4">Resort Amenities</p>
+ <h2 className="font-extralight text-4xl md:text-5xl lg:text-6xl mb-5 leading-tight bg-clip-text text-transparent bg-gradient-to-b from-blue-900 to-blue-700">
+ Everything You Need
+ </h2>
+ <p className="text-blue-700/80 text-lg font-light max-w-2xl mx-auto">
+ Comforts and conveniences for your stay
+ </p>
+ </FadeInUp>
+ <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 gap-6">
+ {amenities.map(({ icon: Icon, title, body }) => (
+ <StaggerItem key={title}>
+ <div className="group h-full p-6 md:p-7 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-300">
+ <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-5 group-hover:from-blue-200 group-hover:to-cyan-200 transition-colors">
+ <Icon className="text-blue-700" size={22} strokeWidth={1.5} />
+ </div>
+ <h3 className="font-extralight text-xl md:text-2xl text-blue-900 mb-3 leading-snug">{title}</h3>
+ <p className="text-blue-800/70 text-sm leading-relaxed font-light">{body}</p>
+ </div>
+ </StaggerItem>
+ ))}
+ </StaggerContainer>
  </div>
  </section>
 
