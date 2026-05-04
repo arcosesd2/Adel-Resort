@@ -204,7 +204,7 @@ export default async function HomePage() {
  <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 gap-6">
  {amenities.map(({ icon: Icon, title, body }) => (
  <StaggerItem key={title}>
- <div className="group h-full p-6 md:p-7 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-300">
+ <div className="group h-full p-6 md:p-7 rounded-2xl bg-white/50 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.08)] hover:shadow-[0_12px_40px_0_rgba(31,38,135,0.15)] hover:-translate-y-1 transition-all duration-300">
  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-5 group-hover:from-blue-200 group-hover:to-cyan-200 transition-colors">
  <Icon className="text-blue-700" size={22} strokeWidth={1.5} />
  </div>
