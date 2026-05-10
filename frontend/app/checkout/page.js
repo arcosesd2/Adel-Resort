@@ -58,8 +58,9 @@ function CheckoutContent() {
 
   const handleConfirmLeave = async () => {
     setLeaving(true)
+    const roomId = booking?.room
     await cancelBookingOnLeave()
-    router.replace('/dashboard')
+    router.replace(roomId ? `/rooms/${roomId}` : '/dashboard')
   }
 
   useEffect(() => {
@@ -496,7 +497,7 @@ function CheckoutContent() {
               <h3 className="text-lg font-bold text-gray-900">Leave Checkout?</h3>
             </div>
             <p className="text-gray-600 text-sm mb-2">
-              If you leave, your booking will be <strong className="text-red-600">cancelled</strong> and you&apos;ll need to start over.
+              If you leave, your booking will be <strong className="text-red-600">cancelled</strong> and you&apos;ll return to the room page.
             </p>
             <p className="text-gray-400 text-xs mb-6">Press Cancel to stay and continue with payment.</p>
             <div className="flex gap-3">
