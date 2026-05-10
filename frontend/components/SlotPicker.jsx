@@ -409,7 +409,7 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
                 textClass = overnightHasOverlap ? 'text-red-700 font-semibold' : 'text-ocean-700 font-semibold'
               }
 
-              const hasPromo = !isPast && !isBk && promoDates[dateStr]?.length > 0
+              const hasPromo = !isPast && promoDates[dateStr]?.length > 0
 
               return (
                 <button
@@ -548,7 +548,7 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
             const daySel   = selectedSet.has(slotKey(dateStr, 'day'))
             const nightSel = selectedSet.has(slotKey(dateStr, 'night'))
 
-            const hasPromo = !fullyPast && !dayBk && !nightBk && promoDates[dateStr]?.length > 0
+            const hasPromo = !fullyPast && promoDates[dateStr]?.length > 0
 
             let cellBg = ''
             if (fullyPast) cellBg = 'bg-gray-50 opacity-50'
