@@ -28,7 +28,8 @@ function CheckoutContent() {
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const pendingNavRef = useRef(null)
-  const activeRef = useRef(false)
+  const readyRef = useRef(false)
+  const ignorePopRef = useRef(true)
 
   const cancelBookingOnLeave = async () => {
     if (!bookingId) return
@@ -45,7 +46,10 @@ function CheckoutContent() {
     const origReplace = window.history.replaceState.bind(window.history)
 
     const intercept = (method) => function (state, title, url) {
-      if (leaving || !url || url === currentUrl) { method.call(window.history, state, title, url); return }
+      if (leaving || !url || !readyRef.current || url === currentUrl) {
+        method.call(window.history, state, title, url)
+        return
+      }
       pendingNavRef.current = { method, state, title, url }
       setShowLeaveModal(true)
     }
@@ -56,18 +60,21 @@ function CheckoutContent() {
     window.history.pushState({ checkout: true }, '', currentUrl)
 
     const handlePopState = () => {
+      if (ignorePopRef.current) { ignorePopRef.current = false; return }
       window.history.pushState({ checkout: true }, '', currentUrl)
       if (!leaving) setShowLeaveModal(true)
     }
     window.addEventListener('popstate', handlePopState)
 
-    activeRef.current = true
+    const timer = setTimeout(() => { readyRef.current = true }, 200)
 
     return () => {
+      clearTimeout(timer)
+      readyRef.current = false
+      ignorePopRef.current = true
       window.history.pushState = origPush
       window.history.replaceState = origReplace
       window.removeEventListener('popstate', handlePopState)
-      activeRef.current = false
     }
   }, [booking, leaving])
 

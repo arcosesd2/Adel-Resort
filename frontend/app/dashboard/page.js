@@ -112,8 +112,23 @@ function BookingCard({ booking, onCancel, reviews, onReviewSubmitted }) {
 
       <div className="flex items-center justify-between border-t pt-3">
         <div>
-          <span className="text-xl font-bold text-ocean-700">₱{booking.total_price}</span>
+          <span className="text-xl font-bold text-ocean-700">
+            ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0)).toFixed(2)}
+          </span>
           <span className="text-gray-400 text-sm capitalize"> · {booking.slots_summary}</span>
+          {(parseFloat(booking.promo_discount || 0) > 0 || parseFloat(booking.voucher_discount || 0) > 0) && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {parseFloat(booking.promo_discount || 0) > 0 && (
+                <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1.5 py-0.5 rounded-full font-medium">Promo</span>
+              )}
+              {parseFloat(booking.voucher_discount || 0) > 0 && (
+                <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">Voucher</span>
+              )}
+            </div>
+          )}
+          {parseFloat(booking.promo_discount || 0) > 0 || parseFloat(booking.voucher_discount || 0) > 0 ? (
+            <span className="text-xs text-gray-400 line-through ml-1">₱{parseFloat(booking.total_price).toFixed(2)}</span>
+          ) : null}
         </div>
 
         <div className="flex gap-2">
