@@ -54,10 +54,10 @@ class BookingSerializer(serializers.ModelSerializer):
         return None
 
     def get_full_payment_deadline(self, obj):
-        """1-hour deadline after admin approval for downpayment bookings."""
+        """1-hour deadline after admin approval for downpayment/partial bookings."""
         if (obj.approved_at
                 and hasattr(obj, 'payment')
-                and obj.payment.payment_type == 'downpayment'):
+                and obj.payment.payment_type in ('downpayment', 'partial')):
             deadline = obj.approved_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
             return deadline.isoformat()
         return None

@@ -125,6 +125,18 @@ def submit_proof_of_payment(request):
 
     if raw_payment_type == 'downpayment':
         amount = (amount * Decimal('0.2')).quantize(Decimal('0.01'))
+    elif raw_payment_type == 'partial':
+        custom_amount = serializer.validated_data.get('custom_amount')
+        if custom_amount is None:
+            return Response({'detail': 'Custom amount is required for partial payment.'}, status=status.HTTP_400_BAD_REQUEST)
+        min_amount = (amount * Decimal('0.2')).quantize(Decimal('0.01'))
+        max_amount = (amount * Decimal('0.99')).quantize(Decimal('0.01'))
+        if custom_amount < min_amount or custom_amount > max_amount:
+            return Response(
+                {'detail': f'Partial payment must be between ₱{min_amount} and ₱{max_amount}.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        amount = custom_amount
 
     Payment.objects.create(
         booking=booking,

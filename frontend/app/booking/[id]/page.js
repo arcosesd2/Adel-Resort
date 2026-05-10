@@ -73,7 +73,7 @@ export default function BookingDetailPage() {
           </div>
         )}
 
-        {booking.status === 'confirmed' && booking.payment_type === 'downpayment' && booking.full_payment_deadline && (
+        {booking.status === 'confirmed' && (booking.payment_type === 'downpayment' || booking.payment_type === 'partial') && booking.full_payment_deadline && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
             <AlertTriangle className="text-amber-500 flex-shrink-0" size={28} />
             <div>
@@ -192,12 +192,12 @@ export default function BookingDetailPage() {
             {booking.payment_type && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">
-                  {booking.payment_type === 'full' ? 'Paid (Full Payment)' : 'Paid (20% Downpayment)'}
+                  {booking.payment_type === 'full' ? 'Paid (Full Payment)' : booking.payment_type === 'partial' ? 'Paid (Partial Payment)' : 'Paid (20% Downpayment)'}
                 </span>
                 <span className="font-semibold text-gray-700">₱{booking.payment_amount}</span>
               </div>
             )}
-            {booking.payment_type === 'downpayment' && (
+            {(booking.payment_type === 'downpayment' || booking.payment_type === 'partial') && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Remaining Balance (due at check-in)</span>
                 <span className="font-semibold text-amber-600">

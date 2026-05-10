@@ -38,6 +38,7 @@ export default function RevenueBreakdownsSection({ insights }) {
   const paymentChartData = revenue_by_payment_type.map(r => ({
     name: r.payment__payment_type === 'full' ? 'Full Payment'
         : r.payment__payment_type === 'downpayment' ? 'Downpayment'
+        : r.payment__payment_type === 'partial' ? 'Partial'
         : r.payment__payment_type === 'onsite' ? 'Onsite (no payment record)'
         : r.payment__payment_type,
     value: r.revenue,

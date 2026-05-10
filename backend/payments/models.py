@@ -11,6 +11,7 @@ class PaymentStatus(models.TextChoices):
 class PaymentType(models.TextChoices):
     FULL = 'full', 'Full Payment'
     DOWNPAYMENT = 'downpayment', '20% Downpayment'
+    PARTIAL = 'partial', 'Partial Payment'
 
 
 class Payment(models.Model):

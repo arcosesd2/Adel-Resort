@@ -83,9 +83,11 @@ function BookingCard({ booking, onCancel, reviews, onReviewSubmitted }) {
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium ${
             booking.payment_type === 'full'
               ? 'bg-green-50 text-green-700'
+              : booking.payment_type === 'partial'
+              ? 'bg-purple-50 text-purple-700'
               : 'bg-blue-50 text-blue-700'
           }`}>
-            {booking.payment_type === 'full' ? 'Full Payment' : '20% Downpayment'}
+            {booking.payment_type === 'full' ? 'Full Payment' : booking.payment_type === 'partial' ? 'Partial Payment' : '20% Downpayment'}
             {booking.payment_amount && ` — ₱${booking.payment_amount}`}
           </span>
         </div>
