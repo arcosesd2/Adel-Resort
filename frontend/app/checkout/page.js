@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Shield, CalendarDays, Tag, X, AlertTriangle } from 'lucide-react'
 import { FadeInUp } from '@/components/motions'
@@ -26,6 +25,42 @@ function CheckoutContent() {
   const [paymentType, setPaymentType] = useState('full')
   const [customAmount, setCustomAmount] = useState('')
   const [timeLeft, setTimeLeft] = useState('')
+  const [showLeaveModal, setShowLeaveModal] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+
+  const cancelBookingOnLeave = async () => {
+    if (!bookingId) return
+    try {
+      await api.delete(`/bookings/${bookingId}/`)
+    } catch {}
+  }
+
+  useEffect(() => {
+    if (!booking) return
+    window.history.pushState({ checkout: true }, '')
+    const handlePopState = () => {
+      window.history.pushState({ checkout: true }, '')
+      setShowLeaveModal(true)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [booking])
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!booking || leaving) return
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [booking, leaving])
+
+  const handleConfirmLeave = async () => {
+    setLeaving(true)
+    await cancelBookingOnLeave()
+    router.replace('/dashboard')
+  }
 
   useEffect(() => {
     if (!isReady) return
@@ -150,9 +185,9 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Link href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
+        <button onClick={() => setShowLeaveModal(true)} className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
           <ArrowLeft size={16} /> Back to Dashboard
-        </Link>
+        </button>
 
         <FadeInUp>
           <h1 className="font-serif text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
@@ -452,6 +487,36 @@ function CheckoutContent() {
           </div></FadeInUp>
         </div>
       </div>
+
+      {showLeaveModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle size={24} className="text-red-500 flex-shrink-0" />
+              <h3 className="text-lg font-bold text-gray-900">Leave Checkout?</h3>
+            </div>
+            <p className="text-gray-600 text-sm mb-2">
+              If you leave, your booking will be <strong className="text-red-600">cancelled</strong> and you&apos;ll need to start over.
+            </p>
+            <p className="text-gray-400 text-xs mb-6">Press Cancel to stay and continue with payment.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                className="btn-primary flex-1 text-sm"
+              >
+                Stay
+              </button>
+              <button
+                onClick={handleConfirmLeave}
+                disabled={leaving}
+                className="flex-1 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {leaving ? 'Cancelling...' : 'Leave & Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
