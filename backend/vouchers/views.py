@@ -155,13 +155,18 @@ def _is_promotion_applicable(promo, booking_dates, room_type):
         return False
     if promo.room_types and room_type not in promo.room_types:
         return False
-    from django.utils import timezone as tz
-    today = tz.localdate()
     if promo.schedule_type == 'duration':
-        if promo.valid_from and today < promo.valid_from:
-            return False
-        if promo.valid_until and today > promo.valid_until:
-            return False
+        booking_date_objs = []
+        for d in booking_dates:
+            try:
+                booking_date_objs.append(date.fromisoformat(d) if isinstance(d, str) else d)
+            except (ValueError, TypeError):
+                pass
+        if booking_date_objs:
+            if promo.valid_from and all(d < promo.valid_from for d in booking_date_objs):
+                return False
+            if promo.valid_until and all(d > promo.valid_until for d in booking_date_objs):
+                return False
     elif promo.schedule_type == 'recurring':
         if promo.applicable_days:
             booking_weekdays = set()
