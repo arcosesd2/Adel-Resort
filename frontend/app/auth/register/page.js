@@ -151,8 +151,8 @@ function RegisterForm() {
                   value={form.password}
                   onChange={handleChange}
                   required
-                  minLength={10}
-                  placeholder="At least 10 characters"
+                  minLength={8}
+                  placeholder="At least 8 characters"
                   className="input-field pr-10"
                 />
                 <button

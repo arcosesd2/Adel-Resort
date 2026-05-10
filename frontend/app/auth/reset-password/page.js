@@ -70,7 +70,7 @@ function ResetPasswordForm() {
                 <KeyRound className="text-ocean-600" size={24} />
               </div>
               <h1 className="text-2xl font-serif font-bold text-ocean-800">Set New Password</h1>
-              <p className="text-gray-500 text-sm mt-1">Choose a strong password (min. 10 characters).</p>
+              <p className="text-gray-500 text-sm mt-1">Choose a strong password (min. 8 characters).</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,9 +82,9 @@ function ResetPasswordForm() {
                     value={form.new_password}
                     onChange={(e) => setForm({ ...form, new_password: e.target.value })}
                     className="input-field pr-10"
-                    placeholder="Min. 10 characters"
+                    placeholder="Min. 8 characters"
                     required
-                    minLength={10}
+                    minLength={8}
                   />
                   <button
                     type="button"

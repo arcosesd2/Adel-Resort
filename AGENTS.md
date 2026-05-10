@@ -36,6 +36,40 @@
 
 Both staging domains have SSL via Certbot (auto-renewal enabled).
 
+# Two-Repo Workflow (CRITICAL)
+
+- **Staging repo**: `vps2-adel-resort/` → GitHub `Staging-Adel-Resort` → VPS2 (`74.208.142.42`)
+- **Production repo**: `vps1-adel-resort/` → GitHub `Adel-Resort` → VPS1 (`74.208.142.44`)
+- These are **separate repos**, NOT branches. Never deploy staging code directly to VPS1.
+
+## Promotion Path
+
+1. Develop + commit + push in `vps2-adel-resort/` → deploy via `deploy/deploy-staging.sh` → sign off on VPS2
+2. In `vps1-adel-resort/`: `git fetch staging && git merge staging/main` → `git push origin main` → run prod deploy
+
+## Do NOT Promote (staging-only files)
+
+- `deploy/deploy-staging.sh`, `deploy/setup-server-staging.sh`
+- `deploy/sync-db-from-prod.sh`, `deploy/sync-db.py`
+- `deploy/check-*.py`, `deploy/debug-*.py`, `deploy/test-*.py`
+- `deploy/env.backend.staging`, `deploy/env.frontend.staging`
+- `deploy/nginx/staging.conf`
+- `deploy/frontend-*.tar.gz`
+- `deploy/pm2/ecosystem.config.js` (staging-specific; prod has its own)
+- `frontend/.next/` build artifacts
+- Any `.env` or `.env.local` files
+
+## DB Rules
+
+- Run `makemigrations --check` on staging before promoting
+- Always run `migrate` on prod after pull
+- Never copy rows staging → prod
+
+## Rollback
+
+- `git revert` + redeploy
+- Never `reset --hard` on pushed prod
+
 # VPS2 Staging Deployment
 
 - App directory: `/home/adel/adel-beach-resort`
@@ -55,10 +89,21 @@ Both staging domains have SSL via Certbot (auto-renewal enabled).
 
 # Deployment Commands
 
-## Redeploy staging after code changes
+## Redeploy staging (VPS2) after code changes
 ```bash
 ssh root@74.208.142.42
-cd /home/adel/adel-beach-resort
+su - adel -c 'cd /home/adel/adel-beach-resort && git pull'
+# Backend:
+su - adel -c 'cd /home/adel/adel-beach-resort/backend && source venv/bin/activate && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate --no-input'
+supervisorctl restart gunicorn
+# Frontend:
+su - adel -c 'cd /home/adel/adel-beach-resort/frontend && npm ci && npm run build'
+su - adel -c 'pm2 restart adel-frontend'
+```
+
+## Redeploy production (VPS1) after promotion
+```bash
+ssh root@74.208.142.44
 su - adel -c 'cd /home/adel/adel-beach-resort && git pull'
 # Backend:
 su - adel -c 'cd /home/adel/adel-beach-resort/backend && source venv/bin/activate && pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate --no-input'

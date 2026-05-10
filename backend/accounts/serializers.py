@@ -5,7 +5,7 @@ from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notifica
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=10)
+    password = serializers.CharField(write_only=True, min_length=8)
     password2 = serializers.CharField(write_only=True)
     email = serializers.EmailField(required=False, allow_blank=True)
 
@@ -60,7 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserManagementSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False, min_length=10)
+    password = serializers.CharField(write_only=True, required=False, min_length=8)
     device_count = serializers.SerializerMethodField()
     login_count = serializers.SerializerMethodField()
     last_login = serializers.DateTimeField(read_only=True)
@@ -123,7 +123,7 @@ class LoginAttemptSerializer(serializers.ModelSerializer):
 
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, min_length=10)
+    new_password = serializers.CharField(required=True, min_length=8)
     new_password2 = serializers.CharField(required=True)
 
     def validate_new_password(self, value):

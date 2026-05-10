@@ -119,11 +119,18 @@ def submit_proof_of_payment(request):
                 discount_amount=discount_amount,
             )
 
+    raw_payment_type = serializer.validated_data.get('payment_type', 'full')
+    if raw_payment_type not in dict(PaymentType.choices):
+        raw_payment_type = 'full'
+
+    if raw_payment_type == 'downpayment':
+        amount = (amount * Decimal('0.2')).quantize(Decimal('0.01'))
+
     Payment.objects.create(
         booking=booking,
         gcash_reference=serializer.validated_data['gcash_reference'],
         proof_of_payment=serializer.validated_data['proof_of_payment'],
-        payment_type=PaymentType.FULL,
+        payment_type=raw_payment_type,
         amount=amount,
         currency='php',
         status=PaymentStatus.PENDING,

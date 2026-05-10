@@ -23,7 +23,7 @@ const statusIcon = {
 
 const paymentTypeLabel = {
   full:        'Full Payment',
-  downpayment: '20% Downpayment',
+  downpayment: 'Downpayment',
 }
 
 export default function PaymentManagementSection() {
