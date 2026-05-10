@@ -138,6 +138,11 @@ function CheckoutContent() {
   const remainingBalance = paymentType === 'downpayment' ? (basePrice * 0.8).toFixed(2) : paymentType === 'partial' ? (basePrice - parseCustom).toFixed(2) : '0.00'
   const partialMin = (basePrice * 0.2).toFixed(2)
   const partialMax = (basePrice * 0.99).toFixed(2)
+  const partialError = paymentType === 'partial' && customAmount !== ''
+    ? parseCustom < parseFloat(partialMin) ? `Minimum is ₱${partialMin}`
+    : parseCustom > parseFloat(partialMax) ? `Maximum is ₱${partialMax}`
+    : ''
+    : ''
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
@@ -295,8 +300,15 @@ function CheckoutContent() {
                       value={customAmount}
                       onChange={(e) => setCustomAmount(e.target.value)}
                       placeholder={`Min ₱${partialMin}`}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent"
+                      className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+                        partialError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                      }`}
                     />
+                    {partialError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <AlertTriangle size={12} /> {partialError}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -429,6 +441,7 @@ function CheckoutContent() {
               totalAmount={amountDue}
               paymentType={paymentType}
               customAmount={paymentType === 'partial' ? customAmount : ''}
+              customError={partialError}
               voucherCode={voucherApplied?.code || ''}
               promotionId={selectedPromo?.id || ''}
               onSuccess={handlePaymentSuccess}
