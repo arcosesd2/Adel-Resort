@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Shield, CalendarDays, Tag, X, AlertTriangle } from 'lucide-react'
@@ -27,6 +27,8 @@ function CheckoutContent() {
   const [timeLeft, setTimeLeft] = useState('')
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaving, setLeaving] = useState(false)
+  const pendingNavRef = useRef(null)
+  const { push: routerPush } = useRouter()
 
   const cancelBookingOnLeave = async () => {
     if (!bookingId) return
@@ -37,14 +39,34 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (!booking) return
-    window.history.pushState({ checkout: true }, '')
-    const handlePopState = () => {
-      window.history.pushState({ checkout: true }, '')
+    const origPush = window.history.pushState.bind(window.history)
+    const origReplace = window.history.replaceState.bind(window.history)
+
+    const intercept = (method) => function (state, title, url) {
+      if (leaving || !url) { method.call(window.history, state, title, url); return }
+      pendingNavRef.current = { method, state, title, url }
       setShowLeaveModal(true)
+    }
+
+    window.history.pushState = intercept(origPush)
+    window.history.replaceState = intercept(origReplace)
+
+    return () => {
+      window.history.pushState = origPush
+      window.history.replaceState = origReplace
+    }
+  }, [booking, leaving])
+
+  useEffect(() => {
+    if (!booking) return
+    window.history.pushState({ checkout: true }, '', window.location.href)
+    const handlePopState = () => {
+      window.history.pushState({ checkout: true }, '', window.location.href)
+      if (!leaving) setShowLeaveModal(true)
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [booking])
+  }, [booking, leaving])
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -60,7 +82,12 @@ function CheckoutContent() {
     setLeaving(true)
     const roomId = booking?.room
     await cancelBookingOnLeave()
-    router.replace(roomId ? `/rooms/${roomId}` : '/dashboard')
+    const pending = pendingNavRef.current
+    if (pending) {
+      pending.method.call(window.history, pending.state, pending.title, pending.url)
+    } else {
+      router.replace(roomId ? `/rooms/${roomId}` : '/dashboard')
+    }
   }
 
   useEffect(() => {
