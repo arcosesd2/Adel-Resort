@@ -185,32 +185,30 @@ export default function BookingDetailPage() {
           )}
 
           <div className="border-t pt-5 space-y-2">
-            {(parseFloat(booking.promo_discount || 0) > 0 || parseFloat(booking.voucher_discount || 0) > 0) && (
-              <>
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Subtotal</span>
-                  <span>₱{(parseFloat(booking.total_price) + parseFloat(booking.promo_discount || 0) + parseFloat(booking.voucher_discount || 0)).toFixed(2)}</span>
-                </div>
-                {parseFloat(booking.promo_discount || 0) > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span className="flex items-center gap-1">
-                      Promo Discount
-                      <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1 rounded">%</span>
-                    </span>
-                    <span>-₱{parseFloat(booking.promo_discount).toFixed(2)}</span>
-                  </div>
-                )}
-                {parseFloat(booking.voucher_discount || 0) > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>Voucher Discount</span>
-                    <span>-₱{parseFloat(booking.voucher_discount).toFixed(2)}</span>
-                  </div>
-                )}
-              </>
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Subtotal</span>
+              <span>₱{parseFloat(booking.total_price).toFixed(2)}</span>
+            </div>
+            {parseFloat(booking.promo_discount || 0) > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span className="flex items-center gap-1">
+                  Promo Discount
+                  <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1 rounded">%</span>
+                </span>
+                <span>-₱{parseFloat(booking.promo_discount).toFixed(2)}</span>
+              </div>
+            )}
+            {parseFloat(booking.voucher_discount || 0) > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Voucher Discount</span>
+                <span>-₱{parseFloat(booking.voucher_discount).toFixed(2)}</span>
+              </div>
             )}
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Total Amount</span>
-              <span className="text-2xl font-bold text-ocean-700">₱{booking.total_price}</span>
+              <span className="text-2xl font-bold text-ocean-700">
+                ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0)).toFixed(2)}
+              </span>
             </div>
             {booking.payment_type && (
               <div className="flex justify-between items-center text-sm">

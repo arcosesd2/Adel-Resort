@@ -28,6 +28,7 @@ function CheckoutContent() {
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const pendingNavRef = useRef(null)
+  const setupRef = useRef(false)
   const { push: routerPush } = useRouter()
 
   const cancelBookingOnLeave = async () => {
@@ -43,7 +44,7 @@ function CheckoutContent() {
     const origReplace = window.history.replaceState.bind(window.history)
 
     const intercept = (method) => function (state, title, url) {
-      if (leaving || !url) { method.call(window.history, state, title, url); return }
+      if (leaving || !url || setupRef.current) { method.call(window.history, state, title, url); return }
       pendingNavRef.current = { method, state, title, url }
       setShowLeaveModal(true)
     }
@@ -59,9 +60,13 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (!booking) return
+    setupRef.current = true
     window.history.pushState({ checkout: true }, '', window.location.href)
+    setupRef.current = false
     const handlePopState = () => {
+      setupRef.current = true
       window.history.pushState({ checkout: true }, '', window.location.href)
+      setupRef.current = false
       if (!leaving) setShowLeaveModal(true)
     }
     window.addEventListener('popstate', handlePopState)
