@@ -53,6 +53,11 @@ function cellBg(booked, max) {
   return ''
 }
 
+/** Get promos for a room on a given date */
+function getPromosForDate(room, dateStr) {
+  return room.promo_dates?.[dateStr] || []
+}
+
 export default function PublicCalendar() {
   const [roomsAvailability, setRoomsAvailability] = useState([])
   const [loading, setLoading] = useState(true)
@@ -208,6 +213,12 @@ export default function PublicCalendar() {
           <span className="w-4 h-4 rounded-sm inline-block bg-red-500" />
           <span className="text-gray-600">Fully Booked</span>
         </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full inline-block bg-fuchsia-500 flex items-center justify-center">
+            <span className="text-[7px] text-white font-bold">%</span>
+          </span>
+          <span className="text-gray-600">Promo Active</span>
+        </span>
       </div>
 
       {/* Week scroll buttons */}
@@ -349,24 +360,29 @@ export default function PublicCalendar() {
 
                             // Day-only rooms span both sub-columns (no grey Night cell)
                             if (isDayOnly) {
+                              const promos = getPromosForDate(room, dateStr)
                               return (
                                 <div
                                   key={d.day}
-                                  className={`flex items-center justify-center text-[10px] font-bold transition-colors ${
+                                  className={`relative flex items-center justify-center text-[10px] font-bold transition-colors ${
                                     d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
                                   } ${cellBg(dayBooked, max)} ${!cellBg(dayBooked, max) ? 'text-gray-400' : ''}`}
                                   style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px`, borderRight: '2px solid #e5e7eb' }}
-                                  title={`${room.room_name} — Day: ${dayBooked}/${max} booked`}
+                                  title={`${room.room_name} — Day: ${dayBooked}/${max} booked${promos.length > 0 ? ' | Promo: ' + promos.map(p => p.title).join(', ') : ''}`}
                                 >
                                   {dayBooked > 0 ? `${dayBooked}/${max}` : ''}
+                                  {promos.length > 0 && (
+                                    <span className="absolute top-0.5 right-0.5 text-[8px] bg-fuchsia-500 text-white rounded-full w-3 h-3 flex items-center justify-center font-bold leading-none">%</span>
+                                  )}
                                 </div>
                               )
                             }
 
+                            const slotPromos = getPromosForDate(room, dateStr)
                             return (
                               <div
                                 key={d.day}
-                                className="flex"
+                                className="flex relative"
                                 style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px`, borderRight: '2px solid #e5e7eb' }}
                               >
                                 {/* Day cell */}
@@ -375,7 +391,7 @@ export default function PublicCalendar() {
                                     d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
                                   } ${cellBg(dayBooked, max)} ${!cellBg(dayBooked, max) ? 'text-gray-400' : ''}`}
                                   style={{ borderRight: '1px solid #e2e8f0' }}
-                                  title={`${room.room_name} — Day: ${dayBooked}/${max} booked`}
+                                  title={`${room.room_name} — Day: ${dayBooked}/${max} booked${slotPromos.length > 0 ? ' | Promo: ' + slotPromos.map(p => p.title).join(', ') : ''}`}
                                 >
                                   {dayBooked > 0 ? `${dayBooked}/${max}` : ''}
                                 </div>
@@ -388,6 +404,9 @@ export default function PublicCalendar() {
                                 >
                                   {nightBooked > 0 ? `${nightBooked}/${max}` : ''}
                                 </div>
+                                {slotPromos.length > 0 && (
+                                  <span className="absolute top-0.5 right-0.5 text-[8px] bg-fuchsia-500 text-white rounded-full w-3 h-3 flex items-center justify-center font-bold leading-none">%</span>
+                                )}
                               </div>
                             )
                           }
@@ -395,17 +414,21 @@ export default function PublicCalendar() {
                           // Overnight / 24hr mode — single value spanning both sub-columns
                           const slotType = room.booking_mode === '24hr' ? '24hr' : 'overnight'
                           const booked = getBooked(room.room_id, dateStr, slotType)
+                          const ovPromos = getPromosForDate(room, dateStr)
 
                           return (
                             <div
                               key={d.day}
-                              className={`flex items-center justify-center text-[10px] font-bold transition-colors ${
+                              className={`relative flex items-center justify-center text-[10px] font-bold transition-colors ${
                                 d.isToday ? 'ring-1 ring-inset ring-ocean-300' : ''
                               } ${cellBg(booked, max)} ${!cellBg(booked, max) ? 'text-gray-400' : ''}`}
                               style={{ width: `${DAY_COL_WIDTH}px`, minWidth: `${DAY_COL_WIDTH}px`, borderRight: '2px solid #e5e7eb' }}
-                              title={`${room.room_name} — ${booked}/${max} booked`}
+                              title={`${room.room_name} — ${booked}/${max} booked${ovPromos.length > 0 ? ' | Promo: ' + ovPromos.map(p => p.title).join(', ') : ''}`}
                             >
                               {booked > 0 ? `${booked}/${max}` : ''}
+                              {ovPromos.length > 0 && (
+                                <span className="absolute top-0.5 right-0.5 text-[8px] bg-fuchsia-500 text-white rounded-full w-3 h-3 flex items-center justify-center font-bold leading-none">%</span>
+                              )}
                             </div>
                           )
                         })}
