@@ -81,6 +81,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
   const isOvernight = bookingMode === 'overnight' || bookingMode === '24hr'
   const [bookedSlots, setBookedSlots] = useState([])
   const [maxRooms, setMaxRooms] = useState(1)
+  const [promoDates, setPromoDates] = useState({})
   const [loading, setLoading] = useState(true)
 
   // Slot-mode state
@@ -107,6 +108,7 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
         const { data } = await api.get(`/rooms/${roomId}/availability/`)
         setBookedSlots(data.booked_slots || [])
         setMaxRooms(data.max_rooms || 1)
+        setPromoDates(data.promo_dates || {})
       } catch (err) { console.error('Failed to load availability:', err) }
       finally { setLoading(false) }
     })()
@@ -344,6 +346,11 @@ export default function SlotPicker({ roomId, isDayOnly, bookingMode, onSlotsChan
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded bg-red-400 inline-block" /> Booked
           </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 rounded-full bg-fuchsia-500 inline-block flex items-center justify-center">
+              <span className="text-[6px] text-white font-bold">%</span>
+            </span> Promo
+          </span>
         </div>
 
         {/* Month navigation */}
@@ -402,15 +409,21 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
                 textClass = overnightHasOverlap ? 'text-red-700 font-semibold' : 'text-ocean-700 font-semibold'
               }
 
+              const hasPromo = !isPast && !isBk && promoDates[dateStr]?.length > 0
+
               return (
                 <button
                   key={dateStr}
                   type="button"
                   onClick={() => !disabled && handleOvernightDateClick(dateStr)}
                   disabled={disabled}
-                  className={`border-b border-r border-gray-100 h-12 flex items-center justify-center text-sm transition-all ${cellBg} ${textClass}`}
+                  className={`relative border-b border-r border-gray-100 h-12 flex items-center justify-center text-sm transition-all ${cellBg} ${textClass}`}
+                  title={hasPromo ? `Promo: ${promoDates[dateStr].map(p => p.title).join(', ')}` : undefined}
                 >
                   {day}
+                  {hasPromo && (
+                    <span className="absolute top-0.5 right-0.5 text-[8px] bg-fuchsia-500 text-white rounded-full w-3 h-3 flex items-center justify-center font-bold leading-none">%</span>
+                  )}
                 </button>
               )
             })}
@@ -485,6 +498,11 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
         <span className="flex items-center gap-1">
           <span className="w-3 h-3 rounded bg-red-400 inline-block" /> Booked
         </span>
+        <span className="flex items-center gap-1">
+          <span className="w-3 h-3 rounded-full bg-fuchsia-500 inline-block flex items-center justify-center">
+            <span className="text-[6px] text-white font-bold">%</span>
+          </span> Promo
+        </span>
       </div>
 
       {/* Month navigation */}
@@ -530,6 +548,8 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
             const daySel   = selectedSet.has(slotKey(dateStr, 'day'))
             const nightSel = selectedSet.has(slotKey(dateStr, 'night'))
 
+            const hasPromo = !fullyPast && !dayBk && !nightBk && promoDates[dateStr]?.length > 0
+
             let cellBg = ''
             if (fullyPast) cellBg = 'bg-gray-50 opacity-50'
             else if (isCheckInDate || isCheckOutDate) cellBg = 'bg-ocean-50'
@@ -557,7 +577,8 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
                   type="button"
                   onClick={() => !allDisabled && handleDateClick(dateStr)}
                   disabled={allDisabled}
-                  className={`w-full text-center text-xs font-medium mb-0.5 rounded transition-colors ${
+                  title={hasPromo ? `Promo: ${promoDates[dateStr].map(p => p.title).join(', ')}` : undefined}
+                  className={`relative w-full text-center text-xs font-medium mb-0.5 rounded transition-colors ${
                     allDisabled
                       ? 'text-gray-400 cursor-not-allowed'
                       : isCheckInDate
@@ -570,6 +591,9 @@ const isPast = fullyPast || isSlotPast(dateStr, overnightSlotType)
                   }`}
                 >
                   {day}
+                  {hasPromo && !allDisabled && (
+                    <span className="absolute -top-0.5 -right-0.5 text-[8px] bg-fuchsia-500 text-white rounded-full w-3 h-3 flex items-center justify-center font-bold leading-none">%</span>
+                  )}
                 </button>
 
                 {/* D / N buttons */}

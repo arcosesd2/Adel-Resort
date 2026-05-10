@@ -163,8 +163,10 @@ def room_availability(request, pk):
     return Response({
         'room_id': room.id,
         'room_name': room.name,
+        'room_type': room.room_type,
         'max_rooms': room.max_rooms,
         'booked_slots': _get_booked_slots(room, include_details=include_details),
+        'promo_dates': _get_promo_dates(room.room_type),
     })
 
 
