@@ -21,6 +21,8 @@ class Payment(models.Model):
     payment_type = models.CharField(max_length=20, choices=PaymentType.choices, default=PaymentType.FULL)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.CharField(max_length=3, default='php')
+    promo_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    voucher_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

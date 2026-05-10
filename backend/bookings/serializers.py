@@ -14,6 +14,7 @@ class BookingSerializer(serializers.ModelSerializer):
     slots_summary = serializers.CharField(read_only=True)
     payment_submitted = serializers.SerializerMethodField()
     voucher_discount = serializers.SerializerMethodField()
+    promo_discount = serializers.SerializerMethodField()
     payment_deadline = serializers.SerializerMethodField()
     payment_type = serializers.SerializerMethodField()
     payment_amount = serializers.SerializerMethodField()
@@ -25,7 +26,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'id', 'reference_code', 'room', 'room_detail', 'check_in', 'check_out', 'guests',
             'slots', 'slots_summary', 'total_price', 'status',
             'special_requests', 'created_at', 'approved_at', 'payment_submitted', 'voucher_discount',
-            'payment_deadline', 'payment_type', 'payment_amount', 'full_payment_deadline',
+            'promo_discount', 'payment_deadline', 'payment_type', 'payment_amount', 'full_payment_deadline',
         )
         read_only_fields = ('id', 'reference_code', 'check_in', 'check_out', 'total_price', 'status', 'created_at', 'approved_at')
 
@@ -35,6 +36,11 @@ class BookingSerializer(serializers.ModelSerializer):
     def get_voucher_discount(self, obj):
         if hasattr(obj, 'voucher_usage'):
             return str(obj.voucher_usage.discount_amount)
+        return None
+
+    def get_promo_discount(self, obj):
+        if hasattr(obj, 'payment'):
+            return str(obj.payment.promo_discount or '0')
         return None
 
     def get_payment_deadline(self, obj):
@@ -217,6 +223,8 @@ class AdminBookingSerializer(serializers.ModelSerializer):
     guest_email = serializers.EmailField(source='user.email', read_only=True)
     room_name = serializers.CharField(source='room.name', read_only=True)
     slots_summary = serializers.CharField(read_only=True)
+    voucher_discount = serializers.SerializerMethodField()
+    promo_discount = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
@@ -225,13 +233,24 @@ class AdminBookingSerializer(serializers.ModelSerializer):
             'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'status', 'special_requests', 'created_at', 'is_backdated',
+            'voucher_discount', 'promo_discount',
         )
         read_only_fields = (
             'id', 'reference_code', 'guest_name', 'guest_username', 'guest_email',
             'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
-            'total_price', 'created_at', 'is_backdated',
+            'total_price', 'created_at', 'is_backdated', 'voucher_discount', 'promo_discount',
         )
 
     def get_guest_name(self, obj):
         return f'{obj.user.first_name} {obj.user.last_name}'.strip() or obj.user.username
+
+    def get_voucher_discount(self, obj):
+        if hasattr(obj, 'voucher_usage'):
+            return str(obj.voucher_usage.discount_amount)
+        return None
+
+    def get_promo_discount(self, obj):
+        if hasattr(obj, 'payment'):
+            return str(obj.payment.promo_discount or '0')
+        return None

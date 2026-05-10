@@ -5,7 +5,7 @@ from .models import Payment, PaymentType, GCashConfig
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ('id', 'booking', 'gcash_reference', 'payment_type', 'amount', 'currency', 'status', 'created_at')
+        fields = ('id', 'booking', 'gcash_reference', 'payment_type', 'amount', 'currency', 'promo_discount', 'voucher_discount', 'status', 'created_at')
         read_only_fields = fields
 
 
@@ -23,12 +23,12 @@ class AdminPaymentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'booking_id', 'booking_reference', 'guest_name', 'guest_email',
             'room_name', 'booking_status', 'gcash_reference', 'proof_of_payment_url',
-            'payment_type', 'amount', 'currency', 'status', 'created_at', 'updated_at',
+            'payment_type', 'amount', 'currency', 'promo_discount', 'voucher_discount', 'status', 'created_at', 'updated_at',
         )
         read_only_fields = (
             'id', 'booking_id', 'booking_reference', 'guest_name', 'guest_email',
             'room_name', 'booking_status', 'gcash_reference', 'proof_of_payment_url',
-            'payment_type', 'amount', 'currency', 'created_at', 'updated_at',
+            'payment_type', 'amount', 'currency', 'promo_discount', 'voucher_discount', 'created_at', 'updated_at',
         )
 
     def get_guest_name(self, obj):

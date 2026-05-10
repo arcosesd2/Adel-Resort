@@ -145,6 +145,8 @@ def submit_proof_of_payment(request):
         payment_type=raw_payment_type,
         amount=amount,
         currency='php',
+        promo_discount=promo_discount_amount,
+        voucher_discount=discount_amount,
         status=PaymentStatus.PENDING,
     )
 
