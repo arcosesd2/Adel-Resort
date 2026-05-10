@@ -11,6 +11,16 @@ const PLACEHOLDER = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+const ROOM_TYPE_LABELS = {
+  cottage: 'Cottage',
+  dos_andanas: 'Dos Andanas',
+  lavender_house: 'Lavender House',
+  ac_karaoke: 'Air-Conditioned Room',
+  kubo: 'Kubo',
+  function_hall: 'Function Hall',
+  trapal_table: 'Trapal Table',
+}
+
 function discountBadge(promo) {
   const val = promo.discount_value
   return promo.discount_type === 'percentage' ? `${val}% OFF` : `₱${Number(val).toLocaleString()} OFF`
@@ -90,6 +100,24 @@ export default function PromotionsPage() {
                 <div className="p-5">
                   <h3 className="font-serif text-xl font-bold text-gray-900 mb-2">{promo.title}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed mb-3">{promo.description}</p>
+                  <div className="space-y-2 mb-3">
+                    {promo.room_types?.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {promo.room_types.map(rt => (
+                          <span key={rt} className="text-xs bg-ocean-50 text-ocean-700 px-2 py-0.5 rounded-full font-medium">
+                            {ROOM_TYPE_LABELS[rt] || rt}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">All room types</span>
+                    )}
+                    {promo.min_booking_amount > 0 && (
+                      <p className="text-xs text-amber-600 font-medium">
+                        Min. booking: ₱{Number(promo.min_booking_amount).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 text-xs text-gray-400">
                     <span>{scheduleText(promo)}</span>
                     {promo.allows_voucher && (

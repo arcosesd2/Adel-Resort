@@ -368,8 +368,15 @@ export default function AdminPromotionsPage() {
                     {item.allows_voucher && (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Voucher stackable</span>
                     )}
-                    {item.room_types?.length > 0 && (
-                      <span className="text-xs text-gray-400">{item.room_types.length} room type(s)</span>
+                    {item.room_types?.length > 0 ? (
+                      <span className="text-xs text-ocean-600">
+                        {item.room_types.map(rt => ROOM_TYPES.find(t => t.value === rt)?.label || rt).join(', ')}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">All rooms</span>
+                    )}
+                    {item.min_booking_amount > 0 && (
+                      <span className="text-xs text-amber-600 font-medium">Min. ₱{Number(item.min_booking_amount).toLocaleString()}</span>
                     )}
                   </div>
                 </div>
