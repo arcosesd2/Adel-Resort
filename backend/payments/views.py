@@ -123,6 +123,9 @@ def submit_proof_of_payment(request):
     if raw_payment_type not in dict(PaymentType.choices):
         raw_payment_type = 'full'
 
+    if raw_payment_type == 'downpayment':
+        amount = (amount * Decimal('0.2')).quantize(Decimal('0.01'))
+
     Payment.objects.create(
         booking=booking,
         gcash_reference=serializer.validated_data['gcash_reference'],
