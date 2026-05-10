@@ -35,12 +35,16 @@ export default function BookingForm({ room }) {
   const [savedCheckIn, setSavedCheckIn] = useState(null)
   const [savedCheckOut, setSavedCheckOut] = useState(null)
   const [weekendWalkinOnly, setWeekendWalkinOnly] = useState(false)
+  const [promoDates, setPromoDates] = useState({})
 
   useEffect(() => {
     api.get('/content/settings/')
       .then(({ data }) => setWeekendWalkinOnly(!!data.weekend_walkin_only))
       .catch(() => {})
-  }, [])
+    api.get(`/rooms/${room.id}/availability/`)
+      .then(({ data }) => setPromoDates(data.promo_dates || {}))
+      .catch(() => {})
+  }, [room.id])
 
   const handleRangeChange = useCallback((checkIn, checkOut) => {
     rangeRef.current = { checkIn, checkOut }
@@ -202,7 +206,21 @@ export default function BookingForm({ room }) {
       </div>
 
       {/* Price summary */}
-      {slots.length > 0 && (
+      {slots.length > 0 && (() => {
+        const slotDates = [...new Set(slots.map(s => s.date))]
+        const bestPromo = slotDates.reduce((best, date) => {
+          const promos = promoDates[date] || []
+          for (const p of promos) {
+            const disc = p.discount_type === 'percentage'
+              ? totalPrice * (parseFloat(p.discount_value) / 100)
+              : parseFloat(p.discount_value)
+            if (!best || disc > best.discount) best = { ...p, discount: disc }
+          }
+          return best
+        }, null)
+        const discountedPrice = bestPromo ? Math.max(totalPrice - bestPromo.discount, 0) : totalPrice
+
+        return (
         <div className="bg-ocean-50 rounded-xl p-4 space-y-2 text-sm">
           {isOvernight && overnightCount > 0 && (
             <div className="flex justify-between">
@@ -230,12 +248,21 @@ export default function BookingForm({ room }) {
               <span className="font-medium">₱{(nightCount * nightPrice).toFixed(2)}</span>
             </div>
           )}
+          {bestPromo && (
+            <div className="flex justify-between text-green-600">
+              <span className="flex items-center gap-1">
+                {bestPromo.title}
+                <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1 rounded">Promo</span>
+              </span>
+              <span>-₱{bestPromo.discount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-base border-t border-ocean-200 pt-2">
             <span>Total</span>
-            <span className="text-ocean-700">₱{totalPrice.toFixed(2)}</span>
+            <span className="text-ocean-700">₱{discountedPrice.toFixed(2)}</span>
           </div>
         </div>
-      )}
+      )})()}
 
       <p className="text-xs text-gray-500 text-center">
         By booking, you agree to our{' '}

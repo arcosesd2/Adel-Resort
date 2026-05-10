@@ -58,7 +58,10 @@ function CheckoutContent() {
         }
         setBooking(data)
         api.get(`/vouchers/promotions/?booking_id=${bookingId}`)
-          .then(({ data }) => setPromotions(data))
+          .then(({ data }) => {
+            setPromotions(data)
+            if (data.length > 0) setSelectedPromo(data[0])
+          })
           .catch(() => {})
       } catch {
         router.push('/dashboard')
