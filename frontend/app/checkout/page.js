@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, Suspense, useRef } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Shield, CalendarDays, Tag, X, AlertTriangle } from 'lucide-react'
 import { FadeInUp } from '@/components/motions'
@@ -25,80 +26,6 @@ function CheckoutContent() {
   const [paymentType, setPaymentType] = useState('full')
   const [customAmount, setCustomAmount] = useState('')
   const [timeLeft, setTimeLeft] = useState('')
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [leaving, setLeaving] = useState(false)
-  const pendingNavRef = useRef(null)
-  const ignorePopRef = useRef(true)
-
-  const cancelBookingOnLeave = async () => {
-    if (!bookingId) return
-    try {
-      await api.delete(`/bookings/${bookingId}/`)
-    } catch {}
-  }
-
-  useEffect(() => {
-    if (!booking) return
-
-    const currentUrl = window.location.href
-    const currentPath = window.location.pathname + window.location.search
-    const origPush = window.history.pushState.bind(window.history)
-    const origReplace = window.history.replaceState.bind(window.history)
-
-    const samePage = (url) => {
-      try {
-        const u = new URL(url, window.location.origin)
-        return u.pathname + u.search === currentPath
-      } catch { return url === currentUrl }
-    }
-
-    const intercept = (method) => function (state, title, url) {
-      if (leaving || !url || samePage(url)) { method.call(window.history, state, title, url); return }
-      pendingNavRef.current = { method, state, title, url }
-      setShowLeaveModal(true)
-    }
-
-    window.history.pushState = intercept(origPush)
-    window.history.replaceState = intercept(origReplace)
-
-    window.history.pushState({ checkout: true }, '', currentUrl)
-
-    const handlePopState = () => {
-      if (ignorePopRef.current) { ignorePopRef.current = false; return }
-      window.history.pushState({ checkout: true }, '', currentUrl)
-      if (!leaving) setShowLeaveModal(true)
-    }
-    window.addEventListener('popstate', handlePopState)
-
-    return () => {
-      ignorePopRef.current = true
-      window.history.pushState = origPush
-      window.history.replaceState = origReplace
-      window.removeEventListener('popstate', handlePopState)
-    }
-  }, [booking, leaving])
-
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      if (!booking || leaving) return
-      e.preventDefault()
-      e.returnValue = ''
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [booking, leaving])
-
-  const handleConfirmLeave = async () => {
-    setLeaving(true)
-    const roomId = booking?.room
-    await cancelBookingOnLeave()
-    const pending = pendingNavRef.current
-    if (pending) {
-      pending.method.call(window.history, pending.state, pending.title, pending.url)
-    } else {
-      router.replace(roomId ? `/rooms/${roomId}` : '/dashboard')
-    }
-  }
 
   useEffect(() => {
     if (!isReady) return
@@ -223,9 +150,9 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button onClick={() => setShowLeaveModal(true)} className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
+        <Link href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
           <ArrowLeft size={16} /> Back
-        </button>
+        </Link>
 
         <FadeInUp>
           <h1 className="font-serif text-3xl font-bold text-gray-900 mb-4">Checkout</h1>
@@ -525,36 +452,6 @@ function CheckoutContent() {
           </div></FadeInUp>
         </div>
       </div>
-
-      {showLeaveModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle size={24} className="text-red-500 flex-shrink-0" />
-              <h3 className="text-lg font-bold text-gray-900">Leave Checkout?</h3>
-            </div>
-            <p className="text-gray-600 text-sm mb-2">
-              If you leave, your booking will be <strong className="text-red-600">cancelled</strong> and you&apos;ll return to the room page.
-            </p>
-            <p className="text-gray-400 text-xs mb-6">Press Cancel to stay and continue with payment.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLeaveModal(false)}
-                className="btn-primary flex-1 text-sm"
-              >
-                Stay
-              </button>
-              <button
-                onClick={handleConfirmLeave}
-                disabled={leaving}
-                className="flex-1 border border-red-200 text-red-600 hover:bg-red-50 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                {leaving ? 'Cancelling...' : 'Leave & Cancel'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

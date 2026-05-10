@@ -81,7 +81,7 @@ export default function BookingDetailPage() {
               <p className="text-amber-600 text-sm">
                 Please pay the remaining balance of{' '}
                 <span className="font-bold">
-                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
+                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0) - parseFloat(booking.payment_amount)).toFixed(2)}
                 </span>{' '}
                 within 1 hour of approval (by{' '}
                 {format(parseISO(booking.full_payment_deadline), 'MMM d, yyyy h:mm a')}).
@@ -222,7 +222,7 @@ export default function BookingDetailPage() {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Remaining Balance (due at check-in)</span>
                 <span className="font-semibold text-amber-600">
-                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
+                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0) - parseFloat(booking.payment_amount)).toFixed(2)}
                 </span>
               </div>
             )}
