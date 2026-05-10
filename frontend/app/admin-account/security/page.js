@@ -89,7 +89,7 @@ export default function StaffSecurityPage() {
               onChange={(e) => setPwForm({ ...pwForm, new_password: e.target.value })}
               show={showPw.new}
               onToggle={() => setShowPw({ ...showPw, new: !showPw.new })}
-              placeholder="Min. 10 characters"
+              placeholder="Min. 8 characters"
             />
           </div>
           <div>

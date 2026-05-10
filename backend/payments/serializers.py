@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Payment, GCashConfig
+from .models import Payment, PaymentType, GCashConfig
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -49,6 +49,7 @@ class SubmitProofSerializer(serializers.Serializer):
     booking_id = serializers.IntegerField()
     gcash_reference = serializers.CharField(max_length=200)
     proof_of_payment = serializers.ImageField()
+    payment_type = serializers.ChoiceField(choices=PaymentType.choices, default=PaymentType.FULL, required=False)
 
     def validate_proof_of_payment(self, value):
         allowed_types = ['image/jpeg', 'image/png', 'image/webp']
