@@ -186,7 +186,7 @@ export default function BookingDetailPage() {
 
           <div className="border-t pt-5 space-y-2">
             <div className="flex justify-between text-sm text-gray-500">
-              <span>Subtotal</span>
+              <span>Amount</span>
               <span>₱{parseFloat(booking.total_price).toFixed(2)}</span>
             </div>
             {parseFloat(booking.promo_discount || 0) > 0 && (

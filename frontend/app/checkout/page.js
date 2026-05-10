@@ -28,8 +28,7 @@ function CheckoutContent() {
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const pendingNavRef = useRef(null)
-  const setupRef = useRef(false)
-  const { push: routerPush } = useRouter()
+  const activeRef = useRef(false)
 
   const cancelBookingOnLeave = async () => {
     if (!bookingId) return
@@ -40,11 +39,13 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (!booking) return
+
+    const currentUrl = window.location.href
     const origPush = window.history.pushState.bind(window.history)
     const origReplace = window.history.replaceState.bind(window.history)
 
     const intercept = (method) => function (state, title, url) {
-      if (leaving || !url || setupRef.current) { method.call(window.history, state, title, url); return }
+      if (leaving || !url || url === currentUrl) { method.call(window.history, state, title, url); return }
       pendingNavRef.current = { method, state, title, url }
       setShowLeaveModal(true)
     }
@@ -52,25 +53,22 @@ function CheckoutContent() {
     window.history.pushState = intercept(origPush)
     window.history.replaceState = intercept(origReplace)
 
-    return () => {
-      window.history.pushState = origPush
-      window.history.replaceState = origReplace
-    }
-  }, [booking, leaving])
+    window.history.pushState({ checkout: true }, '', currentUrl)
 
-  useEffect(() => {
-    if (!booking) return
-    setupRef.current = true
-    window.history.pushState({ checkout: true }, '', window.location.href)
-    setupRef.current = false
     const handlePopState = () => {
-      setupRef.current = true
-      window.history.pushState({ checkout: true }, '', window.location.href)
-      setupRef.current = false
+      window.history.pushState({ checkout: true }, '', currentUrl)
       if (!leaving) setShowLeaveModal(true)
     }
     window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
+
+    activeRef.current = true
+
+    return () => {
+      window.history.pushState = origPush
+      window.history.replaceState = origReplace
+      window.removeEventListener('popstate', handlePopState)
+      activeRef.current = false
+    }
   }, [booking, leaving])
 
   useEffect(() => {
