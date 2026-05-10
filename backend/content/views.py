@@ -67,7 +67,7 @@ class PromotionListView(ListAPIView):
         ).filter(
             db_models.Q(schedule_type='permanent')
             | db_models.Q(schedule_type='recurring')
-            | db_models.Q(schedule_type='duration', valid_from__lte=today, valid_until__gte=today)
+            | db_models.Q(schedule_type='duration', valid_until__gte=today)
         )
 
 

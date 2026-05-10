@@ -24,6 +24,7 @@ const statusIcon = {
 const paymentTypeLabel = {
   full:        'Full Payment',
   downpayment: 'Downpayment',
+  partial:     'Partial Payment',
 }
 
 export default function PaymentManagementSection() {
@@ -169,8 +170,24 @@ export default function PaymentManagementSection() {
                             <span className="text-gray-300 text-xs">None</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-800">
-                          ₱{Number(p.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-semibold text-gray-800">
+                            ₱{Number(p.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                          </span>
+                          {(Number(p.promo_discount) > 0 || Number(p.voucher_discount) > 0) && (
+                            <div className="flex flex-wrap gap-1 justify-end mt-1">
+                              {Number(p.promo_discount) > 0 && (
+                                <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1.5 py-0.5 rounded-full font-medium">
+                                  Promo -₱{Number(p.promo_discount).toFixed(0)}
+                                </span>
+                              )}
+                              {Number(p.voucher_discount) > 0 && (
+                                <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                                  Voucher -₱{Number(p.voucher_discount).toFixed(0)}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-500">
                           {paymentTypeLabel[p.payment_type] || p.payment_type}

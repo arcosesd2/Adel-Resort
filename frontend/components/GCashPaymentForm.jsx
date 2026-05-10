@@ -2,11 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { Upload, CheckCircle, Smartphone } from 'lucide-react'
+import { Upload, CheckCircle, Smartphone, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
 
-export default function GCashPaymentForm({ bookingId, totalAmount, paymentType = 'full', voucherCode, promotionId, onSuccess }) {
+export default function GCashPaymentForm({ bookingId, totalAmount, paymentType = 'full', customAmount, customError, voucherCode, promotionId, onSuccess }) {
   const [gcashReference, setGcashReference] = useState('')
   const [proofFile, setProofFile] = useState(null)
   const [proofPreview, setProofPreview] = useState(null)
@@ -56,6 +56,7 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
       formData.append('gcash_reference', gcashReference.trim())
       formData.append('proof_of_payment', proofFile)
       formData.append('payment_type', paymentType)
+      if (paymentType === 'partial' && customAmount) formData.append('custom_amount', customAmount)
       if (voucherCode) formData.append('voucher_code', voucherCode)
       if (promotionId) formData.append('promotion_id', promotionId)
 
@@ -170,9 +171,14 @@ export default function GCashPaymentForm({ bookingId, totalAmount, paymentType =
         )}
       </div>
 
+      {customError && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 flex items-center gap-2">
+          <AlertTriangle size={14} /> {customError}
+        </div>
+      )}
       <button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || !!customError}
         className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <CheckCircle size={16} />

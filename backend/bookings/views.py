@@ -376,7 +376,7 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                     send_booking_confirmation_email(booking.user, booking)
 
                     # If downpayment, notify user to pay remaining balance within 24h
-                    if hasattr(booking, 'payment') and booking.payment.payment_type == 'downpayment':
+                    if hasattr(booking, 'payment') and booking.payment.payment_type in ('downpayment', 'partial'):
                         remaining = booking.total_price - booking.payment.amount
                         create_notification(
                             booking.user, 'payment_remaining',

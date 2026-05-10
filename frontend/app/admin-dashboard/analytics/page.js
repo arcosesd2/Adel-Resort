@@ -154,6 +154,7 @@ export default function AnalyticsMonitorPage() {
   const paymentChartData = revenue_by_payment_type.map(r => ({
     name: r.payment__payment_type === 'full' ? 'Full'
       : r.payment__payment_type === 'downpayment' ? 'Down'
+      : r.payment__payment_type === 'partial' ? 'Partial'
       : r.payment__payment_type === 'onsite' ? 'Onsite'
       : r.payment__payment_type,
     value: r.revenue,

@@ -24,6 +24,7 @@ function CheckoutContent() {
   const [promotions, setPromotions] = useState([])
   const [selectedPromo, setSelectedPromo] = useState(null)
   const [paymentType, setPaymentType] = useState('full')
+  const [customAmount, setCustomAmount] = useState('')
   const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
@@ -57,7 +58,10 @@ function CheckoutContent() {
         }
         setBooking(data)
         api.get(`/vouchers/promotions/?booking_id=${bookingId}`)
-          .then(({ data }) => setPromotions(data))
+          .then(({ data }) => {
+            setPromotions(data)
+            if (data.length > 0) setSelectedPromo(data[0])
+          })
           .catch(() => {})
       } catch {
         router.push('/dashboard')
@@ -132,14 +136,22 @@ function CheckoutContent() {
   if (!booking) return null
 
   const basePrice = voucherApplied ? parseFloat(voucherApplied.final_price) : selectedPromo ? parseFloat(selectedPromo.final_price) : parseFloat(booking.total_price)
-  const amountDue = paymentType === 'downpayment' ? (basePrice * 0.2).toFixed(2) : basePrice.toFixed(2)
-  const remainingBalance = paymentType === 'downpayment' ? (basePrice * 0.8).toFixed(2) : '0.00'
+  const parseCustom = parseFloat(customAmount) || 0
+  const amountDue = paymentType === 'downpayment' ? (basePrice * 0.2).toFixed(2) : paymentType === 'partial' ? parseCustom.toFixed(2) : basePrice.toFixed(2)
+  const remainingBalance = paymentType === 'downpayment' ? (basePrice * 0.8).toFixed(2) : paymentType === 'partial' ? (basePrice - parseCustom).toFixed(2) : '0.00'
+  const partialMin = (basePrice * 0.2).toFixed(2)
+  const partialMax = (basePrice * 0.99).toFixed(2)
+  const partialError = paymentType === 'partial' && customAmount !== ''
+    ? parseCustom < parseFloat(partialMin) ? `Minimum is ₱${partialMin}`
+    : parseCustom > parseFloat(partialMax) ? `Maximum is ₱${partialMax}`
+    : ''
+    : ''
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <Link href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 text-sm">
-          <ArrowLeft size={16} /> Back to Dashboard
+          <ArrowLeft size={16} /> Back
         </Link>
 
         <FadeInUp>
@@ -256,9 +268,54 @@ function CheckoutContent() {
                     </div>
                     <span className="font-semibold text-ocean-700">₱{(basePrice * 0.2).toFixed(2)}</span>
                   </label>
+                  <label
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      paymentType === 'partial'
+                        ? 'border-ocean-500 bg-ocean-50'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentType"
+                      value="partial"
+                      checked={paymentType === 'partial'}
+                      onChange={(e) => setPaymentType(e.target.value)}
+                      className="accent-ocean-600"
+                    />
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-800">Partial Payment</span>
+                      <p className="text-xs text-gray-500">Pay a custom amount (min. 20%), remaining upon check-in</p>
+                    </div>
+                  </label>
                 </div>
 
-                {paymentType === 'downpayment' && (
+                {paymentType === 'partial' && (
+                  <div className="mt-3">
+                    <label className="block text-xs text-gray-600 mb-1">
+                      Enter amount (₱{partialMin} – ₱{partialMax})
+                    </label>
+                    <input
+                      type="number"
+                      min={partialMin}
+                      max={partialMax}
+                      step="0.01"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
+                      placeholder={`Min ₱${partialMin}`}
+                      className={`w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ocean-500 focus:border-transparent ${
+                        partialError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                      }`}
+                    />
+                    {partialError && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                        <AlertTriangle size={12} /> {partialError}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {(paymentType === 'downpayment' || paymentType === 'partial') && parseFloat(amountDue) > 0 && (
                   <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
                     <p className="font-medium">Remaining balance: ₱{remainingBalance}</p>
                     <p className="text-xs mt-1">The remaining amount must be settled upon check-in.</p>
@@ -386,6 +443,8 @@ function CheckoutContent() {
               bookingId={booking.id}
               totalAmount={amountDue}
               paymentType={paymentType}
+              customAmount={paymentType === 'partial' ? customAmount : ''}
+              customError={partialError}
               voucherCode={voucherApplied?.code || ''}
               promotionId={selectedPromo?.id || ''}
               onSuccess={handlePaymentSuccess}

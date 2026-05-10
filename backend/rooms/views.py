@@ -163,8 +163,10 @@ def room_availability(request, pk):
     return Response({
         'room_id': room.id,
         'room_name': room.name,
+        'room_type': room.room_type,
         'max_rooms': room.max_rooms,
         'booked_slots': _get_booked_slots(room, include_details=include_details),
+        'promo_dates': _get_promo_dates(room.room_type),
     })
 
 
@@ -283,6 +285,43 @@ def room_image_detail(request, pk, image_pk):
     return Response(RoomImageSerializer(image, context={'request': request}).data)
 
 
+def _get_promo_dates(room_type):
+    from content.models import Promotion
+    from datetime import timedelta
+    promo_dates = {}
+    for promo in Promotion.objects.filter(is_active=True):
+        if promo.room_types and room_type not in promo.room_types:
+            continue
+        if promo.schedule_type == 'permanent':
+            continue
+        elif promo.schedule_type == 'duration':
+            if not promo.valid_from or not promo.valid_until:
+                continue
+            d = promo.valid_from
+            while d <= promo.valid_until:
+                promo_dates[d.isoformat()] = promo_dates.get(d.isoformat(), [])
+                promo_dates[d.isoformat()].append({
+                    'id': promo.id, 'title': promo.title,
+                    'discount_type': promo.discount_type, 'discount_value': str(promo.discount_value),
+                })
+                d += timedelta(days=1)
+        elif promo.schedule_type == 'recurring':
+            if not promo.applicable_days:
+                continue
+            today = date.today()
+            d = today
+            end = today + timedelta(days=60)
+            while d <= end:
+                if d.weekday() in promo.applicable_days:
+                    promo_dates[d.isoformat()] = promo_dates.get(d.isoformat(), [])
+                    promo_dates[d.isoformat()].append({
+                        'id': promo.id, 'title': promo.title,
+                        'discount_type': promo.discount_type, 'discount_value': str(promo.discount_value),
+                    })
+                d += timedelta(days=1)
+    return promo_dates
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 @throttle_classes([AnalyticsRateThrottle])
@@ -300,6 +339,7 @@ def all_rooms_availability(request):
             'is_day_only': room.is_day_only,
             'max_rooms': room.max_rooms,
             'booked_slots': _get_booked_slots(room, include_past=False),
+            'promo_dates': _get_promo_dates(room.room_type),
         })
 
     return Response(result)

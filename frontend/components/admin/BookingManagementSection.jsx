@@ -174,8 +174,23 @@ export default function BookingManagementSection() {
                     <td className="px-6 py-3 text-sm text-gray-600">
                       {b.check_in} <span className="text-gray-400">to</span> {b.check_out}
                     </td>
-                    <td className="px-6 py-3 text-sm text-gray-900 font-semibold text-right">
-                      ₱{Number(b.total_price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    <td className="px-6 py-3 text-sm text-right">
+                      <span className="text-gray-900 font-semibold">
+                        ₱{Number(b.total_price).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                      </span>
+                      {(parseFloat(b.promo_discount || 0) > 0 || parseFloat(b.voucher_discount || 0) > 0 || parseFloat(b.manual_discount || 0) > 0) && (
+                        <div className="flex flex-wrap gap-1 justify-end mt-1">
+                          {parseFloat(b.promo_discount || 0) > 0 && (
+                            <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1.5 py-0.5 rounded-full font-medium">Promo</span>
+                          )}
+                          {parseFloat(b.voucher_discount || 0) > 0 && (
+                            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">Voucher</span>
+                          )}
+                          {parseFloat(b.manual_discount || 0) > 0 && (
+                            <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">Manual -₱{parseFloat(b.manual_discount).toFixed(0)}</span>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-3 text-center">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge[b.status] || 'bg-gray-100 text-gray-500'}`}>

@@ -73,7 +73,7 @@ export default function BookingDetailPage() {
           </div>
         )}
 
-        {booking.status === 'confirmed' && booking.payment_type === 'downpayment' && booking.full_payment_deadline && (
+        {booking.status === 'confirmed' && (booking.payment_type === 'downpayment' || booking.payment_type === 'partial') && booking.full_payment_deadline && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 flex items-center gap-3">
             <AlertTriangle className="text-amber-500 flex-shrink-0" size={28} />
             <div>
@@ -81,7 +81,7 @@ export default function BookingDetailPage() {
               <p className="text-amber-600 text-sm">
                 Please pay the remaining balance of{' '}
                 <span className="font-bold">
-                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
+                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0) - parseFloat(booking.payment_amount)).toFixed(2)}
                 </span>{' '}
                 within 1 hour of approval (by{' '}
                 {format(parseISO(booking.full_payment_deadline), 'MMM d, yyyy h:mm a')}).
@@ -185,23 +185,44 @@ export default function BookingDetailPage() {
           )}
 
           <div className="border-t pt-5 space-y-2">
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Amount</span>
+              <span>₱{parseFloat(booking.total_price).toFixed(2)}</span>
+            </div>
+            {parseFloat(booking.promo_discount || 0) > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span className="flex items-center gap-1">
+                  Promo Discount
+                  <span className="text-[10px] bg-fuchsia-100 text-fuchsia-700 px-1 rounded">%</span>
+                </span>
+                <span>-₱{parseFloat(booking.promo_discount).toFixed(2)}</span>
+              </div>
+            )}
+            {parseFloat(booking.voucher_discount || 0) > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Voucher Discount</span>
+                <span>-₱{parseFloat(booking.voucher_discount).toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Total Amount</span>
-              <span className="text-2xl font-bold text-ocean-700">₱{booking.total_price}</span>
+              <span className="text-2xl font-bold text-ocean-700">
+                ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0)).toFixed(2)}
+              </span>
             </div>
             {booking.payment_type && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">
-                  {booking.payment_type === 'full' ? 'Paid (Full Payment)' : 'Paid (20% Downpayment)'}
+                  {booking.payment_type === 'full' ? 'Paid (Full Payment)' : booking.payment_type === 'partial' ? 'Paid (Partial Payment)' : 'Paid (20% Downpayment)'}
                 </span>
                 <span className="font-semibold text-gray-700">₱{booking.payment_amount}</span>
               </div>
             )}
-            {booking.payment_type === 'downpayment' && (
+            {(booking.payment_type === 'downpayment' || booking.payment_type === 'partial') && (
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-500">Remaining Balance (due at check-in)</span>
                 <span className="font-semibold text-amber-600">
-                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.payment_amount)).toFixed(2)}
+                  ₱{(parseFloat(booking.total_price) - parseFloat(booking.promo_discount || 0) - parseFloat(booking.voucher_discount || 0) - parseFloat(booking.payment_amount)).toFixed(2)}
                 </span>
               </div>
             )}
