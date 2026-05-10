@@ -233,13 +233,14 @@ class AdminBookingSerializer(serializers.ModelSerializer):
             'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'status', 'special_requests', 'created_at', 'is_backdated',
-            'voucher_discount', 'promo_discount',
+            'voucher_discount', 'promo_discount', 'manual_discount', 'manual_discount_type',
         )
         read_only_fields = (
             'id', 'reference_code', 'guest_name', 'guest_username', 'guest_email',
             'room', 'room_name',
             'check_in', 'check_out', 'guests', 'slots_summary',
             'total_price', 'created_at', 'is_backdated', 'voucher_discount', 'promo_discount',
+            'manual_discount', 'manual_discount_type',
         )
 
     def get_guest_name(self, obj):
