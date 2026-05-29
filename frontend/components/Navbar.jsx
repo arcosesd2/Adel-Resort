@@ -45,7 +45,6 @@ export default function Navbar() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/rooms', label: 'Rooms' },
-    { href: '/availability', label: 'Availability' },
     { href: '/pricing', label: 'Pricing' },
     { href: '/news', label: 'News' },
     { href: '/events', label: 'Events' },
