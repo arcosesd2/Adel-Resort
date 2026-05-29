@@ -27,15 +27,8 @@ function LoginForm() {
 
   // Handle Supabase Redirect (OAuth Callback)
   useEffect(() => {
-    const handleAuthChange = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error) {
-        console.error('Supabase session error:', error)
-        return
-      }
-
-      if (session?.user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         setLoading(true)
         try {
           // Bridge to Django
@@ -59,9 +52,11 @@ function LoginForm() {
           setLoading(false)
         }
       }
-    }
+    })
 
-    handleAuthChange()
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [router, redirect])
 
   useEffect(() => {
