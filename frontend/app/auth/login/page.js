@@ -27,24 +27,55 @@ function LoginForm() {
 
   // Handle Supabase Redirect (OAuth Callback)
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+    const handleOAuthCallback = async () => {
+      // 1. Manually parse hash if present
+      let currentSession = null;
+      
+      if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          if (data?.session) {
+            currentSession = data.session;
+          }
+        }
+      } else {
+        // Fallback to getting session from storage
+        const { data } = await supabase.auth.getSession();
+        if (data?.session) {
+          currentSession = data.session;
+        }
+      }
+
+      // 2. If we have a session, bridge to Django
+      if (currentSession?.user) {
         setLoading(true)
         try {
-          // Bridge to Django
           const { data } = await api.post('/auth/social-login/', {
-            email: session.user.email,
-            first_name: session.user.user_metadata?.full_name?.split(' ')[0] || session.user.user_metadata?.first_name || '',
-            last_name: session.user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || session.user.user_metadata?.last_name || '',
+            email: currentSession.user.email,
+            first_name: currentSession.user.user_metadata?.full_name?.split(' ')[0] || currentSession.user.user_metadata?.first_name || '',
+            last_name: currentSession.user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || currentSession.user.user_metadata?.last_name || '',
           })
           
           setAuthTokens(data)
           toast.success(`Welcome back, ${data.user.first_name}!`)
-          const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
-          router.replace(dest)
           
-          // Sign out of Supabase locally (we only needed the data to bridge to Django)
+          // Clear hash from URL cleanly
+          if (typeof window !== 'undefined') {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+          
+          const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
+          
           await supabase.auth.signOut()
+          router.replace(dest)
         } catch (err) {
           toast.error('Social login failed to sync with our system.')
           console.error('Django bridge error:', err)
@@ -52,11 +83,9 @@ function LoginForm() {
           setLoading(false)
         }
       }
-    })
+    };
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    handleOAuthCallback();
   }, [router, redirect])
 
   useEffect(() => {
