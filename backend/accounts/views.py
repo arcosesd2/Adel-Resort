@@ -180,6 +180,70 @@ def login(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+def social_login(request):
+    """
+    Handle social login via Supabase.
+    Receives user info (email, first_name, last_name) from the frontend after successful social auth.
+    """
+    email = request.data.get('email')
+    first_name = request.data.get('first_name', '')
+    last_name = request.data.get('last_name', '')
+    
+    if not email:
+        return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Find or create user
+    user = User.objects.filter(email=email).first()
+    
+    if not user:
+        # Create a new user. Generate a random username if needed.
+        # Use email prefix as starting point for username
+        base_username = email.split('@')[0]
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+            
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            email_verified=True  # Trust social provider's verification
+        )
+        # Social users don't have a password set by default
+    
+    if not user.is_active:
+        return Response({'non_field_errors': ['Account is disabled.']}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Record login
+    ip = get_client_ip(request)
+    ua = request.META.get('HTTP_USER_AGENT', '')
+    LoginAttempt.objects.create(
+        user=user, username=user.username, ip_address=ip,
+        user_agent=ua, success=True,
+    )
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
+    
+    if user.is_staff or user.is_superadmin:
+        log_activity(user, 'auth', f'Logged in via Social ({email})', ip_address=ip)
+
+    # Issue tokens
+    refresh = RefreshToken.for_user(user)
+    refresh_str = str(refresh)
+    response = Response({
+        'user': UserSerializer(user, context={'request': request}).data,
+        'access': str(refresh.access_token),
+        'refresh': refresh_str,
+    })
+    _set_refresh_cookie(response, refresh_str)
+    return response
+
+
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout(request):
     refresh_str = _get_refresh_from_request(request)
