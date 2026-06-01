@@ -1,6 +1,15 @@
 export const metadata = {
   title: 'Privacy Policy',
   description: 'Privacy Policy for Adel Beach Resort. Learn how we collect, use, and protect your information.',
+  alternates: {
+    canonical: '/privacy',
+  },
+  openGraph: {
+    title: 'Privacy Policy',
+    description: 'Privacy Policy for Adel Beach Resort. Learn how we collect, use, and protect your information.',
+    url: '/privacy',
+    type: 'website',
+  },
 }
 
 export default function PrivacyPage() {

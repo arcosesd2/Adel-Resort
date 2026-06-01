@@ -1,6 +1,15 @@
 export const metadata = {
   title: 'Data Deletion Instructions',
   description: 'How Adel Beach Resort users can request deletion of account and social login data.',
+  alternates: {
+    canonical: '/data-deletion',
+  },
+  openGraph: {
+    title: 'Data Deletion Instructions',
+    description: 'How Adel Beach Resort users can request deletion of account and social login data.',
+    url: '/data-deletion',
+    type: 'website',
+  },
 }
 
 export default function DataDeletionPage() {
