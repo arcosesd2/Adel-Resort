@@ -61,6 +61,7 @@ export default function Footer() {
                   { href: '/about', label: 'About Us' },
                   { href: '/terms', label: 'Terms of Service' },
                   { href: '/privacy', label: 'Privacy Policy' },
+                  { href: '/data-deletion', label: 'Data Deletion' },
                   { href: '/refund-policy', label: 'Refund Policy' },
                 ].map((link) => (
                   <li key={link.href}>

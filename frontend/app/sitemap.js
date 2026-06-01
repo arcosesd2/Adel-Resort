@@ -12,6 +12,7 @@ export default async function sitemap() {
     { url: `${BASE_URL}/about`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/terms`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/data-deletion`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/refund-policy`, changeFrequency: 'yearly', priority: 0.3 },
   ]
 
