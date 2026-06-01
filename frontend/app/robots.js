@@ -1,3 +1,5 @@
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://adel-resort.ph'
+
 export default function robots() {
   return {
     rules: {
@@ -5,6 +7,6 @@ export default function robots() {
       allow: '/',
       disallow: ['/admin-dashboard/', '/dashboard/', '/checkout/', '/account/', '/auth/'],
     },
-    sitemap: 'https://adel-resort.ph/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
   }
 }

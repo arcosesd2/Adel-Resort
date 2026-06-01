@@ -1,6 +1,15 @@
 export const metadata = {
   title: 'Terms of Service',
   description: 'Terms of Service for Adel Beach Resort online booking system.',
+  alternates: {
+    canonical: '/terms',
+  },
+  openGraph: {
+    title: 'Terms of Service',
+    description: 'Terms of Service for Adel Beach Resort online booking system.',
+    url: '/terms',
+    type: 'website',
+  },
 }
 
 export default function TermsPage() {
