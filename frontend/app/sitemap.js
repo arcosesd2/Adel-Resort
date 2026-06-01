@@ -1,4 +1,4 @@
-const BASE_URL = 'https://adel-resort.ph'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://adel-resort.ph'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export default async function sitemap() {
