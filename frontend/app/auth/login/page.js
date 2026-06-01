@@ -9,8 +9,14 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import { getDeviceFingerprint, getDeviceInfo } from '@/lib/fingerprint'
+import { applyAuthSession } from '@/lib/auth'
 import api from '@/lib/api'
-import { supabase } from '@/lib/supabase'
+import { isSupabaseConfigured, supabase } from '@/lib/supabase'
+
+const applyLoginData = (data) => {
+  applyAuthSession(data)
+  useAuthStore.setState({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
+}
 
 function LoginForm() {
   const router = useRouter()
@@ -28,64 +34,65 @@ function LoginForm() {
   // Handle Supabase Redirect (OAuth Callback)
   useEffect(() => {
     const handleOAuthCallback = async () => {
+      if (!isSupabaseConfigured || !supabase) return
+
       // 1. Manually parse hash if present
-      let currentSession = null;
-      
+      let currentSession = null
+
       if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        
+        const hash = window.location.hash.substring(1)
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+
         if (accessToken && refreshToken) {
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
-          });
+          })
+          if (error) throw error
           if (data?.session) {
-            currentSession = data.session;
+            currentSession = data.session
           }
         }
       } else {
         // Fallback to getting session from storage
-        const { data } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession()
         if (data?.session) {
-          currentSession = data.session;
+          currentSession = data.session
         }
       }
 
       // 2. If we have a session, bridge to Django
-      if (currentSession?.user) {
+      if (currentSession?.access_token) {
         setLoading(true)
         try {
           const { data } = await api.post('/auth/social-login/', {
-            email: currentSession.user.email,
-            first_name: currentSession.user.user_metadata?.full_name?.split(' ')[0] || currentSession.user.user_metadata?.first_name || '',
-            last_name: currentSession.user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || currentSession.user.user_metadata?.last_name || '',
+            supabase_access_token: currentSession.access_token,
           })
-          
-          setAuthTokens(data)
-          toast.success(`Welcome back, ${data.user.first_name}!`)
-          
+
+          applyLoginData(data)
+          toast.success(`Welcome back, ${data.user.first_name || 'there'}!`)
+
           // Clear hash from URL cleanly
           if (typeof window !== 'undefined') {
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            window.history.replaceState(null, '', window.location.pathname + window.location.search)
           }
-          
+
           const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
-          
-          await supabase.auth.signOut()
+
+          await supabase.auth.signOut().catch(() => {})
           router.replace(dest)
         } catch (err) {
-          toast.error('Social login failed to sync with our system.')
+          toast.error(err.response?.data?.detail || 'Social login failed to sync with our system.')
           console.error('Django bridge error:', err)
         } finally {
           setLoading(false)
         }
       }
-    };
+    }
 
-    handleOAuthCallback();
+    handleOAuthCallback()
   }, [router, redirect])
 
   useEffect(() => {
@@ -122,6 +129,10 @@ function LoginForm() {
   }
 
   const handleSocialLogin = async (provider) => {
+    if (!isSupabaseConfigured || !supabase) {
+      toast.error('Social login is not configured.')
+      return
+    }
     setSocialLoading(provider)
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -146,7 +157,7 @@ function LoginForm() {
         device_fingerprint: fingerprint,
         device_info: deviceInfo,
       })
-      setAuthTokens(data)
+      applyLoginData(data)
       toast.success('Device authorized! Welcome back!')
       const dest = data.user?.is_staff && redirect === '/dashboard' ? '/admin-dashboard' : redirect
       router.replace(dest)
@@ -155,14 +166,6 @@ function LoginForm() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const setAuthTokens = (data) => {
-    localStorage.setItem('access_token', data.access)
-    localStorage.setItem('refresh_token', data.refresh)
-    const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-    document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`
-    useAuthStore.setState({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
   }
 
   if (deviceAuth === 'blocked') {
@@ -193,7 +196,7 @@ function LoginForm() {
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Authorize This Device</h2>
           <p className="text-gray-500 text-sm mb-6">
-            This is your first time logging in as staff. Would you like to authorize this device for future logins? Once authorized, you'll be locked to this device.
+            This is your first time logging in as staff. Would you like to authorize this device for future logins? Once authorized, you&apos;ll be locked to this device.
           </p>
           <div className="space-y-3">
             <button onClick={handleAuthorizeDevice} disabled={loading}
@@ -223,7 +226,7 @@ function LoginForm() {
         <div className="space-y-3 mb-6">
           <button
             onClick={() => handleSocialLogin('google')}
-            disabled={loading || socialLoading}
+            disabled={loading || socialLoading || !isSupabaseConfigured}
             className="w-full py-2.5 px-4 border border-gray-300 rounded-xl flex items-center justify-center gap-3 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
           >
             {socialLoading === 'google' ? (
@@ -241,7 +244,7 @@ function LoginForm() {
           
           <button
             onClick={() => handleSocialLogin('facebook')}
-            disabled={loading || socialLoading}
+            disabled={loading || socialLoading || !isSupabaseConfigured}
             className="w-full py-2.5 px-4 bg-[#1877F2] text-white rounded-xl flex items-center justify-center gap-3 font-medium hover:bg-[#166fe5] transition-all disabled:opacity-50"
           >
             {socialLoading === 'facebook' ? (
@@ -286,7 +289,7 @@ function LoginForm() {
           <Link href="/auth/forgot-password" className="text-sm text-ocean-600 hover:text-ocean-700 font-medium">Forgot your password?</Link>
         </div>
         <p className="text-center text-gray-500 text-sm mt-4">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href={redirect !== '/dashboard' ? `/auth/register?redirect=${encodeURIComponent(redirect)}` : '/auth/register'} className="text-ocean-600 hover:underline font-medium">Register here</Link>
         </p>
       </div>

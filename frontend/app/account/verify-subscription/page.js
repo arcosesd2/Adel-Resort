@@ -42,7 +42,7 @@ function VerifySubscriptionContent() {
         {status === 'success' && (
           <>
             <CheckCircle className="mx-auto text-green-500 mb-4" size={48} />
-            <h1 className="font-serif text-2xl font-bold text-ocean-900 mb-2">You're all set!</h1>
+            <h1 className="font-serif text-2xl font-bold text-ocean-900 mb-2">You&apos;re all set!</h1>
             <p className="text-slate-600 mb-6">{message}</p>
             <Link href="/" className="btn-primary inline-block">Return Home</Link>
           </>

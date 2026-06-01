@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import useAuthStore from '@/store/authStore'
+import { getAccessToken } from '@/lib/auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -40,12 +41,12 @@ export default function PageViewTracker() {
     // Skip tracking while a JWT exists but /auth/me/ hasn't finished — without
     // this we'd track as anonymous during the brief window between init() and
     // user state hydration on every page load.
-    const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('access_token')
+    const hasToken = !!getAccessToken()
     if (hasToken && !user) return
 
     try {
       const visitor_id = getVisitorId()
-      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+      const token = getAccessToken()
       fetch(`${API_URL}/api/analytics/track/`, {
         method: 'POST',
         headers: {

@@ -29,7 +29,7 @@ export default function EventsPage() {
     <div className="min-h-screen pt-24 pb-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FadeInUp className="text-center mb-12">
-          <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">What's Happening</p>
+          <p className="text-ocean-600 font-semibold tracking-widest text-sm uppercase mb-3">What&apos;s Happening</p>
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Upcoming Events
           </h1>

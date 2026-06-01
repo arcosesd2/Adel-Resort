@@ -36,7 +36,7 @@ export default function AboutPage() {
             <p>
               We offer a variety of accommodations to suit every need — from cozy cottages and traditional
               kubo rooms to our spacious Lavender House and fully-equipped Function Hall for events.
-              Whether you're here for a relaxing day tour or an overnight adventure, Adel Beach Resort
+              Whether you&apos;re here for a relaxing day tour or an overnight adventure, Adel Beach Resort
               has something for everyone.
             </p>
             <p>

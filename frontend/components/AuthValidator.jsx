@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import useAuthStore from '@/store/authStore'
 
 /**
- * Bootstraps auth state on app mount. Reads the JWT from localStorage,
+ * Bootstraps auth state on app mount. Reads the short-lived access JWT,
  * validates it against /auth/me/, and reconciles the store. Must run
  * exactly once at the top of the tree (in app/layout.js).
  */

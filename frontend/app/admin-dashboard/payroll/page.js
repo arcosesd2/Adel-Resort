@@ -172,7 +172,7 @@ export default function PayrollPage() {
               <tr><th className="px-4 py-2">Period</th><th className="px-4 py-2">Start</th><th className="px-4 py-2">End</th><th className="px-4 py-2">Pay Date</th><th className="px-4 py-2 text-center">Closed</th><th className="px-4 py-2"></th></tr>
             </thead>
             <tbody>
-              {periods.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-400">No periods. Click "Seed year".</td></tr>}
+              {periods.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-400">No periods. Click &quot;Seed year&quot;.</td></tr>}
               {periods.map(p => (
                 <tr key={p.id} className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-2">{p.year}-{(p.month || 0).toString().padStart(2, '0')} <span className="text-gray-400 capitalize">{p.half?.replace('_', ' ')}</span>{p.week_number ? ` W${p.week_number}` : ''}</td>

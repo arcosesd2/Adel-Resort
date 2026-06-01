@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Loader2, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
-import { setTokens } from '@/lib/auth'
+import { setAccessToken } from '@/lib/auth'
 import useAuthStore from '@/store/authStore'
 import { useRouter } from 'next/navigation'
 
@@ -31,9 +31,7 @@ export default function SecurityPage() {
     setPwLoading(true)
     try {
       const { data } = await api.post('/auth/change-password/', pwForm)
-      setTokens(data.access, data.refresh)
-      const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-      document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`
+      setAccessToken(data.access)
       setPwForm({ current_password: '', new_password: '', new_password2: '' })
       toast.success('Password changed successfully')
     } catch (err) {
@@ -55,7 +53,6 @@ export default function SecurityPage() {
     try {
       await api.post('/auth/deactivate/', deactivateForm)
       await logout()
-      document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
       toast.success('Account deactivated')
       router.push('/')
     } catch (err) {

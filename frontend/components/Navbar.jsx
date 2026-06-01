@@ -36,7 +36,6 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     await logout()
-    document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
     toast.success('Logged out successfully')
     router.push('/')
     setMobileOpen(false)

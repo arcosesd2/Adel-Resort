@@ -9,12 +9,12 @@ export default function PrivacyPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h1 className="font-serif text-4xl font-bold text-gray-900 mb-3">Privacy Policy</h1>
-          <p className="text-gray-500 text-sm">Last updated: April 2026</p>
+          <p className="text-gray-500 text-sm">Last updated: June 2026</p>
         </div>
 
         <div className="card p-8 md:p-12 prose prose-gray max-w-none">
           <h2>1. Information We Collect</h2>
-          <p>When you use Adel Beach Resort's website and booking system, we may collect the following information:</p>
+          <p>When you use Adel Beach Resort&apos;s website and booking system, we may collect the following information:</p>
           <ul>
             <li><strong>Account Information:</strong> Name, username, phone number, and email address when you register.</li>
             <li><strong>Booking Data:</strong> Room preferences, check-in/out dates, number of guests, and special requests.</li>
@@ -36,19 +36,21 @@ export default function PrivacyPage() {
           <p>
             Your data is stored securely on our servers. Uploaded images (avatars, payment proofs, room photos)
             are stored via Cloudinary, a third-party cloud storage service. Passwords are encrypted and never
-            stored in plain text. We use JWT (JSON Web Tokens) for secure authentication.
+            stored in plain text. We use short-lived JWT access tokens and an HttpOnly refresh cookie
+            for secure authentication.
           </p>
 
           <h2>4. Cookies & Local Storage</h2>
           <p>
-            We use browser local storage to maintain your login session and save booking drafts for your
-            convenience. We do not use tracking cookies from third-party advertisers.
+            We use an HttpOnly cookie to maintain your login session and browser local storage for
+            short-lived access state and booking drafts. We do not use tracking cookies from third-party advertisers.
           </p>
 
           <h2>5. Third-Party Services</h2>
           <p>We use the following third-party services:</p>
           <ul>
             <li><strong>Cloudinary:</strong> For image storage and optimization.</li>
+            <li><strong>Supabase:</strong> For Google and Facebook social sign-in.</li>
             <li><strong>GCash:</strong> For payment processing (manual verification).</li>
             <li><strong>Gmail SMTP:</strong> For sending transactional emails.</li>
           </ul>
@@ -69,7 +71,7 @@ export default function PrivacyPage() {
             <li>Contact us to request deletion of your data.</li>
           </ul>
 
-          <h2>8. Children's Privacy</h2>
+          <h2>8. Children&apos;s Privacy</h2>
           <p>
             Our services are not intended for children under 18. We do not knowingly collect personal
             information from minors. Bookings must be made by adults.
