@@ -1,9 +1,8 @@
 import json
-import urllib.error
-import urllib.request
 from datetime import timedelta
 from urllib.parse import urlsplit
 
+import requests
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
@@ -92,25 +91,23 @@ def _fetch_supabase_user(access_token):
             status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
-    request = urllib.request.Request(
-        f'{supabase_url}/auth/v1/user',
-        headers={
-            'Authorization': f'Bearer {access_token}',
-            'apikey': supabase_key,
-            'Accept': 'application/json',
-        },
-    )
     try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            return json.loads(response.read().decode('utf-8'))
-    except urllib.error.HTTPError as exc:
-        if exc.code in (401, 403):
-            raise SupabaseVerificationError('Invalid or expired social login.')
-        raise SupabaseVerificationError(
-            'Could not verify social login.',
-            status.HTTP_502_BAD_GATEWAY,
+        response = requests.get(
+            f'{supabase_url}/auth/v1/user',
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'apikey': supabase_key,
+                'Accept': 'application/json',
+            },
+            timeout=10,
         )
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+        if response.status_code in (401, 403):
+            raise SupabaseVerificationError('Invalid or expired social login.')
+        response.raise_for_status()
+        return response.json()
+    except SupabaseVerificationError:
+        raise
+    except (requests.RequestException, json.JSONDecodeError):
         raise SupabaseVerificationError(
             'Could not verify social login.',
             status.HTTP_502_BAD_GATEWAY,
