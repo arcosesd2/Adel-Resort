@@ -222,8 +222,8 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 
 # Production-only security settings
-if not DEBUG:
-    SECURE_SSL_REDIRECT = False  # Nginx handles SSL termination
+if not DEBUG and not IS_TESTING:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

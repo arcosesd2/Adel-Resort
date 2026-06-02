@@ -1,16 +1,26 @@
 const ACCESS_TOKEN_KEY = 'access_token'
 const LEGACY_REFRESH_TOKEN_KEY = 'refresh_token'
 export const AUTH_COOKIE_MAX_AGE = 60 * 60
+let memoryAccessToken = null
 
 const isBrowser = () => typeof window !== 'undefined'
 
 const secureCookieFlag = () => (window.location.protocol === 'https:' ? '; Secure' : '')
 
+const getCookie = (name) => {
+  if (typeof document === 'undefined') return null
+  const cookie = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${name}=`))
+  return cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : null
+}
+
 export const getAccessToken = () =>
-  isBrowser() ? localStorage.getItem(ACCESS_TOKEN_KEY) : null
+  isBrowser() ? memoryAccessToken || getCookie(ACCESS_TOKEN_KEY) : null
 
 export const clearLegacyRefreshToken = () => {
   if (!isBrowser()) return
+  localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY)
 }
 
@@ -33,7 +43,7 @@ export const clearAuthCookie = () => {
 
 export const setAccessToken = (access) => {
   if (!isBrowser() || !access) return
-  localStorage.setItem(ACCESS_TOKEN_KEY, access)
+  memoryAccessToken = access
   clearLegacyRefreshToken()
   setAuthCookie(access)
 }
@@ -46,6 +56,7 @@ export const setTokens = (access) => {
 
 export const clearTokens = () => {
   if (!isBrowser()) return
+  memoryAccessToken = null
   localStorage.removeItem(ACCESS_TOKEN_KEY)
   localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY)
 }

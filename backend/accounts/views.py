@@ -2,6 +2,7 @@ import json
 import urllib.error
 import urllib.request
 from datetime import timedelta
+from urllib.parse import urlsplit
 
 from django.conf import settings
 from django.contrib.auth import authenticate
@@ -32,13 +33,7 @@ from .serializers import (
 )
 from .tokens import email_verification_token
 from .emails import send_welcome_email, send_verification_email, send_password_reset_email
-
-
-def get_client_ip(request):
-    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded:
-        return x_forwarded.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
+from .ip_utils import get_client_ip
 
 
 REFRESH_COOKIE_NAME = 'refresh_token'
@@ -80,6 +75,18 @@ def _fetch_supabase_user(access_token):
     supabase_url = (settings.SUPABASE_URL or '').rstrip('/')
     supabase_key = settings.SUPABASE_ANON_KEY or ''
     if not supabase_url or not supabase_key:
+        raise SupabaseVerificationError(
+            'Social login is not configured.',
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    parsed_url = urlsplit(supabase_url)
+    if parsed_url.scheme != 'https' or not parsed_url.hostname:
+        raise SupabaseVerificationError(
+            'Social login is not configured.',
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    if not (parsed_url.hostname == 'supabase.co' or parsed_url.hostname.endswith('.supabase.co')):
         raise SupabaseVerificationError(
             'Social login is not configured.',
             status.HTTP_503_SERVICE_UNAVAILABLE,

@@ -34,6 +34,7 @@ yarn-error.log*
 Thumbs.db
 
 # Deploy secrets and helper scripts
+deploy/*.tar.gz
 deploy/env.backend.staging
 deploy/env.frontend.staging
 deploy/copy-key*.py

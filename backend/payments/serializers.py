@@ -2,6 +2,22 @@ from rest_framework import serializers
 from .models import Payment, PaymentType, GCashConfig
 
 
+def validate_image_upload(value, *, max_size_mb=10):
+    allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+    if value.content_type not in allowed_types:
+        raise serializers.ValidationError('Only JPEG, PNG, or WebP images are allowed.')
+    if value.size > max_size_mb * 1024 * 1024:
+        raise serializers.ValidationError(f'File size must be under {max_size_mb}MB.')
+    try:
+        from PIL import Image
+        img = Image.open(value)
+        img.verify()
+        value.seek(0)
+    except Exception:
+        raise serializers.ValidationError('File is not a valid image.')
+    return value
+
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
@@ -53,20 +69,7 @@ class SubmitProofSerializer(serializers.Serializer):
     custom_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
 
     def validate_proof_of_payment(self, value):
-        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
-        if value.content_type not in allowed_types:
-            raise serializers.ValidationError('Only JPEG, PNG, or WebP images are allowed.')
-        if value.size > 10 * 1024 * 1024:
-            raise serializers.ValidationError('File size must be under 10MB.')
-        # Verify file is actually a valid image (not just a spoofed Content-Type)
-        try:
-            from PIL import Image
-            img = Image.open(value)
-            img.verify()
-            value.seek(0)
-        except Exception:
-            raise serializers.ValidationError('File is not a valid image.')
-        return value
+        return validate_image_upload(value, max_size_mb=10)
 
 
 class GCashConfigSerializer(serializers.ModelSerializer):
@@ -84,3 +87,6 @@ class GCashConfigSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.qr_code.url)
             return obj.qr_code.url
         return None
+
+    def validate_qr_code(self, value):
+        return validate_image_upload(value, max_size_mb=5)
