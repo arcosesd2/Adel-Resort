@@ -1,12 +1,12 @@
 export const metadata = {
   title: 'Data Deletion Instructions',
-  description: 'How Adel Beach Resort users can request deletion of account and social login data.',
+  description: 'How Adel Beach Resort users can request deletion of account and sign-in data.',
   alternates: {
     canonical: '/data-deletion',
   },
   openGraph: {
     title: 'Data Deletion Instructions',
-    description: 'How Adel Beach Resort users can request deletion of account and social login data.',
+    description: 'How Adel Beach Resort users can request deletion of account and sign-in data.',
     url: '/data-deletion',
     type: 'website',
   },
@@ -23,9 +23,9 @@ export default function DataDeletionPage() {
 
         <div className="card p-8 md:p-12 prose prose-gray max-w-none">
           <p>
-            Adel Beach Resort uses Google and Facebook social sign-in to help guests create and access their
-            accounts. If you want to delete or remove personal data associated with your Adel Beach Resort
-            account, use one of the methods below.
+            Adel Beach Resort uses account registration and Google sign-in to help guests create and access
+            their accounts. If you want to delete or remove personal data associated with your Adel Beach
+            Resort account, use one of the methods below.
           </p>
 
           <h2>Delete or Deactivate Your Account</h2>
@@ -47,12 +47,12 @@ export default function DataDeletionPage() {
             or dispute-resolution purposes.
           </p>
 
-          <h2>Remove Facebook Access</h2>
+          <h2>Remove Google Access</h2>
           <ol>
-            <li>Open your Facebook account settings.</li>
-            <li>Go to Apps and Websites.</li>
+            <li>Open your Google account settings.</li>
+            <li>Go to Security, then Third-party apps and services.</li>
             <li>Select Adel Resort or Adel Beach Resort.</li>
-            <li>Click Remove to disconnect Facebook Login from your Facebook account.</li>
+            <li>Remove access to disconnect Google sign-in from your Google account.</li>
           </ol>
 
           <h2>Contact</h2>

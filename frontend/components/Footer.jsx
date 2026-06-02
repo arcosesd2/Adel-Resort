@@ -5,6 +5,9 @@ import WaveDivider from '@/components/WaveDivider'
 import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/motions'
 import NewsletterForm from '@/components/NewsletterForm'
 
+const SHOW_FACEBOOK_SOCIAL_LINK = false
+const FACEBOOK_SOCIAL_URL = 'https://www.facebook.com/AdelBeachResort'
+
 export default function Footer() {
   return (
     <>
@@ -42,9 +45,11 @@ export default function Footer() {
                 Your perfect beach getaway in Lawigan, Surigao Del Sur. Enjoy cottages, rooms, and event spaces right by the shore.
               </p>
               <div className="flex gap-3 mt-4">
-                <a href="https://www.facebook.com/AdelBeachResort" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-ocean-200 hover:bg-white/20 hover:text-white transition-all">
-                  <Facebook size={18} />
-                </a>
+                {SHOW_FACEBOOK_SOCIAL_LINK && (
+                  <a href={FACEBOOK_SOCIAL_URL} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-ocean-200 hover:bg-white/20 hover:text-white transition-all">
+                    <Facebook size={18} />
+                  </a>
+                )}
                 <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-ocean-200 hover:bg-white/20 hover:text-white transition-all">
                   <Instagram size={18} />
                 </a>

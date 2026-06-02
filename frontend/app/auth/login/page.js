@@ -18,6 +18,9 @@ const applyLoginData = (data) => {
   useAuthStore.setState({ user: data.user, isAuthenticated: true, isReady: true, lastActivity: Date.now() })
 }
 
+// Keep Facebook OAuth available in code, but hidden until it is ready for public use.
+const ENABLE_FACEBOOK_LOGIN = false
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -241,21 +244,22 @@ function LoginForm() {
             )}
             Continue with Google
           </button>
-          
-          <button
-            onClick={() => handleSocialLogin('facebook')}
-            disabled={loading || socialLoading || !isSupabaseConfigured}
-            className="w-full py-2.5 px-4 bg-[#1877F2] text-white rounded-xl flex items-center justify-center gap-3 font-medium hover:bg-[#166fe5] transition-all disabled:opacity-50"
-          >
-            {socialLoading === 'facebook' ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-            )}
-            Continue with Facebook
-          </button>
+          {ENABLE_FACEBOOK_LOGIN && (
+            <button
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={loading || socialLoading || !isSupabaseConfigured}
+              className="w-full py-2.5 px-4 bg-[#1877F2] text-white rounded-xl flex items-center justify-center gap-3 font-medium hover:bg-[#166fe5] transition-all disabled:opacity-50"
+            >
+              {socialLoading === 'facebook' ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              )}
+              Continue with Facebook
+            </button>
+          )}
         </div>
 
         <div className="relative mb-6">
