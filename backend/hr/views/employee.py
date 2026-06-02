@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import log_activity
+from accounts.ip_utils import get_client_ip
 from accounts.permissions import IsAdminOrSuperAdmin
 
 from hr.models import Employee, CompensationProfile, Loan, Payslip
@@ -13,11 +14,6 @@ from hr.serializers import (
     LoanSerializer, PayslipSerializer,
 )
 from hr.views._pagination import paginate_or_list
-
-
-def _get_ip(request):
-    fwd = request.META.get('HTTP_X_FORWARDED_FOR')
-    return fwd.split(',')[0].strip() if fwd else request.META.get('REMOTE_ADDR')
 
 
 @api_view(['GET', 'POST'])
@@ -44,7 +40,7 @@ def employee_list(request):
     if serializer.is_valid():
         emp = serializer.save()
         log_activity(request.user, 'payroll', f'Created employee {emp.employee_code}',
-                     ip_address=_get_ip(request))
+                     ip_address=get_client_ip(request))
         return Response(EmployeeSerializer(emp).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -65,7 +61,7 @@ def employee_detail(request, pk):
         if serializer.is_valid():
             emp = serializer.save()
             log_activity(request.user, 'payroll', f'Updated employee {emp.employee_code}',
-                         ip_address=_get_ip(request))
+                         ip_address=get_client_ip(request))
             return Response(EmployeeSerializer(emp).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

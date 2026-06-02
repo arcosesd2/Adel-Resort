@@ -5,10 +5,11 @@ module.exports = {
       exec_mode: 'fork',
       cwd: '/home/adel/adel-beach-resort/frontend',
       script: 'node_modules/.bin/next',
-      args: 'start',
+      args: 'start --hostname 127.0.0.1',
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
+        HOSTNAME: '127.0.0.1',
       },
       instances: 1,
       autorestart: true,

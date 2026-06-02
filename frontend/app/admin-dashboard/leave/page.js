@@ -177,7 +177,7 @@ export default function LeavePage() {
               <tr><th className="px-4 py-2">Employee</th><th className="px-4 py-2">Type</th><th className="px-4 py-2">Year</th><th className="px-4 py-2 text-right">Credits</th><th className="px-4 py-2 text-right">Used</th><th className="px-4 py-2 text-right">Remaining</th></tr>
             </thead>
             <tbody>
-              {balances.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-400">No balances. Click "Init Balances" to create.</td></tr>}
+              {balances.length === 0 && <tr><td colSpan={6} className="text-center py-8 text-gray-400">No balances. Click &quot;Init Balances&quot; to create.</td></tr>}
               {balances.map(b => (
                 <tr key={b.id} className="border-t border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-2">{b.employee}</td>

@@ -26,6 +26,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'staging.adel-resort.ph',
+      },
+      {
+        protocol: 'https',
         hostname: 'api.adel-resort.ph',
       },
       {
@@ -35,6 +39,10 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
       },
       {
         protocol: 'https',
@@ -48,6 +56,8 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_VERSION: appVersion,
   },
   async headers() {
@@ -67,7 +77,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://adel-resort.ph https://api.adel-resort.ph; media-src 'self' https://res.cloudinary.com https://api.adel-resort.ph blob:; font-src 'self'; connect-src 'self' https://api.adel-resort.ph https://staging-api.adel-resort.ph; frame-src 'self' https://www.google.com; frame-ancestors 'none';",
+              "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com https://images.unsplash.com https://adel-resort.ph https://staging.adel-resort.ph https://api.adel-resort.ph https://staging-api.adel-resort.ph; media-src 'self' https://res.cloudinary.com https://api.adel-resort.ph https://staging-api.adel-resort.ph blob:; font-src 'self'; connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 https://api.adel-resort.ph https://staging-api.adel-resort.ph https://*.supabase.co; frame-src 'self' https://www.google.com; frame-ancestors 'none';",
           },
         ],
       },

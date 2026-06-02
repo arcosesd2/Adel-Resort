@@ -1,5 +1,9 @@
+import json
 from datetime import timedelta
+from urllib.parse import urlsplit
 
+import requests
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.utils import timezone
@@ -28,13 +32,7 @@ from .serializers import (
 )
 from .tokens import email_verification_token
 from .emails import send_welcome_email, send_verification_email, send_password_reset_email
-
-
-def get_client_ip(request):
-    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded:
-        return x_forwarded.split(',')[0].strip()
-    return request.META.get('REMOTE_ADDR')
+from .ip_utils import get_client_ip
 
 
 REFRESH_COOKIE_NAME = 'refresh_token'
@@ -62,6 +60,83 @@ def _clear_refresh_cookie(response):
 def _get_refresh_from_request(request):
     """Prefer the HttpOnly cookie; fall back to request body for backward compatibility."""
     return request.COOKIES.get(REFRESH_COOKIE_NAME) or request.data.get('refresh')
+
+
+class SupabaseVerificationError(Exception):
+    def __init__(self, detail, status_code=status.HTTP_401_UNAUTHORIZED):
+        self.detail = detail
+        self.status_code = status_code
+        super().__init__(detail)
+
+
+def _fetch_supabase_user(access_token):
+    """Verify a Supabase access token by asking Supabase Auth for its user."""
+    supabase_url = (settings.SUPABASE_URL or '').rstrip('/')
+    supabase_key = settings.SUPABASE_ANON_KEY or ''
+    if not supabase_url or not supabase_key:
+        raise SupabaseVerificationError(
+            'Social login is not configured.',
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    parsed_url = urlsplit(supabase_url)
+    if parsed_url.scheme != 'https' or not parsed_url.hostname:
+        raise SupabaseVerificationError(
+            'Social login is not configured.',
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    if not (parsed_url.hostname == 'supabase.co' or parsed_url.hostname.endswith('.supabase.co')):
+        raise SupabaseVerificationError(
+            'Social login is not configured.',
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    try:
+        response = requests.get(
+            f'{supabase_url}/auth/v1/user',
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'apikey': supabase_key,
+                'Accept': 'application/json',
+            },
+            timeout=10,
+        )
+        if response.status_code in (401, 403):
+            raise SupabaseVerificationError('Invalid or expired social login.')
+        response.raise_for_status()
+        return response.json()
+    except SupabaseVerificationError:
+        raise
+    except (requests.RequestException, json.JSONDecodeError):
+        raise SupabaseVerificationError(
+            'Could not verify social login.',
+            status.HTTP_502_BAD_GATEWAY,
+        )
+
+
+def _names_from_supabase(user_info):
+    metadata = user_info.get('user_metadata') or {}
+    first_name = (metadata.get('first_name') or metadata.get('given_name') or '').strip()
+    last_name = (metadata.get('last_name') or metadata.get('family_name') or '').strip()
+    full_name = (metadata.get('full_name') or metadata.get('name') or '').strip()
+    if full_name and not (first_name or last_name):
+        parts = full_name.split(' ', 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+    if not first_name:
+        first_name = user_info['email'].split('@')[0]
+    return first_name[:150], last_name[:150]
+
+
+def _unique_username_from_email(email):
+    base = email.split('@')[0][:140] or 'guest'
+    username = base
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        suffix = str(counter)
+        username = f'{base[:150 - len(suffix)]}{suffix}'
+        counter += 1
+    return username
 
 
 class LoginRateThrottle(ScopedRateThrottle):
@@ -100,7 +175,6 @@ def register(request):
         response = Response({
             'user': UserSerializer(user, context={'request': request}).data,
             'access': str(refresh.access_token),
-            'refresh': refresh_str,
         }, status=status.HTTP_201_CREATED)
         _set_refresh_cookie(response, refresh_str)
         return response
@@ -173,14 +247,103 @@ def login(request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data,
         'access': str(refresh.access_token),
-        'refresh': refresh_str,
     })
     _set_refresh_cookie(response, refresh_str)
     return response
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
+def social_login(request):
+    """
+    Handle social login via Supabase.
+    The frontend sends the Supabase access token; Django verifies that token with
+    Supabase and derives identity from the verified response only.
+    """
+    access_token = request.data.get('supabase_access_token') or request.data.get('access_token')
+    if not access_token:
+        return Response({'detail': 'Supabase access token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        supabase_user = _fetch_supabase_user(access_token)
+    except SupabaseVerificationError as exc:
+        return Response({'detail': exc.detail}, status=exc.status_code)
+
+    email = (supabase_user.get('email') or '').strip().lower()
+    if not email:
+        return Response({'detail': 'Verified social account has no email address.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    email_verified = bool(
+        supabase_user.get('email_confirmed_at')
+        or supabase_user.get('confirmed_at')
+        or supabase_user.get('email_verified')
+    )
+    if not email_verified:
+        return Response({'detail': 'Social account email is not verified.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Find or create user
+    user = User.objects.filter(email__iexact=email).first()
+
+    if not user:
+        first_name, last_name = _names_from_supabase(supabase_user)
+        user = User.objects.create_user(
+            username=_unique_username_from_email(email),
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            email_verified=True,
+        )
+
+    if not user.is_active:
+        return Response({'non_field_errors': ['Account is disabled.']}, status=status.HTTP_400_BAD_REQUEST)
+
+    if user.is_staff:
+        LoginAttempt.objects.create(
+            user=user,
+            username=user.username,
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            success=False,
+            failure_reason='staff_social_login_blocked',
+        )
+        return Response(
+            {'detail': 'Staff accounts must use password login and device authorization.'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    updates = []
+    if user.email != email:
+        user.email = email
+        updates.append('email')
+    if not user.email_verified:
+        user.email_verified = True
+        updates.append('email_verified')
+    if updates:
+        user.save(update_fields=updates)
+
+    # Record login
+    ip = get_client_ip(request)
+    ua = request.META.get('HTTP_USER_AGENT', '')
+    LoginAttempt.objects.create(
+        user=user, username=user.username, ip_address=ip,
+        user_agent=ua, success=True,
+    )
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
+
+    # Issue tokens
+    refresh = RefreshToken.for_user(user)
+    refresh_str = str(refresh)
+    response = Response({
+        'user': UserSerializer(user, context={'request': request}).data,
+        'access': str(refresh.access_token),
+    })
+    _set_refresh_cookie(response, refresh_str)
+    return response
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def logout(request):
     refresh_str = _get_refresh_from_request(request)
     response = Response({'detail': 'Logged out successfully.'})
@@ -301,7 +464,6 @@ def change_password(request):
     response = Response({
         'detail': 'Password changed successfully.',
         'access': str(refresh.access_token),
-        'refresh': refresh_str,
     })
     _set_refresh_cookie(response, refresh_str)
     return response
@@ -688,7 +850,6 @@ def authorize_device(request):
     response = Response({
         'user': UserSerializer(user, context={'request': request}).data,
         'access': str(refresh.access_token),
-        'refresh': refresh_str,
         'detail': 'Device authorized successfully.',
     })
     _set_refresh_cookie(response, refresh_str)

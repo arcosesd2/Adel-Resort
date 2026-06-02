@@ -1,9 +1,11 @@
 from datetime import date, timedelta
 from decimal import Decimal
 from rest_framework import serializers
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from .models import Booking
+from .availability import find_slot_conflict
 from rooms.serializers import RoomListSerializer
 
 PAYMENT_DEADLINE_MINUTES = 60
@@ -149,38 +151,14 @@ class BookingSerializer(serializers.ModelSerializer):
                             'Cottages can only be booked via walk-in during the weekends.'
                         )
 
-        # Conflict check: per-slot overlap
         if slots and room:
-            slot_dates = [s['date'] for s in slots]
-            min_date = min(slot_dates)
-            max_date = max(slot_dates)
-
-            existing_bookings = Booking.objects.filter(
-                room=room,
-                status__in=['confirmed', 'pending'],
-                check_in__lte=max_date,
-                check_out__gte=min_date,
+            conflict = find_slot_conflict(
+                room,
+                slots,
+                exclude_pk=self.instance.pk if self.instance else None,
             )
-            instance = self.instance
-            if instance:
-                existing_bookings = existing_bookings.exclude(pk=instance.pk)
-
-            # Count bookings per (date, slot)
-            from collections import Counter
-            booked_counts = Counter()
-            for booking in existing_bookings:
-                for s in booking.slots:
-                    booked_counts[(s['date'], s['slot'])] += 1
-
-            max_rooms = room.max_rooms or 1
-
-            # Check for overlaps
-            for s in slots:
-                key = (s['date'], s['slot'])
-                if booked_counts[key] >= max_rooms:
-                    raise serializers.ValidationError(
-                        f"The {s['slot']} slot on {s['date']} is fully booked for this room."
-                    )
+            if conflict:
+                raise serializers.ValidationError(conflict)
 
         return data
 
@@ -212,7 +190,12 @@ class BookingSerializer(serializers.ModelSerializer):
         validated_data['total_price'] = total
 
         validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+        with transaction.atomic():
+            type(room).objects.select_for_update().get(pk=room.pk)
+            conflict = find_slot_conflict(room, slots)
+            if conflict:
+                raise serializers.ValidationError(conflict)
+            return super().create(validated_data)
 
 
 

@@ -9,7 +9,7 @@
 - **Frontend**: Next.js 15.5 (Node 20) — PM2
 - **Reverse Proxy**: Nginx
 - **Database**: PostgreSQL (adel_resort db, user: adel)
-- **DB Password**: `!??!A@10530501b1515D` (URL-encoded in DATABASE_URL: `%21%3F%3F%21A%4010530501b1515D`)
+- **DB Password**: stored outside Git in the deployment environment/password manager. Do not commit plaintext credentials.
 - **Media Storage**: Cloudinary (cloud: dwx5uhyvd)
 - **Email**: Brevo SMTP (user: a9bd1e001@smtp-brevo.com)
 - **Payments**: Stripe
@@ -120,7 +120,5 @@ bash /home/adel/adel-beach-resort/deploy/sync-db-from-prod.sh
 ```
 
 ## IONOS VPS Access
-- SSH passwords (for initial setup only, key auth is now active):
-  - VPS1 root: `yuK0JJXNoQfKJK`
-  - VPS2 root: `mt632I0SBbLj0tp`
+- SSH key auth is active; keep any emergency passwords in the password manager only.
 - IONOS control panel: https://ionos.com (separate from SSH)

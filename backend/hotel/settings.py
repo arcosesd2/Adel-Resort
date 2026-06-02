@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
@@ -14,6 +15,7 @@ if not _secret and os.environ.get('DEBUG', 'False') != 'True':
 SECRET_KEY = _secret or 'django-insecure-dev-key-for-local-only'
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+IS_TESTING = 'test' in sys.argv
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
@@ -111,11 +113,19 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-if not DEBUG:
+
+_cloudinary_cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+_cloudinary_api_key = os.environ.get('CLOUDINARY_API_KEY', '')
+_cloudinary_api_secret = os.environ.get('CLOUDINARY_API_SECRET', '')
+_cloudinary_configured = all([_cloudinary_cloud_name, _cloudinary_api_key, _cloudinary_api_secret])
+
+if not DEBUG and not IS_TESTING:
+    if not _cloudinary_configured:
+        raise RuntimeError('Cloudinary credentials are required in production')
     CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-        'API_KEY': os.environ.get('CLOUDINARY_API_KEY', ''),
-        'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
+        'CLOUD_NAME': _cloudinary_cloud_name,
+        'API_KEY': _cloudinary_api_key,
+        'API_SECRET': _cloudinary_api_secret,
     }
     STORAGES = {
         'default': {
@@ -137,6 +147,9 @@ else:
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+SUPABASE_URL = os.environ.get('SUPABASE_URL') or os.environ.get('NEXT_PUBLIC_SUPABASE_URL', '')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY') or os.environ.get('NEXT_PUBLIC_SUPABASE_ANON_KEY', '')
 
 # Allow up to 50MB uploads (for hero video)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
@@ -209,8 +222,8 @@ CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 
 # Production-only security settings
-if not DEBUG:
-    SECURE_SSL_REDIRECT = False  # Nginx handles SSL termination
+if not DEBUG and not IS_TESTING:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True

@@ -11,6 +11,8 @@ import JsonLd from '@/components/JsonLd'
 import NotificationPopup from '@/components/NotificationPopup'
 import './globals.css'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://adel-resort.ph'
+
 const inter = Inter({
   subsets: ['latin'],
   weight: ['200', '300', '400', '500', '600', '700'],
@@ -20,7 +22,7 @@ const inter = Inter({
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
 
 export const metadata = {
-  metadataBase: new URL('https://adel-resort.ph'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
     template: '%s | Adel Beach Resort',
@@ -34,7 +36,7 @@ export const metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://adel-resort.ph',
+    url: SITE_URL,
     siteName: 'Adel Beach Resort',
     title: 'Adel Beach Resort | Lawigan, Surigao Del Sur',
     description: 'Book cottages, rooms, and event spaces at Adel Beach Resort in Lawigan, Surigao Del Sur.',
@@ -55,7 +57,7 @@ export default function RootLayout({ children }) {
           '@type': 'Hotel',
           name: 'Adel Beach Resort',
           description: 'Beach resort in Lawigan, Surigao Del Sur offering cottages, rooms, and event spaces.',
-          url: 'https://adel-resort.ph',
+          url: SITE_URL,
           telephone: '09685361395',
           email: 'arnelarcos@adel-resort.ph',
           address: {

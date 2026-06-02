@@ -6,11 +6,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from accounts.permissions import IsAdminOrSuperAdmin
 from rooms.models import Room
 from vouchers.utils import get_booking_voucher_validity_status
+from .availability import find_slot_conflict
 from .models import Booking, BookingStatus
 from .serializers import BookingSerializer, AdminBookingSerializer
 
@@ -180,23 +182,9 @@ def onsite_booking(request):
     check_statuses = ['confirmed', 'pending']
     if is_backdate:
         check_statuses.append('completed')
-    existing = Booking.objects.filter(
-        room=room, status__in=check_statuses,
-        check_in__lte=max_date, check_out__gte=min_date,
-    )
-    from collections import Counter
-    booked_counts = Counter()
-    for b in existing:
-        for s in b.slots:
-            booked_counts[(s['date'], s['slot'])] += 1
-
-    max_rooms = room.max_rooms or 1
-    for s in slots:
-        if booked_counts[(s['date'], s['slot'])] >= max_rooms:
-            return Response(
-                {'detail': f"The {s['slot']} slot on {s['date']} is fully booked."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+    conflict = find_slot_conflict(room, slots, statuses=check_statuses)
+    if conflict:
+        return Response({'detail': conflict}, status=status.HTTP_400_BAD_REQUEST)
 
     # Calculate price
     day_price = room.day_price or Decimal('0')
@@ -231,7 +219,6 @@ def onsite_booking(request):
     voucher = None
 
     if voucher_code:
-        from django.db import transaction
         from vouchers.models import Voucher, VoucherUsage
 
         with transaction.atomic():
@@ -264,21 +251,25 @@ def onsite_booking(request):
     else:
         checkout_date = max_date
 
-    booking = Booking.objects.create(
-        user=user, room=room,
-        check_in=min_date, check_out=checkout_date,
-        guests=guests, slots=slots,
-        total_price=total,
-        status=BookingStatus.COMPLETED if is_backdate else BookingStatus.CONFIRMED,
-        special_requests=special_requests,
-        is_backdated=is_backdate,
-        excluded_from_sales=excluded_from_sales,
-        manual_discount=manual_discount,
-        manual_discount_type=manual_discount_type if manual_discount > 0 else '',
-    )
+    with transaction.atomic():
+        room = Room.objects.select_for_update().get(pk=room.pk)
+        conflict = find_slot_conflict(room, slots, statuses=check_statuses)
+        if conflict:
+            return Response({'detail': conflict}, status=status.HTTP_400_BAD_REQUEST)
+        booking = Booking.objects.create(
+            user=user, room=room,
+            check_in=min_date, check_out=checkout_date,
+            guests=guests, slots=slots,
+            total_price=total,
+            status=BookingStatus.COMPLETED if is_backdate else BookingStatus.CONFIRMED,
+            special_requests=special_requests,
+            is_backdated=is_backdate,
+            excluded_from_sales=excluded_from_sales,
+            manual_discount=manual_discount,
+            manual_discount_type=manual_discount_type if manual_discount > 0 else '',
+        )
 
     if voucher:
-        from django.db import transaction
         from vouchers.models import Voucher as V, VoucherUsage
         with transaction.atomic():
             v = V.objects.select_for_update().get(pk=voucher.pk)
@@ -389,7 +380,6 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                     # Reverse voucher usage if any
                     try:
                         from vouchers.models import VoucherUsage
-                        from django.db import transaction
                         usage = VoucherUsage.objects.select_related('voucher').filter(booking=booking).first()
                         if usage:
                             with transaction.atomic():

@@ -1,6 +1,6 @@
 # Adel Beach Resort
 
-A full-stack luxury beach hotel reservation system built with **Next.js 14** (App Router) + **Django 5** + **PostgreSQL** + **Stripe payments**.
+A full-stack luxury beach hotel reservation system built with **Next.js 15** (App Router) + **Django 6** + **PostgreSQL** + **Stripe payments**.
 
 ---
 
@@ -8,8 +8,8 @@ A full-stack luxury beach hotel reservation system built with **Next.js 14** (Ap
 
 ```
 adel-beach-resort/
-├── backend/           # Django 5 + DRF API
-├── frontend/          # Next.js 14 App Router
+├── backend/           # Django 6 + DRF API
+├── frontend/          # Next.js 15 App Router
 └── render.yaml        # Render deployment config
 ```
 
@@ -31,7 +31,7 @@ adel-beach-resort/
 ## Local Development
 
 ### Prerequisites
-- Python 3.11+
+- Python 3.12+
 - Node.js 20+
 - PostgreSQL (or SQLite for dev)
 - Stripe account (test keys)
@@ -81,6 +81,8 @@ cp .env.local.example .env.local
 # Edit .env.local:
 #   NEXT_PUBLIC_API_URL=http://localhost:8000
 #   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+#   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # Start dev server
 npm run dev
@@ -162,6 +164,8 @@ After deployment, go to each service's **Environment** settings:
 | `FRONTEND_URL` | `https://adel-beach-resort-frontend.onrender.com` |
 | `STRIPE_SECRET_KEY` | `sk_live_...` or `sk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` (from Stripe dashboard) |
+| `SUPABASE_URL` | `https://your-project.supabase.co` |
+| `SUPABASE_ANON_KEY` | Supabase anon/public API key |
 
 **Frontend service:**
 
@@ -169,6 +173,8 @@ After deployment, go to each service's **Environment** settings:
 |---|---|
 | `NEXT_PUBLIC_API_URL` | `https://adel-beach-resort-backend.onrender.com` |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` or `pk_test_...` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://your-project.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public API key |
 
 > Note: `SECRET_KEY` and `DATABASE_URL` are auto-generated/injected by Render.
 
@@ -269,9 +275,9 @@ Any future expiry date and any 3-digit CVC.
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 14, Tailwind CSS, Zustand, Axios |
-| Backend | Django 5, DRF, SimpleJWT |
+| Frontend | Next.js 15, Tailwind CSS, Zustand, Axios |
+| Backend | Django 6, DRF, SimpleJWT |
 | Database | PostgreSQL (SQLite for dev) |
 | Payments | Stripe PaymentIntents |
-| Auth | JWT (access + refresh tokens) |
+| Auth | JWT (access + HttpOnly refresh cookie), Supabase social login |
 | Deployment | Render (free tier) |

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clearAuthSession, getAccessToken, setAccessToken, setRoleCookie } from '@/lib/auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -11,7 +12,7 @@ const api = axios.create({
 // Attach access token to every request
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token')
+    const token = getAccessToken()
     if (token) config.headers.Authorization = `Bearer ${token}`
   }
   return config
@@ -22,28 +23,20 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config
+    if (!original) return Promise.reject(error)
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       try {
-        // Refresh token is now sent automatically via the HttpOnly cookie.
-        // Legacy clients that still have a localStorage refresh value fall back to body.
-        const legacyRefresh = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null
-        const body = legacyRefresh ? { refresh: legacyRefresh } : {}
-        const { data } = await axios.post(`${API_URL}/api/auth/refresh/`, body, { withCredentials: true })
-        localStorage.setItem('access_token', data.access)
-        if (typeof document !== 'undefined') {
-          const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-          document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60}; SameSite=Lax${secure}`
-        }
+        const { data } = await axios.post(`${API_URL}/api/auth/refresh/`, {}, { withCredentials: true })
+        setAccessToken(data.access)
         original.headers.Authorization = `Bearer ${data.access}`
+        axios.get(`${API_URL}/api/auth/me/`, {
+          headers: { Authorization: `Bearer ${data.access}` },
+          withCredentials: true,
+        }).then(({ data: user }) => setRoleCookie(user)).catch(() => {})
         return api(original)
       } catch {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        if (typeof document !== 'undefined') {
-          document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-          document.cookie = 'user_role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-        }
+        clearAuthSession()
       }
     }
     return Promise.reject(error)

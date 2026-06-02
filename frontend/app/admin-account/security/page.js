@@ -4,8 +4,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '@/lib/api'
-import { setTokens } from '@/lib/auth'
-import useAuthStore from '@/store/authStore'
+import { setAccessToken } from '@/lib/auth'
 
 export default function StaffSecurityPage() {
   const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', new_password2: '' })
@@ -21,9 +20,7 @@ export default function StaffSecurityPage() {
     setPwLoading(true)
     try {
       const { data } = await api.post('/auth/change-password/', pwForm)
-      setTokens(data.access, data.refresh)
-      const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-      document.cookie = `access_token=${data.access}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secure}`
+      setAccessToken(data.access)
       setPwForm({ current_password: '', new_password: '', new_password2: '' })
       toast.success('Password changed successfully')
     } catch (err) {

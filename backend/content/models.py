@@ -7,7 +7,7 @@ from rooms.models import RoomType
 
 
 def _get_video_storage():
-    if not settings.DEBUG:
+    if not settings.DEBUG and not getattr(settings, 'IS_TESTING', False):
         from cloudinary_storage.storage import VideoMediaCloudinaryStorage
         return VideoMediaCloudinaryStorage()
     return default_storage
