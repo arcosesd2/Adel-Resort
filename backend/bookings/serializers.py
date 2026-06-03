@@ -4,11 +4,10 @@ from rest_framework import serializers
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from .constants import PAYMENT_DEADLINE_MINUTES
 from .models import Booking
 from .availability import find_slot_conflict
 from rooms.serializers import RoomListSerializer
-
-PAYMENT_DEADLINE_MINUTES = 60
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -62,7 +61,7 @@ class BookingSerializer(serializers.ModelSerializer):
         return None
 
     def get_full_payment_deadline(self, obj):
-        """1-hour deadline after admin approval for downpayment/partial bookings."""
+        """Deadline after admin approval for downpayment/partial bookings."""
         if (obj.approved_at
                 and hasattr(obj, 'payment')
                 and obj.payment.payment_type in ('downpayment', 'partial')):

@@ -9,7 +9,7 @@ from django.utils import timezone
 from bookings.models import Booking, BookingStatus
 
 REMIND_AFTER_MINUTES = 30
-# Fire at 30 min — well before the 60-min payment deadline cancellation.
+# Fire at 30 min, well before the 12-hour payment deadline cancellation.
 
 
 class Command(BaseCommand):
@@ -17,7 +17,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         cutoff = timezone.now() - timedelta(minutes=REMIND_AFTER_MINUTES)
-        # Window: created between 60 and 30 min ago — so we only remind once per booking
+        # Window: created between 60 and 30 min ago, so we only remind once per booking.
         window_start = timezone.now() - timedelta(minutes=REMIND_AFTER_MINUTES + 30)
 
         bookings = (

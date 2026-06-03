@@ -1,9 +1,9 @@
 from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from bookings.constants import PAYMENT_DEADLINE_MINUTES
 from bookings.models import Booking, BookingStatus
 
-PAYMENT_DEADLINE_MINUTES = 60
 WARNING_BEFORE_MINUTES = 15
 
 

@@ -11,7 +11,7 @@
 - **Database**: PostgreSQL (adel_resort db, user: adel)
 - **DB Password**: stored outside Git in the deployment environment/password manager. Do not commit plaintext credentials.
 - **Media Storage**: Cloudinary (cloud: dwx5uhyvd)
-- **Email**: Brevo SMTP (user: a9bd1e001@smtp-brevo.com)
+- **Email**: Gmail / Google Workspace SMTP (user: noreply@adel-resort.ph)
 - **Payments**: Stripe
 
 # Servers
@@ -118,6 +118,22 @@ su - adel -c 'pm2 restart adel-frontend'
 ssh adel@74.208.142.42
 bash /home/adel/adel-beach-resort/deploy/sync-db-from-prod.sh
 ```
+
+## Production anonymous visitor counter query
+
+When asked for the production "unique visitors without account" counter, use:
+
+```powershell
+.\deploy\check-prod-anonymous-visitors.ps1
+```
+
+When asked for the same counter broken down by each page for today and yesterday, use:
+
+```powershell
+.\deploy\check-prod-anonymous-visitors-by-page.ps1
+```
+
+Definition: count distinct `analytics.PageView.visitor_id` values from production VPS1, excluding `StaffVisitor` IDs and excluding visitors that ever hit account-like paths: `/dashboard`, `/account`, `/booking/`, `/checkout`, or `/admin-dashboard`. Report counts by Philippine calendar day (Asia/Manila), especially today and yesterday.
 
 ## IONOS VPS Access
 - SSH key auth is active; keep any emergency passwords in the password manager only.

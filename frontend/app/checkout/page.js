@@ -165,7 +165,7 @@ function CheckoutContent() {
             <div>
               <p className="font-semibold text-red-800">Payment deadline: {timeLeft} remaining</p>
               <p className="text-red-600 text-sm">
-                Please complete your payment within 1 hour of booking. Unpaid reservations will be automatically cancelled.
+                Please complete your payment within 12 hours of booking. Unpaid reservations will be automatically cancelled.
               </p>
             </div>
           </div>

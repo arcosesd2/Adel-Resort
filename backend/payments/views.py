@@ -8,13 +8,12 @@ from rest_framework.response import Response
 from django.db.models import F
 from django.utils import timezone
 
+from bookings.constants import PAYMENT_DEADLINE_LABEL, PAYMENT_DEADLINE_MINUTES
 from bookings.models import Booking, BookingStatus
 from .models import Payment, PaymentStatus, PaymentType, GCashConfig
 from .serializers import SubmitProofSerializer, GCashConfigSerializer, AdminPaymentSerializer
 from accounts.permissions import IsSuperAdmin, IsAdminOrSuperAdmin
 from vouchers.utils import get_booking_voucher_validity_status
-
-PAYMENT_DEADLINE_MINUTES = 60
 
 
 @api_view(['POST'])
@@ -44,13 +43,13 @@ def submit_proof_of_payment(request):
         else:
             return Response({'detail': 'Payment proof already submitted.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Check payment deadline (1 hour after booking creation)
+    # Check payment deadline after booking creation.
     deadline = booking.created_at + timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
     if timezone.now() > deadline:
         booking.status = BookingStatus.CANCELLED
         booking.save(update_fields=['status'])
         return Response(
-            {'detail': 'Payment deadline has passed. This booking has been automatically cancelled.'},
+            {'detail': f'Payment deadline ({PAYMENT_DEADLINE_LABEL}) has passed. This booking has been automatically cancelled.'},
             status=status.HTTP_400_BAD_REQUEST,
         )
 

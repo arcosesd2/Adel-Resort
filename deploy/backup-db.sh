@@ -13,10 +13,10 @@ BACKUP_DIR="/home/adel/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/adel_resort_$TIMESTAMP.sql.gz"
 EMAIL_TO="bkmoonsalter@gmail.com"
-EMAIL_FROM="adel-backup@adel-resort.ph"
+EMAIL_FROM="noreply@adel-resort.ph"
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
-SMTP_USER="adel-backup@adel-resort.ph"
+SMTP_USER="noreply@adel-resort.ph"
 # SMTP_PASS is read from /home/adel/.msmtprc
 GDRIVE_REMOTE="gdrive:adel-resort-backups/daily"
 GDRIVE_RETENTION="180d"
@@ -31,7 +31,7 @@ pg_dump adel_resort | gzip > "$BACKUP_FILE"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Backup created: $BACKUP_FILE" >> "$LOG_FILE"
 
 # Extract password from .msmtprc
-SMTP_PASS=$(grep -A 10 'account adel-backup' ~/.msmtprc | grep '^password' | head -1 | sed 's/^password\s*//')
+SMTP_PASS=$(grep -A 10 'account adel-resort' ~/.msmtprc | grep '^password' | head -1 | sed 's/^password\s*//')
 
 # Send email with backup attached using Python
 FILE_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)

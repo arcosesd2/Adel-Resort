@@ -31,7 +31,7 @@ export default function TermsPage() {
           <h2>2. Booking Terms</h2>
           <p>
             All bookings are subject to availability. A booking is considered confirmed only after payment
-            has been verified by our staff. Pending bookings that are not paid within 24 hours will be
+            has been verified by our staff. Pending bookings that are not paid within 12 hours will be
             automatically cancelled.
           </p>
           <ul>
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
           <h2>3. Payment Terms</h2>
           <p>
-            We accept payments via GCash. Payment proof must be submitted within 24 hours of booking.
+            We accept payments via GCash. Payment proof must be submitted within 12 hours of booking.
             The resort offers full payment and 20% downpayment options. The remaining balance for
             downpayment bookings must be settled upon check-in.
           </p>

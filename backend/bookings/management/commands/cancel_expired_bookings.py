@@ -1,14 +1,13 @@
 from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from bookings.constants import PAYMENT_DEADLINE_LABEL, PAYMENT_DEADLINE_MINUTES
 from bookings.models import Booking, BookingStatus
 from payments.models import Payment, PaymentStatus
 
-PAYMENT_DEADLINE_MINUTES = 60
-
 
 class Command(BaseCommand):
-    help = f'Cancel pending bookings not paid within {PAYMENT_DEADLINE_MINUTES} minutes, including those with unverified payment proof.'
+    help = f'Cancel pending bookings not paid within {PAYMENT_DEADLINE_LABEL}, including those with unverified payment proof.'
 
     def handle(self, *args, **options):
         deadline = timezone.now() - timedelta(minutes=PAYMENT_DEADLINE_MINUTES)
@@ -52,14 +51,14 @@ class Command(BaseCommand):
                     booking.user,
                     'booking_cancelled',
                     'Booking Cancelled',
-                    f'Your booking for {booking.room.name} ({booking.reference_code}) has been cancelled because payment was not verified within {PAYMENT_DEADLINE_MINUTES} minutes.',
+                    f'Your booking for {booking.room.name} ({booking.reference_code}) has been cancelled because payment was not verified within {PAYMENT_DEADLINE_LABEL}.',
                     f'/booking/{booking.id}',
                 )
                 # Notify all staff
                 notify_staff(
                     'booking_cancelled',
                     'Expired Booking Auto-Cancelled',
-                    f'Booking #{booking.id} ({booking.reference_code}) for {booking.room.name} by {booking.user.get_full_name() or booking.user.username} was auto-cancelled (unpaid after {PAYMENT_DEADLINE_MINUTES} min).',
+                    f'Booking #{booking.id} ({booking.reference_code}) for {booking.room.name} by {booking.user.get_full_name() or booking.user.username} was auto-cancelled (unpaid after {PAYMENT_DEADLINE_LABEL}).',
                     '/admin-dashboard/bookings',
                 )
             except Exception:
