@@ -366,13 +366,13 @@ class AdminBookingDetailView(generics.RetrieveUpdateDestroyAPIView):
                     )
                     send_booking_confirmation_email(booking.user, booking)
 
-                    # If downpayment, notify user to pay remaining balance within 24h
+                    # If downpayment, notify user to pay remaining balance within 12h.
                     if hasattr(booking, 'payment') and booking.payment.payment_type in ('downpayment', 'partial'):
                         remaining = booking.total_price - booking.payment.amount
                         create_notification(
                             booking.user, 'payment_remaining',
                             'Remaining Balance Due',
-                            f'Your booking for {booking.room.name} has been approved. Please pay the remaining balance of ₱{remaining} within 24 hours.',
+                            f'Your booking for {booking.room.name} has been approved. Please pay the remaining balance of ₱{remaining} within 12 hours.',
                             f'/booking/{booking.id}',
                         )
 

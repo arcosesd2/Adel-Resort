@@ -21,7 +21,7 @@ export default function RefundPolicyPage() {
             be settled upon check-in at the resort.
           </p>
           <p>
-            Payment proof must be submitted within <strong>1 hour</strong> of booking. Unpaid
+            Payment proof must be submitted within <strong>12 hours</strong> of booking. Unpaid
             reservations will be automatically cancelled after this period.
           </p>
           <p>

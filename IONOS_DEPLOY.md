@@ -128,7 +128,7 @@ EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=adel-backup@adel-resort.ph
+EMAIL_HOST_USER=noreply@adel-resort.ph
 EMAIL_HOST_PASSWORD=<your-gmail-app-password>
 DEFAULT_FROM_EMAIL=Adel Beach Resort <noreply@adel-resort.ph>
 ```
@@ -260,7 +260,7 @@ Add these lines:
 # Local database backup every 30 minutes (no email, pruned after 7 days)
 */30 * * * * /home/adel/adel-beach-resort/deploy/backup-db-local.sh >> /var/log/backup-local.log 2>&1
 
-# Cancel expired bookings (unpaid > 1h) — every 5 minutes
+# Cancel expired bookings (unpaid > 12h) — every 5 minutes
 */5 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py cancel_expired_bookings >> /var/log/cron-bookings.log 2>&1
 
 # Expire stale pending payments (> 48h unverified) — every 2 hours
@@ -272,10 +272,10 @@ Add these lines:
 # Deactivate expired vouchers — daily at 3 AM
 0 3 * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py deactivate_expired_vouchers >> /var/log/cron-vouchers.log 2>&1
 
-# Warn staff about bookings approaching payment deadline (1h deadline) — every 15 minutes
+# Warn staff about bookings approaching payment deadline (12h deadline) — every 15 minutes
 */15 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py warn_payment_deadline >> /var/log/cron-bookings.log 2>&1
 
-# Send abandoned booking emails (1h after no payment) — every 30 min
+# Send abandoned booking emails (30 min after no payment) — every 30 min
 */30 * * * * cd /home/adel/adel-beach-resort/backend && venv/bin/python manage.py send_abandoned_booking_emails >> /var/log/cron-emails.log 2>&1
 
 # Send check-in reminders (for bookings checking in tomorrow) — daily at 8 AM
@@ -331,14 +331,14 @@ tls on
 tls_trust_file /etc/ssl/certs/ca-certificates.crt
 logfile /var/log/msmtp.log
 
-account adel-backup
+account adel-resort
 host smtp.gmail.com
 port 587
-from adel-backup@adel-resort.ph
+from noreply@adel-resort.ph
 user bkmoonsalter@gmail.com
 password YOUR_GMAIL_APP_PASSWORD
 
-account default : adel-backup
+account default : adel-resort
 ```
 
 ```bash
@@ -346,7 +346,7 @@ account default : adel-backup
 sudo chmod 600 /etc/msmtprc
 
 # Test email sending
-echo "Test email from Adel Resort backup" | msmtp -a adel-backup bkmoonsalter@gmail.com
+echo "Test email from Adel Resort backup" | msmtp -a adel-resort bkmoonsalter@gmail.com
 
 # Make sure log file exists
 sudo touch /var/log/msmtp.log
@@ -356,7 +356,7 @@ sudo chown adel:adel /var/log/msmtp.log
 **To create a Gmail App Password:**
 1. Go to https://myaccount.google.com/security
 2. Enable 2-Step Verification (if not already)
-3. Go to App Passwords → Create a new app password for "Mail" on "Other (Custom name)" → enter "Adel Resort Backup"
+3. Go to App Passwords → Create a new app password for "Mail" on "Other (Custom name)" → enter "Adel-Resort"
 4. Use the generated 16-character password in the msmtp config
 
 ---

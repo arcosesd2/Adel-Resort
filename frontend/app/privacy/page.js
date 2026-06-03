@@ -64,7 +64,7 @@ export default function PrivacyPage() {
             <li><strong>Supabase:</strong> For secure Google social sign-in.</li>
             <li><strong>Google:</strong> For Google sign-in when you choose to use it.</li>
             <li><strong>GCash:</strong> For payment processing (manual verification).</li>
-            <li><strong>Brevo SMTP:</strong> For sending transactional emails.</li>
+            <li><strong>Gmail SMTP:</strong> For sending transactional emails.</li>
           </ul>
           <p>
             We share personal information only as needed to provide our booking, account, payment, storage,

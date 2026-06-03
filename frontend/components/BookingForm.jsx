@@ -272,7 +272,7 @@ export default function BookingForm({ room }) {
       {isAuthenticated && !user?.is_staff && slots.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700 flex items-start gap-2">
           <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
-          <span>You&apos;ll have <strong>1 hour</strong> to complete payment after booking. Unpaid reservations are automatically cancelled.</span>
+          <span>You&apos;ll have <strong>12 hours</strong> to complete payment after booking. Unpaid reservations are automatically cancelled.</span>
         </div>
       )}
 
