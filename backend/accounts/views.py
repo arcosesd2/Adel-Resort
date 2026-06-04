@@ -215,7 +215,7 @@ def login(request):
         return Response({'non_field_errors': ['Account is disabled.']}, status=status.HTTP_400_BAD_REQUEST)
 
     # Device restriction: staff (non-superadmin) must use a registered device or authorize a new one
-    if user.is_staff and not user.is_superadmin and fingerprint:
+    if user.is_staff and not user.is_superadmin and not user.bypass_device_authorization and fingerprint:
         device_exists = RegisteredDevice.objects.filter(
             user=user, fingerprint=fingerprint, is_active=True
         ).exists()

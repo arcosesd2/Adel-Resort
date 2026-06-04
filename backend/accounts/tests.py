@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from .models import LoginAttempt, User
+from .models import LoginAttempt, RegisteredDevice, User
 
 
 class SocialLoginTests(TestCase):
@@ -84,3 +84,48 @@ class SocialLoginTests(TestCase):
             LoginAttempt.objects.get(user=staff).failure_reason,
             'staff_social_login_blocked',
         )
+
+
+class DeviceAuthorizationTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_staff_without_bypass_must_authorize_first_device(self):
+        User.objects.create_user(
+            username='staff',
+            email='staff@example.com',
+            password='password123',
+            first_name='Staff',
+            last_name='Member',
+            is_admin=True,
+        )
+
+        response = self.client.post(
+            '/api/auth/login/',
+            {'username': 'staff', 'password': 'password123', 'device_fingerprint': 'fingerprint-a'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['code'], 'device_authorization_required')
+
+    def test_staff_with_bypass_can_login_without_registered_device(self):
+        user = User.objects.create_user(
+            username='staff',
+            email='staff@example.com',
+            password='password123',
+            first_name='Staff',
+            last_name='Member',
+            is_admin=True,
+            bypass_device_authorization=True,
+        )
+
+        response = self.client.post(
+            '/api/auth/login/',
+            {'username': 'staff', 'password': 'password123', 'device_fingerprint': 'fingerprint-a'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('access', response.data)
+        self.assertFalse(RegisteredDevice.objects.filter(user=user).exists())

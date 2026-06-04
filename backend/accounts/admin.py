@@ -5,14 +5,14 @@ from .models import User, RegisteredDevice, LoginAttempt, FavoriteRoom, Notifica
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'email', 'email_verified', 'is_staff', 'is_superadmin', 'is_active')
-    list_filter = ('is_staff', 'is_superadmin', 'is_active', 'email_verified')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'email_verified', 'is_staff', 'is_admin', 'is_superadmin', 'bypass_device_authorization', 'is_active')
+    list_filter = ('is_staff', 'is_admin', 'is_superadmin', 'bypass_device_authorization', 'is_active', 'email_verified')
     search_fields = ('username', 'first_name', 'last_name', 'email')
     ordering = ('username',)
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'email_verified', 'phone', 'avatar')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superadmin', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_admin', 'is_superadmin', 'bypass_device_authorization', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
         (None, {

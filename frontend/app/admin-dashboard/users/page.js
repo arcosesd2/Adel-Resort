@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Shield, Users, Plus, Trash2, ToggleLeft, ToggleRight, X, ArrowLeft, Smartphone } from 'lucide-react'
+import { Shield, Users, Plus, Trash2, ToggleLeft, ToggleRight, X, ArrowLeft, Smartphone, Unlock } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import useAuthStore from '@/store/authStore'
 import api from '@/lib/api'
 
-const emptyForm = { username: '', first_name: '', last_name: '', phone: '', password: '', is_staff: false, is_admin: false, is_superadmin: false }
+const emptyForm = { username: '', first_name: '', last_name: '', phone: '', password: '', is_staff: false, is_admin: false, is_superadmin: false, bypass_device_authorization: false }
 
 export default function UsersPage() {
   const { user } = useAuthStore()
@@ -46,7 +46,7 @@ export default function UsersPage() {
   }
 
   const openEdit = (u) => {
-    setForm({ username: u.username, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '', password: '', is_staff: u.is_staff, is_admin: !!u.is_admin, is_superadmin: u.is_superadmin })
+    setForm({ username: u.username, first_name: u.first_name, last_name: u.last_name, phone: u.phone || '', password: '', is_staff: u.is_staff, is_admin: !!u.is_admin, is_superadmin: u.is_superadmin, bypass_device_authorization: !!u.bypass_device_authorization })
     setEditId(u.id)
     setModal('edit')
   }
@@ -179,7 +179,12 @@ export default function UsersPage() {
                     </td>
                     {tab === 'staff' && (
                       <td className="px-6 py-3 text-sm">
-                        {u.is_staff && !u.is_superadmin ? (
+                        {u.is_staff && !u.is_superadmin && u.bypass_device_authorization ? (
+                          <span className="flex items-center gap-1 text-xs text-emerald-700">
+                            <Unlock size={12} />
+                            Unrestricted
+                          </span>
+                        ) : u.is_staff && !u.is_superadmin ? (
                           <span className="flex items-center gap-1 text-xs">
                             <Smartphone size={12} className={u.device_count > 0 ? 'text-green-600' : 'text-gray-400'} />
                             {u.device_count || 0} device{u.device_count !== 1 ? 's' : ''}
@@ -197,7 +202,7 @@ export default function UsersPage() {
                           <button onClick={() => handleToggleActive(u)} className="text-gray-500 hover:text-ocean-600" title="Toggle active">
                             {u.is_active ? <ToggleRight size={18} className="inline" /> : <ToggleLeft size={18} className="inline" />}
                           </button>
-                          {tab === 'staff' && u.is_staff && u.device_count > 0 && (
+                          {tab === 'staff' && u.is_staff && !u.bypass_device_authorization && u.device_count > 0 && (
                             <button onClick={() => handleResetDevices(u)} className="text-gray-500 hover:text-amber-600" title="Reset device authorization">
                               <Smartphone size={16} className="inline" />
                             </button>
@@ -273,6 +278,11 @@ export default function UsersPage() {
                   <input type="checkbox" checked={form.is_superadmin}
                     onChange={e => setForm(f => ({ ...f, is_superadmin: e.target.checked }))} />
                   Superadmin
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={form.bypass_device_authorization}
+                    onChange={e => setForm(f => ({ ...f, bypass_device_authorization: e.target.checked }))} />
+                  No device lock
                 </label>
               </div>
               <div className="flex gap-2 pt-2">
